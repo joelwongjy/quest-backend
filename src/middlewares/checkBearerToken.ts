@@ -4,7 +4,6 @@ import {
   BearerTokenType,
   isAccessTokenSignedPayload,
   isBearerToken,
-  isRefreshTokenSignedPayload,
 } from "../types/tokens";
 
 export const checkBearerToken = (type: BearerTokenType) => (
@@ -31,13 +30,6 @@ export const checkBearerToken = (type: BearerTokenType) => (
   switch (type) {
     case BearerTokenType.AccessToken:
       if (!isAccessTokenSignedPayload(payload)) {
-        res.sendStatus(401);
-        return;
-      }
-      break;
-
-    case BearerTokenType.RefreshToken:
-      if (!isRefreshTokenSignedPayload(payload)) {
         res.sendStatus(401);
         return;
       }

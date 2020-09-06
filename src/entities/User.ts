@@ -43,16 +43,12 @@ export class User extends Discardable {
     return token;
   };
 
-  createAuthenticationTokens = () => {
+  createAuthenticationToken = () => {
     const accessToken = this.createBearerToken(
       BearerTokenType.AccessToken,
-      "5m"
+      "7d"
     );
-    const refreshToken = this.createBearerToken(
-      BearerTokenType.RefreshToken,
-      "7 days"
-    );
-    return { accessToken, refreshToken };
+    return { accessToken };
   };
 
   getData = (): UserData => ({

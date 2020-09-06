@@ -12,3 +12,7 @@
 
 1. SSH into Droplet.
 1. Run `yarn production`.
+
+## Testing
+
+Testing is done using the Jest library. Run `yarn test` to run tests.

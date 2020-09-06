@@ -2,7 +2,6 @@ export type BearerToken = string;
 
 export enum BearerTokenType {
   AccessToken,
-  RefreshToken,
 }
 
 type Payload<BearerTokenType> = {
@@ -19,11 +18,6 @@ export type AccessTokenPayload = Payload<BearerTokenType.AccessToken> & {
 };
 export type AccessTokenSignedPayload = AccessTokenPayload & TokenLifespan;
 
-export type RefreshTokenPayload = Payload<BearerTokenType.RefreshToken> & {
-  userId: number;
-};
-export type RefreshTokenSignedPayload = RefreshTokenPayload & TokenLifespan;
-
 // Type checkers
 
 export function isBearerToken(token: string | undefined): token is BearerToken {
@@ -38,6 +32,7 @@ function isPayload<T>(
   payload: any,
   tokenType: BearerTokenType
 ): payload is Payload<T> {
+  console.log(payload);
   return (
     payload.tokenType in BearerTokenType && payload.tokenType === tokenType
   );
@@ -60,19 +55,4 @@ export function isAccessTokenSignedPayload(
   payload: any
 ): payload is AccessTokenSignedPayload {
   return isAccessTokenPayload(payload) && hasTokenLifespan(payload);
-}
-
-export function isRefreshTokenPayload(
-  payload: any
-): payload is RefreshTokenPayload {
-  return (
-    typeof payload.userId === "number" &&
-    isPayload(payload, BearerTokenType.RefreshToken)
-  );
-}
-
-export function isRefreshTokenSignedPayload(
-  payload: any
-): payload is RefreshTokenSignedPayload {
-  return isRefreshTokenPayload(payload) && hasTokenLifespan(payload);
 }

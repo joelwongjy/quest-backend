@@ -30,7 +30,7 @@ export class Fixtures {
     this.faker = faker;
     this.user = user;
     this.userAccessToken = `Bearer ${
-      user!.createAuthenticationTokens().accessToken
+      user!.createAuthenticationToken().accessToken
     }`;
   }
 }

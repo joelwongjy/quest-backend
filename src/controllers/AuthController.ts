@@ -1,31 +1,10 @@
 import { compareSync } from "bcryptjs";
 import { Request, Response } from "express";
-import { verify } from "jsonwebtoken";
 import { getRepository } from "typeorm";
 import { User } from "../entities/User";
-import { isRefreshTokenSignedPayload } from "../types/tokens";
 
-export async function processToken(request: Request, response: Response) {
+export async function login(request: Request, response: Response) {
   try {
-    const { authorization } = request.headers;
-    if (authorization) {
-      const [type, token] = authorization.split(" ");
-      if (type !== "Bearer") {
-        throw new Error("Invalid input");
-      }
-
-      // Try to refresh tokens
-      const payload = verify(token, process.env.JWT_SECRET!);
-
-      if (!isRefreshTokenSignedPayload(payload)) {
-        throw new Error("Invalid input");
-      }
-      const { userId } = payload;
-      const user = await getRepository(User).findOneOrFail(userId);
-      const data = user.createAuthenticationTokens();
-      response.status(200).json(data);
-    }
-
     // Try to login using username and password
     const username = request.body.username;
     const password = request.body.password;
@@ -41,7 +20,7 @@ export async function processToken(request: Request, response: Response) {
       throw new Error();
     }
 
-    const data = user.createAuthenticationTokens();
+    const data = user.createAuthenticationToken();
     response.status(200).json(data);
     return;
   } catch (error) {

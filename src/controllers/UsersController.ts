@@ -24,7 +24,7 @@ export async function create(request: Request, response: Response) {
 
   const data = {
     user: user.getData(),
-    ...user.createAuthenticationTokens(),
+    ...user.createAuthenticationToken(),
   };
   response.status(201).json(data);
 }
