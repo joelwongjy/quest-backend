@@ -32,7 +32,6 @@ function isPayload<T>(
   payload: any,
   tokenType: BearerTokenType
 ): payload is Payload<T> {
-  console.log(payload);
   return (
     payload.tokenType in BearerTokenType && payload.tokenType === tokenType
   );
