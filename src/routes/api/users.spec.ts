@@ -4,6 +4,7 @@ import { Fixtures, loadFixtures, synchronize } from "../../utils/tests";
 
 let server: ApiServer;
 let fixtures: Fixtures;
+
 beforeAll(async () => {
   server = new ApiServer();
   await server.initialize();
