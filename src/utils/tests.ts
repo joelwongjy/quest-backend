@@ -35,7 +35,7 @@ export class Fixtures {
   }
 }
 
-export async function loadFixtures(apiServer: ApiServer): Promise<Fixtures> {
+export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
   const users: User[] = [];
   const user = new User("admin", "Admin", "setMeUp?");
   users.push(user);
