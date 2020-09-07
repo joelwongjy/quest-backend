@@ -20,7 +20,13 @@ export async function create(
   const errors = await validate(user);
   if (errors.length > 0) {
     console.log(errors);
-    response.sendStatus(400);
+    let error = "Something went wrong. Please try again!";
+    errors.forEach((e) => {
+      if (e.property && e.property === "username") {
+        error = "Username already exists!";
+      }
+    });
+    response.status(400).json({ error });
     return;
   }
   await getRepository(User).save(user);

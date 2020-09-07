@@ -20,13 +20,15 @@ export async function login(
       .getOne();
 
     if (!user || !user.password || !compareSync(password, user.password)) {
-      throw new Error();
+      throw new Error("Invalid login credentials!");
     }
 
     const data = user.createAuthenticationToken();
     response.status(200).json(data);
     return;
   } catch (error) {
-    response.sendStatus(400);
+    response.status(400).json({
+      error: error.message ?? "Something went wrong. Please try again!",
+    });
   }
 }
