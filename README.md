@@ -57,7 +57,7 @@ docker-compose up
 > Copy the IP address provided. Now change the `POSTGRES_HOST` in `.env.development` and `.env.test`:
 >
 > ```bash
-> POSTGRES_HOST=IP_ADDRESS_COPIED
+> POSTGRES_HOST=<IP_ADDRESS_COPIED>
 > ```
 
 ### Start app in development
