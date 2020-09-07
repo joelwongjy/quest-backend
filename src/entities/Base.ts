@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { BaseData } from "entities";
 
 export abstract class Base {
   @PrimaryGeneratedColumn()
@@ -14,7 +15,7 @@ export abstract class Base {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  getBase = () => ({
+  getBase = (): BaseData => ({
     id: this.id,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,

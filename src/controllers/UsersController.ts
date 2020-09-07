@@ -6,7 +6,10 @@ import { getRepository, IsNull } from "typeorm";
 import { User } from "../entities/User";
 import { AccessTokenSignedPayload } from "../types/tokens";
 
-export async function create(request: Request, response: Response) {
+export async function create(
+  request: Request,
+  response: Response
+): Promise<void> {
   const { username, password, name } = pick(
     request.body,
     "username",
@@ -29,7 +32,10 @@ export async function create(request: Request, response: Response) {
   response.status(201).json(data);
 }
 
-export async function showSelf(request: Request, response: Response) {
+export async function showSelf(
+  _request: Request,
+  response: Response
+): Promise<void> {
   const payload = response.locals.payload as AccessTokenSignedPayload;
   const { userId } = payload;
 
@@ -51,7 +57,10 @@ export async function showSelf(request: Request, response: Response) {
   }
 }
 
-export async function updateSelf(request: Request, response: Response) {
+export async function updateSelf(
+  request: Request,
+  response: Response
+): Promise<void> {
   const payload = response.locals.payload as AccessTokenSignedPayload;
   const { userId } = payload;
   let user: User;
@@ -75,7 +84,10 @@ export async function updateSelf(request: Request, response: Response) {
   }
 }
 
-export async function changePassword(request: Request, response: Response) {
+export async function changePassword(
+  request: Request,
+  response: Response
+): Promise<void> {
   const payload = response.locals.payload as AccessTokenSignedPayload;
   const { userId } = payload;
 

@@ -3,7 +3,10 @@ import { Request, Response } from "express";
 import { getRepository } from "typeorm";
 import { User } from "../entities/User";
 
-export async function login(request: Request, response: Response) {
+export async function login(
+  request: Request,
+  response: Response
+): Promise<void> {
   try {
     // Try to login using username and password
     const username = request.body.username;

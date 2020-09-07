@@ -37,7 +37,7 @@ function isPayload<T>(
   );
 }
 
-function hasTokenLifespan(payload: any) {
+function hasTokenLifespan(payload: any): boolean {
   return typeof payload.iat === "number" && typeof payload.exp === "number";
 }
 

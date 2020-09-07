@@ -8,7 +8,7 @@ import { User } from "../entities/User";
 
 @ValidatorConstraint()
 class IsUniqueUsername implements ValidatorConstraintInterface {
-  async validate(_name: string, args: ValidationArguments) {
+  async validate(_name: string, args: ValidationArguments): Promise<boolean> {
     const user = args.object as User;
 
     const { username } = user;
@@ -29,7 +29,7 @@ class IsUniqueUsername implements ValidatorConstraintInterface {
     return count === 0;
   }
 
-  defaultMessage(_args: ValidationArguments) {
+  defaultMessage(_args: ValidationArguments): string {
     return "Duplicate username";
   }
 }

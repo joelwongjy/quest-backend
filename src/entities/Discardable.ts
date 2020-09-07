@@ -1,5 +1,6 @@
 import { IsOptional } from "class-validator";
 import { Column } from "typeorm";
+import { DiscardableData } from "entities";
 import { Base } from "./Base";
 
 export abstract class Discardable extends Base {
@@ -7,7 +8,7 @@ export abstract class Discardable extends Base {
   @IsOptional()
   discardedAt!: Date | null;
 
-  getBase = () => ({
+  getBase = (): DiscardableData => ({
     id: this.id,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,

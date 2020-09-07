@@ -19,7 +19,7 @@ export class ApiServer {
 
   public server: Server | null = null;
 
-  async initialize(port: number = 3001) {
+  async initialize(port: number = 3001): Promise<void> {
     this.connection = await createConnection(postgres);
 
     const app = express();
@@ -37,7 +37,7 @@ export class ApiServer {
     this.server.timeout = 1200000;
   }
 
-  async close() {
+  async close(): Promise<void> {
     this.connection && (await this.connection.close());
     this.server && this.server.close();
   }

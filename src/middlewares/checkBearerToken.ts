@@ -10,7 +10,7 @@ export const checkBearerToken = (type: BearerTokenType) => (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): void => {
   const bearerToken = req.headers.authorization;
   if (!bearerToken || !isBearerToken(bearerToken)) {
     res.sendStatus(401);
