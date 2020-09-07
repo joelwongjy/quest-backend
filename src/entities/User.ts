@@ -3,6 +3,7 @@ import { IsNotEmpty, IsString, Validate } from "class-validator";
 import { sign } from "jsonwebtoken";
 import { Column, Entity } from "typeorm";
 import IsUniqueUsername from "../constraints/IsUniqueUsername";
+import { AuthenticationData } from "../types/auth";
 import { BearerTokenType } from "../types/tokens";
 import { UserData } from "../types/users";
 import { Discardable } from "./Discardable";
@@ -20,21 +21,22 @@ export class User extends Discardable {
 
   @Column({ unique: true })
   @IsNotEmpty()
+  @IsString()
   @Validate(IsUniqueUsername)
-  username!: string;
+  username: string;
 
   @Column({ type: "character varying" })
   @IsNotEmpty()
   @IsString()
-  name!: string;
+  name: string;
 
   @Column({ type: "character varying", nullable: true, select: false })
-  password?: string | null;
+  password: string | null;
 
   private createBearerToken = (
     tokenType: BearerTokenType,
     expiresIn: string
-  ) => {
+  ): string => {
     const payload = {
       tokenType,
       userId: this.id,
@@ -43,7 +45,7 @@ export class User extends Discardable {
     return token;
   };
 
-  createAuthenticationToken = () => {
+  createAuthenticationToken = (): AuthenticationData => {
     const accessToken = this.createBearerToken(
       BearerTokenType.AccessToken,
       "7d"
