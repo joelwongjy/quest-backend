@@ -54,7 +54,7 @@
   "scripts": {
     "lint": "prettier --write \"src/**/*.{ts,tsx}\" --tab-width 2",
     "start": "set debug=* && cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only ./src/index.ts",
-    "typeorm": "ts-node -r tsconfig-paths/register ../node_modules/typeorm/cli.js",
+    "typeorm": "node --require ts-node/register ./node_modules/typeorm/cli.js",
     "test": "jest --runInBand",
     "build": "tsc && cp package.json ./build/ && cd build && yarn install",
     "production": "cd build && cross-env NODE_ENV=production node ./src/index.js"

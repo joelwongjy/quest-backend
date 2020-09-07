@@ -40,17 +40,17 @@ export const postgres: ConnectionOptions = {
   synchronize: true,
   logging: false,
   entities: [`${__dirname}/src/entities/**/*.js`, "src/entities/**/*.ts"],
-  migrations: [`${__dirname}/src/migrations/**/*.js`, "src/migrations/**/*.ts"],
+  migrations: ["src/migrations/**/*.ts"],
   subscribers: [
     `${__dirname}/src/subscribers/**/*.js`,
     "src/subscribers/**/*.ts",
   ],
   cli: {
-    entitiesDir: `${__dirname}/src/entities`,
-    migrationsDir: `${__dirname}/src/migrations`,
-    subscribersDir: `${__dirname}/src/subscribers`,
+    entitiesDir: `src/entities`,
+    migrationsDir: `src/migrations`,
+    subscribersDir: `src/subscribers`,
   },
   migrationsRun: true,
 };
 
-export default postgres;
+module.exports = postgres;

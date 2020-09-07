@@ -6,7 +6,7 @@ import { Server } from "http";
 import morgan from "morgan";
 import "reflect-metadata";
 import { Connection, createConnection } from "typeorm";
-import ormconfig from "../ormconfig";
+import { postgres } from "../ormconfig";
 import routes from "./routes";
 
 const corsOptions: CorsOptions = {
@@ -20,7 +20,7 @@ export class ApiServer {
   public server: Server | null = null;
 
   async initialize(port: number = 3001) {
-    this.connection = await createConnection(ormconfig);
+    this.connection = await createConnection(postgres);
 
     const app = express();
     app.use(bodyParser.json({ limit: "20mb" }));
