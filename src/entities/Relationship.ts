@@ -1,7 +1,8 @@
+import { IsEnum } from "class-validator";
 import { Column, Entity, ManyToOne } from "typeorm";
-import { Base } from "../Base";
+import { Base } from "./Base";
 import { Person } from "./Person";
-import { RelationshipType } from "./RelationshipType";
+import { RelationshipType } from "../types/relationships";
 
 @Entity()
 export class Relationship extends Base {
@@ -28,5 +29,6 @@ export class Relationship extends Base {
     type: "enum",
     enum: RelationshipType,
   })
+  @IsEnum(RelationshipType)
   relationship!: RelationshipType;
 }

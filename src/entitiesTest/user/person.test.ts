@@ -1,8 +1,8 @@
 import { validate } from "class-validator";
 import { postgres } from "../../../ormconfig";
 import { Connection, createConnection } from "typeorm";
-import { Gender } from "../../entities/user/Gender";
-import { Person } from "../../entities/user/Person";
+import { Gender } from "../../types/persons";
+import { Person } from "../../entities/Person";
 import { User } from "../../entities/User";
 
 let connection: Connection;

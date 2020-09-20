@@ -1,13 +1,14 @@
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
 } from "class-validator";
 import { Column, Entity, OneToMany, OneToOne } from "typeorm";
-import { Discardable } from "../Discardable";
-import { User } from "../User";
-import { Gender } from "./Gender";
+import { Discardable } from "./Discardable";
+import { User } from "./User";
+import { Gender } from "../types/persons";
 import { Relationship } from "./Relationship";
 
 @Entity()
@@ -45,6 +46,7 @@ export class Person extends Discardable {
     type: "enum",
     enum: Gender,
   })
+  @IsEnum(Gender)
   gender: Gender;
 
   @Column({ type: "character varying", nullable: true })
