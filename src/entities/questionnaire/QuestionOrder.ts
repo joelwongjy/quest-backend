@@ -2,15 +2,17 @@ import { IsInt, IsNotEmpty, Min } from "class-validator";
 import { Column, Entity, ManyToOne } from "typeorm";
 import { Discardable } from "../Discardable";
 import { Question } from "./Question";
+import { QuestionSet } from "./QuestionSet";
 
 @Entity()
 export class QuestionOrder extends Discardable {
   entityName = "QuestionOrder";
 
-  constructor(order: number, question: Question) {
+  constructor(order: number, question: Question, question_set: QuestionSet) {
     super();
     this.order = order;
     this.question = question;
+    this.question_set = question_set;
   }
 
   @Column()
@@ -22,4 +24,7 @@ export class QuestionOrder extends Discardable {
   // the same question could appear in different orders in different sets
   @ManyToOne((type) => Question)
   question: Question;
+
+  @ManyToOne((type) => QuestionSet)
+  question_set: QuestionSet;
 }
