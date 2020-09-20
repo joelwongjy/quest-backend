@@ -1,11 +1,11 @@
 import { IsEnum } from "class-validator";
 import { Column, Entity, ManyToOne } from "typeorm";
-import { Base } from "./Base";
 import { Person } from "./Person";
 import { RelationshipType } from "../types/relationships";
+import { Discardable } from "./Discardable";
 
 @Entity()
-export class Relationship extends Base {
+export class Relationship extends Discardable {
   entityName = "Relationship";
 
   constructor(
