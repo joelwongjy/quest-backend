@@ -4,7 +4,7 @@ import {
   ValidatorConstraintInterface,
 } from "class-validator";
 import { getRepository } from "typeorm";
-import { Person } from "../entities/Person";
+import { Person } from "../entities/user/Person";
 
 @ValidatorConstraint()
 class IsPersonlessUser implements ValidatorConstraintInterface {

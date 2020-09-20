@@ -1,8 +1,8 @@
 import { postgres } from "../../../ormconfig";
 import { Connection, createConnection } from "typeorm";
 import { RelationshipType } from "../../types/relationships";
-import { Person } from "../../entities/Person";
-import { Relationship } from "../../entities/Relationship";
+import { Person } from "../../entities/user/Person";
+import { Relationship } from "../../entities/user/Relationship";
 import { Gender } from "../../types/persons";
 
 let connection: Connection;

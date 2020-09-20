@@ -1,6 +1,6 @@
 import { IsNotEmpty } from "class-validator";
 import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
-import { Discardable } from "./Discardable";
+import { Discardable } from "../Discardable";
 import { ClassUser } from "./ClassUser";
 import { Programme } from "./Programme";
 

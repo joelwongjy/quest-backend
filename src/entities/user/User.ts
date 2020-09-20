@@ -2,12 +2,12 @@ import { hashSync } from "bcryptjs";
 import { IsNotEmpty, IsString, Validate } from "class-validator";
 import { sign } from "jsonwebtoken";
 import { Column, Entity, OneToMany } from "typeorm";
-import IsUniqueUsername from "../constraints/IsUniqueUsername";
-import { AuthenticationData } from "../types/auth";
-import { BearerTokenType } from "../types/tokens";
-import { UserData } from "../types/users";
-import { Discardable } from "./Discardable";
-import { ClassUser } from "./ClassUser";
+import IsUniqueUsername from "../../constraints/IsUniqueUsername";
+import { AuthenticationData } from "../../types/auth";
+import { BearerTokenType } from "../../types/tokens";
+import { UserData } from "../../types/users";
+import { Discardable } from "../Discardable";
+import { ClassUser } from "../programme/ClassUser";
 
 @Entity()
 export class User extends Discardable {

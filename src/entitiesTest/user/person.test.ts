@@ -2,8 +2,8 @@ import { validate } from "class-validator";
 import { postgres } from "../../../ormconfig";
 import { Connection, createConnection, QueryFailedError } from "typeorm";
 import { Gender } from "../../types/persons";
-import { Person } from "../../entities/Person";
-import { User } from "../../entities/User";
+import { Person } from "../../entities/user/Person";
+import { User } from "../../entities/user/User";
 
 let connection: Connection;
 

@@ -1,7 +1,7 @@
 import { validate } from "class-validator";
 import { postgres } from "../../../ormconfig";
 import { Connection, createConnection } from "typeorm";
-import { Programme } from "../../entities/Programme";
+import { Programme } from "../../entities/programme/Programme";
 
 let connection: Connection;
 

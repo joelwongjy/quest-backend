@@ -1,6 +1,6 @@
 import faker from "faker";
 import { getRepository } from "typeorm";
-import { User } from "../entities/User";
+import { User } from "../entities/user/User";
 import ApiServer from "../server";
 
 faker.seed(127);

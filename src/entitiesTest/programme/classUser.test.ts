@@ -1,9 +1,9 @@
 import { postgres } from "../../../ormconfig";
 import { Connection, createConnection } from "typeorm";
-import { Class } from "../../entities/Class";
-import { ClassUser } from "../../entities/ClassUser";
-import { Programme } from "../../entities/Programme";
-import { User } from "../../entities/User";
+import { Class } from "../../entities/programme/Class";
+import { ClassUser } from "../../entities/programme/ClassUser";
+import { Programme } from "../../entities/programme/Programme";
+import { User } from "../../entities/user/User";
 import { ClassUserRole } from "../../types/classUsers";
 
 let connection: Connection;

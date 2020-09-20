@@ -1,6 +1,6 @@
 import { IsNotEmpty } from "class-validator";
 import { Column, Entity, OneToMany } from "typeorm";
-import { Discardable } from "./Discardable";
+import { Discardable } from "../Discardable";
 import { Class } from "./Class";
 
 @Entity()

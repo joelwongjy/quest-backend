@@ -1,8 +1,8 @@
 import { Column, Entity, ManyToOne } from "typeorm";
-import { Discardable } from "./Discardable";
-import { User } from "./User";
+import { Discardable } from "../Discardable";
+import { User } from "../user/User";
 import { Class } from "./Class";
-import { ClassUserRole } from "../types/classUsers";
+import { ClassUserRole } from "../../types/classUsers";
 import { IsEnum, IsNotEmpty } from "class-validator";
 
 @Entity()
