@@ -10,8 +10,8 @@ export class Answer extends Base {
   constructor(question: Question, option?: Option, answer?: string) {
     super();
     this.question = question;
-    this.option = option ? option : null;
-    this.answer = answer ? answer : null;
+    this.option = option ?? null;
+    this.answer = answer ?? null;
   }
 
   // for each question object, there can be multiple answer objects
