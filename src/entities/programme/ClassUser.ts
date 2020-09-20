@@ -17,15 +17,15 @@ export class ClassUser extends Discardable {
   }
 
   @ManyToOne((type) => User, (user) => user.classUsers)
-  user!: User;
+  user: User;
 
   @ManyToOne((type) => Class, (class_) => class_.classUsers)
-  class!: Class;
+  class: Class;
 
   @Column({
     type: "enum",
     enum: ClassRole,
   })
   @IsEnum(ClassRole)
-  role!: ClassRole;
+  role: ClassRole;
 }

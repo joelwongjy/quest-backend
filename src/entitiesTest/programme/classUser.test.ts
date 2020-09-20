@@ -23,7 +23,7 @@ describe("Create and Query ClassUser", () => {
   let user2: User;
 
   beforeAll(async () => {
-    const programmeData = new Programme("X-Programme", []);
+    const programmeData = new Programme("X-Programme");
     const classData = new Class("X-Programme-Class 1", programmeData);
     const user1Data = new User("Bobby", "Bobby");
     const user2Data = new User("Timmy", "Timmy");

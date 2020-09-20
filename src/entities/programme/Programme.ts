@@ -7,16 +7,15 @@ import { Class } from "./Class";
 export class Programme extends Discardable {
   entityName = "Programme";
 
-  constructor(programme_name: string, classes: Class[]) {
+  constructor(programme_name: string) {
     super();
     this.programme_name = programme_name;
-    this.classes = classes;
   }
 
   @Column()
   @IsNotEmpty()
-  programme_name!: string;
+  programme_name: string;
 
   @OneToMany((type) => Class, (class_) => class_.programme)
-  classes: Class[];
+  classes!: Class[];
 }

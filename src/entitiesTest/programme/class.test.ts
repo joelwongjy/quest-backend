@@ -3,7 +3,6 @@ import { postgres } from "../../../ormconfig";
 import { Connection, createConnection } from "typeorm";
 import { Class } from "../../entities/programme/Class";
 import { Programme } from "../../entities/programme/Programme";
-import { assert } from "console";
 
 let connection: Connection;
 
@@ -26,7 +25,7 @@ afterAll(async () => {
 describe("Create class", () => {
   let programme: Programme;
   beforeEach(async () => {
-    const programmeData = new Programme("First Programme!", []);
+    const programmeData = new Programme("First Programme!");
     programme = await connection.getRepository(Programme).save(programmeData);
   });
 
@@ -51,7 +50,7 @@ describe("Query programme and class", () => {
   let class1: Class;
   let class2: Class;
   beforeEach(async () => {
-    const programmeData = new Programme("X Programme!", []);
+    const programmeData = new Programme("X Programme!");
     const class1Data = new Class("X Programme - class 1", programmeData);
     const class2Data = new Class("X Programme - class 2", programmeData);
 

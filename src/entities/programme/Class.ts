@@ -16,10 +16,10 @@ export class Class extends Discardable {
 
   @Column()
   @IsNotEmpty()
-  class_name!: string;
+  class_name: string;
 
   @ManyToOne((type) => Programme, (programme) => programme.classes)
-  programme!: Programme;
+  programme: Programme;
 
   @OneToMany((type) => ClassUser, (classUser) => classUser.class)
   classUsers!: ClassUser[];

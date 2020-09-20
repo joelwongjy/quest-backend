@@ -13,14 +13,14 @@ afterAll(async () => {
   await connection.close();
 });
 
-describe("Programme", () => {
+describe("Create programme", () => {
   afterEach(async () => {
     const programmeRepository = connection.getRepository(Programme);
     await programmeRepository.delete({});
   });
 
   it("with valid name", async () => {
-    const programme = new Programme("First Programme!", []);
+    const programme = new Programme("First Programme!");
     const errors = await validate(programme);
     expect(errors).toHaveLength(0);
 
@@ -29,7 +29,7 @@ describe("Programme", () => {
   });
 
   it("with invalid name", async () => {
-    const programme = new Programme("", []);
+    const programme = new Programme("");
     const errors = await validate(programme);
     expect(errors).toHaveLength(1);
   });
