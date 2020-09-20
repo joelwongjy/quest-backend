@@ -17,7 +17,7 @@ afterEach(async () => {
   const optionRepository = connection.getRepository(Option);
   const questionRepository = connection.getRepository(Question);
 
-  answerRepository.delete({});
+  await answerRepository.delete({});
   await optionRepository.delete({});
   await questionRepository.delete({});
 });
