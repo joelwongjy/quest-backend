@@ -58,10 +58,10 @@ describe("Create option", () => {
     optionOne = new Option("Good.", question);
     optionTwo = new Option("Terrible.", question);
 
-    const errorsOptionOne = await validate(optionOne); // validating either option is sufficient
+    const errorsOptionOne = await validate(optionOne);
     expect(errorsOptionOne.length).toBe(0);
 
-    const errorsOptionTwo = await validate(optionTwo); // validating either option is sufficient
+    const errorsOptionTwo = await validate(optionTwo);
     expect(errorsOptionTwo.length).toBe(0);
   });
 });
