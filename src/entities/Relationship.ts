@@ -20,15 +20,15 @@ export class Relationship extends Discardable {
   }
 
   @ManyToOne((type) => Person, (youth) => youth.family_members)
-  youth!: Person;
+  youth: Person;
 
   @ManyToOne((type) => Person, (family_member) => family_member.youths)
-  family_member!: Person;
+  family_member: Person;
 
   @Column({
     type: "enum",
     enum: RelationshipType,
   })
   @IsEnum(RelationshipType)
-  relationship!: RelationshipType;
+  relationship: RelationshipType;
 }

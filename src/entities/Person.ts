@@ -27,11 +27,11 @@ export class Person extends Discardable {
     super();
     this.name = name;
     this.gender = gender;
-    this.email = email ? email : null;
-    this.mobile_number = mobile_number ? mobile_number : null;
-    this.home_number = home_number ? home_number : null;
-    this.birthday = birthday ? birthday : null;
-    this.user = user ? user : null;
+    this.email = email ?? null;
+    this.mobile_number = mobile_number ?? null;
+    this.home_number = home_number ?? null;
+    this.birthday = birthday ?? null;
+    this.user = user ?? null;
   }
 
   @Column()
@@ -74,6 +74,4 @@ export class Person extends Discardable {
 
   @OneToMany((type) => Relationship, (relationship) => relationship.youth)
   family_members!: Relationship[];
-
-  // TODO: getData()
 }

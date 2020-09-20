@@ -29,10 +29,10 @@ describe("Create person", () => {
 
     person = new Person("Bobby", Gender.MALE);
     const errors = await validate(person);
-    expect(errors.length).toBe(0);
+    expect(errors).toHaveLength(0);
 
     const newPerson = await connection.getRepository(Person).save(person);
-    expect(newPerson).toBeTruthy();
+    expect(newPerson.id).toBeTruthy();
   });
 
   it("with valid email", async () => {
@@ -40,7 +40,7 @@ describe("Create person", () => {
 
     person = new Person("Bobby", Gender.MALE, "bobby@example.com");
     const errors = await validate(person);
-    expect(errors.length).toBe(0);
+    expect(errors).toHaveLength(0);
   });
 
   it("with invalid email", async () => {
@@ -48,7 +48,7 @@ describe("Create person", () => {
 
     person = new Person("Bobby", Gender.MALE, "not-an-email");
     const errors = await validate(person);
-    expect(errors.length).toBe(1);
+    expect(errors).toHaveLength(1);
   });
 
   it("with valid mobile_phone", async () => {
@@ -56,7 +56,7 @@ describe("Create person", () => {
 
     person = new Person("Bobby", Gender.MALE, undefined, "91234567");
     const errors = await validate(person);
-    expect(errors.length).toBe(0);
+    expect(errors).toHaveLength(0);
   });
 
   it("with invalid mobile_phone", async () => {
@@ -64,7 +64,7 @@ describe("Create person", () => {
 
     person = new Person("Bobby", Gender.MALE, undefined, "9123456");
     const errors = await validate(person);
-    expect(errors.length).toBe(1);
+    expect(errors).toHaveLength(1);
   });
 
   it("with user", async () => {
@@ -76,7 +76,7 @@ describe("Create person", () => {
     person.user = newUser;
     const newPerson = await connection.getRepository(Person).save(person);
 
-    expect(newPerson).toBeTruthy();
-    expect(newPerson.user?.id).toBe(newUser.id);
+    expect(newPerson.id).toBeTruthy();
+    expect(newPerson.user?.name).toBe(newUser.name);
   });
 });
