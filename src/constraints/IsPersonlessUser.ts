@@ -7,7 +7,7 @@ import { getRepository } from "typeorm";
 import { Person } from "../entities/Person";
 
 @ValidatorConstraint()
-class HasUser implements ValidatorConstraintInterface {
+class IsPersonlessUser implements ValidatorConstraintInterface {
   async validate(_name: string, args: ValidationArguments): Promise<boolean> {
     const person = args.object as Person;
 
@@ -17,12 +17,21 @@ class HasUser implements ValidatorConstraintInterface {
     }
 
     const { id } = person.user;
-    const count = await getRepository(Person)
+    const queryBuilder = getRepository(Person)
       .createQueryBuilder("person")
       .where("person.user.id = :id", {
         id,
-      })
-      .getCount();
+      });
+
+    let count: number;
+    if (person.id) {
+      // means we are editing an existing person
+      count = await queryBuilder
+        .andWhere("person.id != :id", { id: person.id })
+        .getCount();
+    } else {
+      count = await queryBuilder.getCount();
+    }
 
     return count === 0;
   }
@@ -32,4 +41,4 @@ class HasUser implements ValidatorConstraintInterface {
   }
 }
 
-export default HasUser;
+export default IsPersonlessUser;

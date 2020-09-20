@@ -11,7 +11,7 @@ import { Discardable } from "./Discardable";
 import { User } from "./User";
 import { Gender } from "../types/persons";
 import { Relationship } from "./Relationship";
-import HasUser from "../constraints/HasUser";
+import IsPersonlessUser from "../constraints/IsPersonlessUser";
 
 @Entity()
 export class Person extends Discardable {
@@ -67,7 +67,7 @@ export class Person extends Discardable {
 
   @OneToOne((type) => User, { nullable: true })
   @JoinColumn()
-  @Validate(HasUser)
+  @Validate(IsPersonlessUser)
   user: User | null;
 
   @OneToMany(
