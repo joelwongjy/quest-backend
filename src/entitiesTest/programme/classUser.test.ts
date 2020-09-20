@@ -1,10 +1,10 @@
 import { postgres } from "../../../ormconfig";
 import { Connection, createConnection } from "typeorm";
-import { Class } from "../../entities/programme/Class";
-import { ClassUser } from "../../entities/programme/ClassUser";
-import { Programme } from "../../entities/programme/Programme";
+import { Class } from "../../entities/Class";
+import { ClassUser } from "../../entities/ClassUser";
+import { Programme } from "../../entities/Programme";
 import { User } from "../../entities/User";
-import { ClassRole } from "../../types/classRole";
+import { ClassUserRole } from "../../types/classUsers";
 
 let connection: Connection;
 
@@ -47,8 +47,8 @@ describe("Create and Query ClassUser", () => {
   });
 
   it("create classUsers", async () => {
-    const user1Class = new ClassUser(class_, user1, ClassRole.TEACHER);
-    const user2Class = new ClassUser(class_, user2, ClassRole.STUDENT);
+    const user1Class = new ClassUser(class_, user1, ClassUserRole.TEACHER);
+    const user2Class = new ClassUser(class_, user2, ClassUserRole.STUDENT);
 
     const savedUser1Class = await connection
       .getRepository(ClassUser)
@@ -68,7 +68,7 @@ describe("Create and Query ClassUser", () => {
     });
 
     expect(classUserQuery).toHaveLength(2);
-    expect(classUserQuery[0].class.class_name).toBe(class_.class_name);
+    expect(classUserQuery[0].class.name).toBe(class_.name);
 
     const usersInClass = classUserQuery.map((classUser) => classUser.user.name);
     expect(usersInClass).toContain(user1.name);
@@ -99,9 +99,9 @@ describe("Create and Query ClassUser", () => {
     expect(userQuery).toHaveLength(1);
 
     const classesInvolvedIn = userQuery[0].classUsers.map(
-      (classUser) => classUser.class.class_name
+      (classUser) => classUser.class.name
     );
     expect(classesInvolvedIn).toHaveLength(1);
-    expect(classesInvolvedIn).toContain(class_.class_name);
+    expect(classesInvolvedIn).toContain(class_.name);
   });
 });

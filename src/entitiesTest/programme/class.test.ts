@@ -1,8 +1,8 @@
 import { validate } from "class-validator";
 import { postgres } from "../../../ormconfig";
 import { Connection, createConnection } from "typeorm";
-import { Class } from "../../entities/programme/Class";
-import { Programme } from "../../entities/programme/Programme";
+import { Class } from "../../entities/Class";
+import { Programme } from "../../entities/Programme";
 
 let connection: Connection;
 
@@ -74,8 +74,6 @@ describe("Query programme and class", () => {
       relations: ["programme"],
     });
     expect(classQuery).toHaveLength(1);
-    expect(classQuery[0].programme.programme_name).toBe(
-      programme.programme_name
-    );
+    expect(classQuery[0].programme.name).toBe(programme.name);
   });
 });
