@@ -3,7 +3,7 @@ import { postgres } from "../../../ormconfig";
 import { Connection, createConnection } from "typeorm";
 import { QuestionOrder } from "../../entities/questionnaire/QuestionOrder";
 import { Question } from "../../entities/questionnaire/Question";
-import { QuestionType } from "../../entities/questionnaire/QuestionType";
+import { QuestionType } from "../../types/questions";
 
 let connection: Connection;
 

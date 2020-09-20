@@ -4,7 +4,7 @@ import { Connection, createConnection } from "typeorm";
 import { Answer } from "../../entities/questionnaire/Answer";
 import { Option } from "../../entities/questionnaire/Option";
 import { Question } from "../../entities/questionnaire/Question";
-import { QuestionType } from "../../entities/questionnaire/QuestionType";
+import { QuestionType } from "../../types/questions";
 
 let connection: Connection;
 

@@ -1,7 +1,7 @@
 import { IsNotEmpty } from "class-validator";
-import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
+import { Column, Entity, OneToMany } from "typeorm";
 import { Discardable } from "../Discardable";
-import { QuestionnaireType } from "./QuestionnaireType";
+import { QuestionnaireType } from "../../types/questionnaires";
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
 import { QuestionSet } from "./QuestionSet";
 

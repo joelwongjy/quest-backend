@@ -1,7 +1,7 @@
 import { IsNotEmpty } from "class-validator";
 import { Column, Entity } from "typeorm";
 import { Discardable } from "../Discardable";
-import { QuestionType } from "./QuestionType";
+import { QuestionType } from "../../types/questions";
 
 @Entity()
 export class Question extends Discardable {
