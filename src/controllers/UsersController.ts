@@ -3,7 +3,7 @@ import { validate, validateOrReject } from "class-validator";
 import { Request, Response } from "express";
 import { pick } from "lodash";
 import { getRepository, IsNull } from "typeorm";
-import { User } from "../entities/User";
+import { User } from "../entities/user/User";
 import { AccessTokenSignedPayload } from "../types/tokens";
 
 export async function create(

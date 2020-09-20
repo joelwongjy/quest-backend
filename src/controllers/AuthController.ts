@@ -1,7 +1,7 @@
 import { compareSync } from "bcryptjs";
 import { Request, Response } from "express";
 import { getRepository } from "typeorm";
-import { User } from "../entities/User";
+import { User } from "../entities/user/User";
 
 export async function login(
   request: Request,

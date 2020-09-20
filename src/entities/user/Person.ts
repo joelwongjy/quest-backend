@@ -7,11 +7,11 @@ import {
   Validate,
 } from "class-validator";
 import { Column, Entity, JoinColumn, OneToMany, OneToOne } from "typeorm";
-import { Discardable } from "./Discardable";
+import { Discardable } from "../Discardable";
 import { User } from "./User";
-import { Gender } from "../types/persons";
+import { Gender } from "../../types/persons";
 import { Relationship } from "./Relationship";
-import IsPersonlessUser from "../constraints/IsPersonlessUser";
+import IsPersonlessUser from "../../constraints/IsPersonlessUser";
 
 @Entity()
 export class Person extends Discardable {
