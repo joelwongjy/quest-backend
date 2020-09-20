@@ -1,15 +1,15 @@
 import { Column, Entity, ManyToOne } from "typeorm";
-import { Discardable } from "../Discardable";
-import { User } from "../User";
+import { Discardable } from "./Discardable";
+import { User } from "./User";
 import { Class } from "./Class";
-import { ClassRole } from "../../types/classRole";
-import { IsEnum } from "class-validator";
+import { ClassUserRole } from "../types/classUsers";
+import { IsEnum, IsNotEmpty } from "class-validator";
 
 @Entity()
 export class ClassUser extends Discardable {
   entityName = "ClassUser";
 
-  constructor(class_: Class, user: User, role: ClassRole) {
+  constructor(class_: Class, user: User, role: ClassUserRole) {
     super();
     this.user = user;
     this.class = class_;
@@ -24,8 +24,9 @@ export class ClassUser extends Discardable {
 
   @Column({
     type: "enum",
-    enum: ClassRole,
+    enum: ClassUserRole,
   })
-  @IsEnum(ClassRole)
-  role: ClassRole;
+  @IsNotEmpty()
+  @IsEnum(ClassUserRole)
+  role: ClassUserRole;
 }

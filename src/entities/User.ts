@@ -7,7 +7,7 @@ import { AuthenticationData } from "../types/auth";
 import { BearerTokenType } from "../types/tokens";
 import { UserData } from "../types/users";
 import { Discardable } from "./Discardable";
-import { ClassUser } from "./programme/ClassUser";
+import { ClassUser } from "./ClassUser";
 
 @Entity()
 export class User extends Discardable {
