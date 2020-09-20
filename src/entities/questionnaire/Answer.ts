@@ -1,4 +1,4 @@
-import { Column, Entity, OneToOne } from "typeorm";
+import { Column, Entity, ManyToOne } from "typeorm";
 import { Base } from "../Base";
 import { Question } from "./Question";
 import { Option } from "./Option";
@@ -14,11 +14,13 @@ export class Answer extends Base {
     this.answer = answer ? answer : null;
   }
 
-  @OneToOne((type) => Question)
+  // for each question object, there can be multiple answer objects
+  @ManyToOne((type) => Question)
   question: Question;
 
   // option column may be empty if question type is text-based
-  @OneToOne((type) => Option, { nullable: true })
+  // for each option object, there can be multiple answer objects
+  @ManyToOne((type) => Option, { nullable: true })
   option: Option | null;
 
   // answer column may be empty if question does not require a text-based answer
