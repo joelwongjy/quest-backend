@@ -60,6 +60,20 @@ describe("Create answer", () => {
     expect(newAnswer).toBeTruthy();
   });
 
+  it("with valid question but no option and no answer", async () => {
+    let answer: Answer;
+    let question: Question;
+
+    question = new Question(
+      "How are you feeling today?",
+      QuestionType.SHORT_ANSWER
+    );
+    answer = new Answer(question);
+
+    const errors = await validate(answer);
+    expect(errors.length).not.toBe(0);
+  });
+
   it("with multiple answers for the same question", async () => {
     let answerOne: Answer;
     let answerTwo: Answer;
