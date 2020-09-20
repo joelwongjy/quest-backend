@@ -1,13 +1,17 @@
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
+  Validate,
 } from "class-validator";
-import { Column, Entity, OneToOne } from "typeorm";
-import { Discardable } from "../Discardable";
-import { User } from "../User";
-import { Gender } from "./Gender";
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from "typeorm";
+import { Discardable } from "./Discardable";
+import { User } from "./User";
+import { Gender } from "../types/persons";
+import { Relationship } from "./Relationship";
+import IsPersonlessUser from "../constraints/IsPersonlessUser";
 
 @Entity()
 export class Person extends Discardable {
@@ -25,11 +29,11 @@ export class Person extends Discardable {
     super();
     this.name = name;
     this.gender = gender;
-    this.email = email ? email : null;
-    this.mobile_number = mobile_number ? mobile_number : null;
-    this.home_number = home_number ? home_number : null;
-    this.birthday = birthday ? birthday : null;
-    this.user = user ? user : null;
+    this.email = email ?? null;
+    this.mobile_number = mobile_number ?? null;
+    this.home_number = home_number ?? null;
+    this.birthday = birthday ?? null;
+    this.user = user ?? null;
   }
 
   @Column()
@@ -40,6 +44,7 @@ export class Person extends Discardable {
     type: "enum",
     enum: Gender,
   })
+  @IsEnum(Gender)
   gender: Gender;
 
   @Column({ type: "character varying", nullable: true })
@@ -61,7 +66,16 @@ export class Person extends Discardable {
   birthday: Date | null;
 
   @OneToOne((type) => User, { nullable: true })
+  @JoinColumn()
+  @Validate(IsPersonlessUser)
   user: User | null;
 
-  // TODO: getData()
+  @OneToMany(
+    (type) => Relationship,
+    (relationship) => relationship.family_member
+  )
+  youths!: Relationship[];
+
+  @OneToMany((type) => Relationship, (relationship) => relationship.youth)
+  family_members!: Relationship[];
 }

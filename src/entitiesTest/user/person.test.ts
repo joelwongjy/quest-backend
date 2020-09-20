@@ -1,8 +1,8 @@
 import { validate } from "class-validator";
 import { postgres } from "../../../ormconfig";
-import { Connection, createConnection } from "typeorm";
-import { Gender } from "../../entities/user/Gender";
-import { Person } from "../../entities/user/Person";
+import { Connection, createConnection, QueryFailedError } from "typeorm";
+import { Gender } from "../../types/persons";
+import { Person } from "../../entities/Person";
 import { User } from "../../entities/User";
 
 let connection: Connection;
@@ -29,10 +29,10 @@ describe("Create person", () => {
 
     person = new Person("Bobby", Gender.MALE);
     const errors = await validate(person);
-    expect(errors.length).toBe(0);
+    expect(errors).toHaveLength(0);
 
     const newPerson = await connection.getRepository(Person).save(person);
-    expect(newPerson).toBeTruthy();
+    expect(newPerson.id).toBeTruthy();
   });
 
   it("with valid email", async () => {
@@ -40,7 +40,7 @@ describe("Create person", () => {
 
     person = new Person("Bobby", Gender.MALE, "bobby@example.com");
     const errors = await validate(person);
-    expect(errors.length).toBe(0);
+    expect(errors).toHaveLength(0);
   });
 
   it("with invalid email", async () => {
@@ -48,7 +48,7 @@ describe("Create person", () => {
 
     person = new Person("Bobby", Gender.MALE, "not-an-email");
     const errors = await validate(person);
-    expect(errors.length).toBe(1);
+    expect(errors).toHaveLength(1);
   });
 
   it("with valid mobile_phone", async () => {
@@ -56,7 +56,7 @@ describe("Create person", () => {
 
     person = new Person("Bobby", Gender.MALE, undefined, "91234567");
     const errors = await validate(person);
-    expect(errors.length).toBe(0);
+    expect(errors).toHaveLength(0);
   });
 
   it("with invalid mobile_phone", async () => {
@@ -64,7 +64,7 @@ describe("Create person", () => {
 
     person = new Person("Bobby", Gender.MALE, undefined, "9123456");
     const errors = await validate(person);
-    expect(errors.length).toBe(1);
+    expect(errors).toHaveLength(1);
   });
 
   it("with user", async () => {
@@ -76,7 +76,30 @@ describe("Create person", () => {
     person.user = newUser;
     const newPerson = await connection.getRepository(Person).save(person);
 
-    expect(newPerson).toBeTruthy();
-    expect(newPerson.user?.id).toBe(newUser.id);
+    expect(newPerson.id).toBeTruthy();
+    expect(newPerson.user?.name).toBe(newUser.name);
+  });
+
+  it("connect one user to 2 persons", async () => {
+    const userData = new User("Bobby", "Bobby");
+    const user = await connection.getRepository(User).save(userData);
+
+    const firstPersonData = new Person("BobbyPerson", Gender.MALE);
+    firstPersonData.user = user;
+    await connection.getRepository(Person).save(firstPersonData);
+
+    const secondPersonData = new Person("TimmyPerson", Gender.MALE);
+    secondPersonData.user = user;
+
+    const errors = await validate(secondPersonData);
+    expect(errors).toHaveLength(1);
+
+    let saveError;
+    try {
+      await connection.getRepository(Person).save(secondPersonData);
+    } catch (e) {
+      saveError = e;
+    }
+    expect(saveError).toBeInstanceOf(QueryFailedError);
   });
 });
