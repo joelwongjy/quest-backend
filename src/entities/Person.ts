@@ -4,12 +4,14 @@ import {
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
+  Validate,
 } from "class-validator";
-import { Column, Entity, OneToMany, OneToOne } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from "typeorm";
 import { Discardable } from "./Discardable";
 import { User } from "./User";
 import { Gender } from "../types/persons";
 import { Relationship } from "./Relationship";
+import HasUser from "../constraints/HasUser";
 
 @Entity()
 export class Person extends Discardable {
@@ -64,6 +66,8 @@ export class Person extends Discardable {
   birthday: Date | null;
 
   @OneToOne((type) => User, { nullable: true })
+  @JoinColumn()
+  @Validate(HasUser)
   user: User | null;
 
   @OneToMany(

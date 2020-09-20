@@ -1,6 +1,6 @@
 import { validate } from "class-validator";
 import { postgres } from "../../../ormconfig";
-import { Connection, createConnection } from "typeorm";
+import { Connection, createConnection, QueryFailedError } from "typeorm";
 import { Gender } from "../../types/persons";
 import { Person } from "../../entities/Person";
 import { User } from "../../entities/User";
@@ -78,5 +78,28 @@ describe("Create person", () => {
 
     expect(newPerson.id).toBeTruthy();
     expect(newPerson.user?.name).toBe(newUser.name);
+  });
+
+  it("connect one user to 2 persons", async () => {
+    const userData = new User("Bobby", "Bobby");
+    const user = await connection.getRepository(User).save(userData);
+
+    const firstPersonData = new Person("BobbyPerson", Gender.MALE);
+    firstPersonData.user = user;
+    await connection.getRepository(Person).save(firstPersonData);
+
+    const secondPersonData = new Person("TimmyPerson", Gender.MALE);
+    secondPersonData.user = user;
+
+    const errors = await validate(secondPersonData);
+    expect(errors).toHaveLength(1);
+
+    let saveError;
+    try {
+      await connection.getRepository(Person).save(secondPersonData);
+    } catch (e) {
+      saveError = e;
+    }
+    expect(saveError).toBeInstanceOf(QueryFailedError);
   });
 });
