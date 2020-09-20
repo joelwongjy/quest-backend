@@ -1,4 +1,4 @@
-export enum QuestionTypes {
+export enum QuestionType {
   MULTIPLE_CHOICE,
   MOOD,
   SHORT_ANSWER,
