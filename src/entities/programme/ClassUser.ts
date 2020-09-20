@@ -2,7 +2,8 @@ import { Column, Entity, ManyToOne } from "typeorm";
 import { Discardable } from "../Discardable";
 import { User } from "../User";
 import { Class } from "./Class";
-import { ClassRole } from "./ClassRole";
+import { ClassRole } from "../../types/classRole";
+import { IsEnum } from "class-validator";
 
 @Entity()
 export class ClassUser extends Discardable {
@@ -25,5 +26,6 @@ export class ClassUser extends Discardable {
     type: "enum",
     enum: ClassRole,
   })
+  @IsEnum(ClassRole)
   role!: ClassRole;
 }

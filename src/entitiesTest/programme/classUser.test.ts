@@ -4,7 +4,7 @@ import { Class } from "../../entities/programme/Class";
 import { ClassUser } from "../../entities/programme/ClassUser";
 import { Programme } from "../../entities/programme/Programme";
 import { User } from "../../entities/User";
-import { ClassRole } from "../../entities/programme/ClassRole";
+import { ClassRole } from "../../types/classRole";
 
 let connection: Connection;
 
