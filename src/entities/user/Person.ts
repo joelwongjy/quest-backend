@@ -4,10 +4,11 @@ import {
   IsOptional,
   IsPhoneNumber,
 } from "class-validator";
-import { Column, Entity, OneToOne } from "typeorm";
+import { Column, Entity, OneToMany, OneToOne } from "typeorm";
 import { Discardable } from "../Discardable";
 import { User } from "../User";
 import { Gender } from "./Gender";
+import { Relationship } from "./Relationship";
 
 @Entity()
 export class Person extends Discardable {
@@ -20,7 +21,9 @@ export class Person extends Discardable {
     mobile_number?: string,
     home_number?: string,
     birthday?: null,
-    user?: User
+    user?: User,
+    youths?: Relationship[],
+    family_members?: Relationship[]
   ) {
     super();
     this.name = name;
@@ -30,6 +33,8 @@ export class Person extends Discardable {
     this.home_number = home_number ? home_number : null;
     this.birthday = birthday ? birthday : null;
     this.user = user ? user : null;
+    this.youths = youths ? youths : null;
+    this.family_members = family_members ? family_members : null;
   }
 
   @Column()
@@ -62,6 +67,15 @@ export class Person extends Discardable {
 
   @OneToOne((type) => User, { nullable: true })
   user: User | null;
+
+  @OneToMany(
+    (type) => Relationship,
+    (relationship) => relationship.family_member
+  )
+  youths: Relationship[] | null;
+
+  @OneToMany((type) => Relationship, (relationship) => relationship.youth)
+  family_members: Relationship[] | null;
 
   // TODO: getData()
 }
