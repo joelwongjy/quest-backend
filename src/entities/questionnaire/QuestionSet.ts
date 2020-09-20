@@ -1,6 +1,5 @@
-import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
+import { Column, Entity } from "typeorm";
 import { Discardable } from "../Discardable";
-import { QuestionOrder } from "./QuestionOrder";
 
 @Entity()
 export class QuestionSet extends Discardable {
