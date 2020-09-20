@@ -9,16 +9,9 @@ import { QuestionSet } from "./QuestionSet";
 export class Questionnaire extends Discardable {
   entityName = "Questionnaire";
 
-  constructor(
-    name: string,
-    questionnaire_type: QuestionnaireType,
-    question_sets: QuestionSet[],
-    questionnaire_windows: QuestionnaireWindow[]
-  ) {
+  constructor(name: string, questionnaire_type: QuestionnaireType) {
     super();
     this.name = name;
-    this.question_sets = question_sets;
-    this.questionnaire_windows = questionnaire_windows;
     this.questionnaire_type = questionnaire_type;
   }
 
@@ -36,11 +29,11 @@ export class Questionnaire extends Discardable {
     (type) => QuestionSet,
     (questionSets) => questionSets.questionnaire
   )
-  question_sets: QuestionSet[];
+  question_sets!: QuestionSet[];
 
   @OneToMany(
     (type) => QuestionnaireWindow,
     (questionnaireWindow) => questionnaireWindow.questionnaire
   )
-  questionnaire_windows: QuestionnaireWindow[];
+  questionnaire_windows!: QuestionnaireWindow[];
 }

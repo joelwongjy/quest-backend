@@ -6,11 +6,10 @@ import { Questionnaire } from "./Questionnaire";
 export class QuestionnaireWindow extends Discardable {
   entityName = "QuestionnaireWindow";
 
-  constructor(open_at: Date, close_at: Date, questionnaire: Questionnaire) {
+  constructor(open_at: Date, close_at: Date) {
     super();
     this.open_at = open_at;
     this.close_at = close_at;
-    this.questionnaire = questionnaire;
   }
 
   @Column({ type: "timestamp without time zone" })
@@ -23,5 +22,5 @@ export class QuestionnaireWindow extends Discardable {
     (type) => Questionnaire,
     (questionnaire) => questionnaire.questionnaire_windows
   )
-  questionnaire: Questionnaire;
+  questionnaire!: Questionnaire;
 }
