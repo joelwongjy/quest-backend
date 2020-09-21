@@ -1,26 +1,24 @@
 import { validate } from "class-validator";
-import { postgres } from "../../../ormconfig";
-import { Connection, createConnection, QueryFailedError } from "typeorm";
+import { getRepository, QueryFailedError } from "typeorm";
 import { Gender } from "../../types/persons";
 import { Person } from "../../entities/Person";
 import { User } from "../../entities/User";
+import ApiServer from "../../server";
+import { synchronize } from "../../utils/tests";
 
-let connection: Connection;
+let server: ApiServer;
 
 beforeAll(async () => {
-  connection = await createConnection(postgres);
+  server = new ApiServer();
+  await server.initialize();
 });
 
-afterEach(async () => {
-  const personRepository = connection.getRepository(Person);
-  const userRepository = connection.getRepository(User);
-
-  await personRepository.delete({});
-  await userRepository.delete({});
+beforeEach(async () => {
+  await synchronize(server);
 });
 
 afterAll(async () => {
-  await connection.close();
+  await server.close();
 });
 
 describe("Create person", () => {
@@ -31,7 +29,7 @@ describe("Create person", () => {
     const errors = await validate(person);
     expect(errors).toHaveLength(0);
 
-    const newPerson = await connection.getRepository(Person).save(person);
+    const newPerson = await getRepository(Person).save(person);
     expect(newPerson.id).toBeTruthy();
   });
 
@@ -71,10 +69,10 @@ describe("Create person", () => {
     const user = new User("Bobby", "Bobby");
     const person = new Person("Bobby Tan", Gender.MALE);
 
-    const newUser = await connection.getRepository(User).save(user);
+    const newUser = await getRepository(User).save(user);
 
     person.user = newUser;
-    const newPerson = await connection.getRepository(Person).save(person);
+    const newPerson = await getRepository(Person).save(person);
 
     expect(newPerson.id).toBeTruthy();
     expect(newPerson.user?.name).toBe(newUser.name);
@@ -82,11 +80,11 @@ describe("Create person", () => {
 
   it("connect one user to 2 persons", async () => {
     const userData = new User("Bobby", "Bobby");
-    const user = await connection.getRepository(User).save(userData);
+    const user = await getRepository(User).save(userData);
 
     const firstPersonData = new Person("BobbyPerson", Gender.MALE);
     firstPersonData.user = user;
-    await connection.getRepository(Person).save(firstPersonData);
+    await getRepository(Person).save(firstPersonData);
 
     const secondPersonData = new Person("TimmyPerson", Gender.MALE);
     secondPersonData.user = user;
@@ -96,7 +94,7 @@ describe("Create person", () => {
 
     let saveError;
     try {
-      await connection.getRepository(Person).save(secondPersonData);
+      await getRepository(Person).save(secondPersonData);
     } catch (e) {
       saveError = e;
     }
