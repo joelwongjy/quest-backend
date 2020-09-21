@@ -5,19 +5,18 @@ name: Quest Backend CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version: [10.x, 12.x, 14.x]
-        
+
     # Service containers to run with `container-job`
     services:
       # Label used to access the service container
@@ -40,16 +39,16 @@ jobs:
           - 5432:5432
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: Install dependencies
-      run: yarn install
-    - name: Run tests
-      run: yarn test
-      env:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: yarn install
+      - name: Run tests
+        run: yarn test:ci
+        env:
           # The hostname used to communicate with the PostgreSQL service container
           POSTGRES_HOST: localhost
           # The default PostgreSQL port
@@ -59,4 +58,3 @@ jobs:
           POSTGRES_NAME: db
           POSTGRES_DISABLE_SSL: true
           JWT_SECRET: teamQuestIsTheBest
-          
