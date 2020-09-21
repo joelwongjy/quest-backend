@@ -3,6 +3,7 @@ import { Base } from "../Base";
 import { Question } from "./Question";
 import { Option } from "./Option";
 import { IsNotEmpty, ValidateIf, validateOrReject } from "class-validator";
+import { Attempt } from "./Attempt";
 
 @Entity()
 export class Answer extends Base {
@@ -29,6 +30,9 @@ export class Answer extends Base {
   @ValidateIf((answerObject) => !answerObject.option)
   @IsNotEmpty()
   answer: string | null;
+
+  @ManyToOne((type) => Attempt, (attempt) => attempt.answers)
+  attempt!: Attempt;
 
   // Hook to ensure entity does not have null option and null answer
   @BeforeInsert()
