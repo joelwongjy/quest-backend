@@ -1,9 +1,9 @@
 import { validate } from "class-validator";
 import { getRepository } from "typeorm";
-import { Class } from "../../entities/programme/Class";
-import { Programme } from "../../entities/programme/Programme";
-import ApiServer from "../../server";
-import { synchronize } from "../../utils/tests";
+import { Class } from "../../../entities/programme/Class";
+import { Programme } from "../../../entities/programme/Programme";
+import ApiServer from "../../../server";
+import { synchronize } from "../../../utils/tests";
 
 let server: ApiServer;
 

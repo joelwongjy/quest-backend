@@ -1,11 +1,11 @@
 import { validate } from "class-validator";
 import { getRepository } from "typeorm";
-import { Answer } from "../../entities/questionnaire/Answer";
-import { Option } from "../../entities/questionnaire/Option";
-import { Question } from "../../entities/questionnaire/Question";
-import { QuestionType } from "../../types/questions";
-import ApiServer from "../../server";
-import { synchronize } from "../../utils/tests";
+import { Answer } from "../../../entities/questionnaire/Answer";
+import { Option } from "../../../entities/questionnaire/Option";
+import { Question } from "../../../entities/questionnaire/Question";
+import { QuestionType } from "../../../types/questions";
+import ApiServer from "../../../server";
+import { synchronize } from "../../../utils/tests";
 
 let server: ApiServer;
 

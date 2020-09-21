@@ -1,8 +1,8 @@
 import { validate } from "class-validator";
 import { getRepository } from "typeorm";
-import { QuestionnaireWindow } from "../../entities/questionnaire/QuestionnaireWindow";
-import ApiServer from "../../server";
-import { synchronize } from "../../utils/tests";
+import { QuestionnaireWindow } from "../../../entities/questionnaire/QuestionnaireWindow";
+import ApiServer from "../../../server";
+import { synchronize } from "../../../utils/tests";
 
 let server: ApiServer;
 

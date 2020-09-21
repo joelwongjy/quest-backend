@@ -1,10 +1,10 @@
 import { getRepository } from "typeorm";
-import { RelationshipType } from "../../types/relationships";
-import { Person } from "../../entities/user/Person";
-import { Relationship } from "../../entities/user/Relationship";
-import { Gender } from "../../types/persons";
-import ApiServer from "../../server";
-import { synchronize } from "../../utils/tests";
+import { RelationshipType } from "../../../types/relationships";
+import { Person } from "../../../entities/user/Person";
+import { Relationship } from "../../../entities/user/Relationship";
+import { Gender } from "../../../types/persons";
+import ApiServer from "../../../server";
+import { synchronize } from "../../../utils/tests";
 
 let server: ApiServer;
 

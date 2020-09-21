@@ -1,10 +1,10 @@
 import { validate } from "class-validator";
 import { getRepository, QueryFailedError } from "typeorm";
-import { Gender } from "../../types/persons";
-import { Person } from "../../entities/user/Person";
-import { User } from "../../entities/user/User";
-import ApiServer from "../../server";
-import { synchronize } from "../../utils/tests";
+import { Gender } from "../../../types/persons";
+import { Person } from "../../../entities/user/Person";
+import { User } from "../../../entities/user/User";
+import ApiServer from "../../../server";
+import { synchronize } from "../../../utils/tests";
 
 let server: ApiServer;
 

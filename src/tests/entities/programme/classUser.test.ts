@@ -1,11 +1,11 @@
 import { getRepository } from "typeorm";
-import { Class } from "../../entities/programme/Class";
-import { ClassUser } from "../../entities/programme/ClassUser";
-import { Programme } from "../../entities/programme/Programme";
-import { User } from "../../entities/user/User";
-import { ClassUserRole } from "../../types/classUsers";
-import ApiServer from "../../server";
-import { synchronize } from "../../utils/tests";
+import { Class } from "../../../entities/programme/Class";
+import { ClassUser } from "../../../entities/programme/ClassUser";
+import { Programme } from "../../../entities/programme/Programme";
+import { User } from "../../../entities/user/User";
+import { ClassUserRole } from "../../../types/classUsers";
+import ApiServer from "../../../server";
+import { synchronize } from "../../../utils/tests";
 
 let server: ApiServer;
 
