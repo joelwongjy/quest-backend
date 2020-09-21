@@ -26,7 +26,9 @@ jobs:
         image: postgres
         # Provide the password for postgres
         env:
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: db
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -45,10 +47,15 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - name: Install dependencies
       run: yarn install
-    - name: Test backend
+    - name: Run tests
       run: yarn test
       env:
           # The hostname used to communicate with the PostgreSQL service container
           POSTGRES_HOST: localhost
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_NAME: db
+          POSTGRES_DISABLE_SSL: true
+          
