@@ -1,19 +1,22 @@
-import { postgres } from "../../../ormconfig";
-import { Connection, createConnection } from "typeorm";
+import { getRepository } from "typeorm";
 import { Class } from "../../entities/Class";
 import { ClassUser } from "../../entities/ClassUser";
 import { Programme } from "../../entities/Programme";
 import { User } from "../../entities/User";
 import { ClassUserRole } from "../../types/classUsers";
+import ApiServer from "../../server";
+import { synchronize } from "../../utils/tests";
 
-let connection: Connection;
+let server: ApiServer;
 
 beforeAll(async () => {
-  connection = await createConnection(postgres);
+  server = new ApiServer();
+  await server.initialize();
+  await synchronize(server);
 });
 
 afterAll(async () => {
-  await connection.close();
+  await server.close();
 });
 
 describe("Create and Query ClassUser", () => {
@@ -28,17 +31,17 @@ describe("Create and Query ClassUser", () => {
     const user1Data = new User("Bobby", "Bobby");
     const user2Data = new User("Timmy", "Timmy");
 
-    programme = await connection.getRepository(Programme).save(programmeData);
-    class_ = await connection.getRepository(Class).save(classData);
-    user1 = await connection.getRepository(User).save(user1Data);
-    user2 = await connection.getRepository(User).save(user2Data);
+    programme = await getRepository(Programme).save(programmeData);
+    class_ = await getRepository(Class).save(classData);
+    user1 = await getRepository(User).save(user1Data);
+    user2 = await getRepository(User).save(user2Data);
   });
 
   afterAll(async () => {
-    const classUserRepository = connection.getRepository(ClassUser);
-    const programmeRepository = connection.getRepository(Programme);
-    const classRepository = connection.getRepository(Class);
-    const userRepository = connection.getRepository(User);
+    const classUserRepository = getRepository(ClassUser);
+    const programmeRepository = getRepository(Programme);
+    const classRepository = getRepository(Class);
+    const userRepository = getRepository(User);
 
     await classUserRepository.delete({});
     await classRepository.delete({});
@@ -50,19 +53,15 @@ describe("Create and Query ClassUser", () => {
     const user1Class = new ClassUser(class_, user1, ClassUserRole.TEACHER);
     const user2Class = new ClassUser(class_, user2, ClassUserRole.STUDENT);
 
-    const savedUser1Class = await connection
-      .getRepository(ClassUser)
-      .save(user1Class);
-    const savedUser2Class = await connection
-      .getRepository(ClassUser)
-      .save(user2Class);
+    const savedUser1Class = await getRepository(ClassUser).save(user1Class);
+    const savedUser2Class = await getRepository(ClassUser).save(user2Class);
 
     expect(savedUser1Class.id).toBeTruthy();
     expect(savedUser2Class.id).toBeTruthy();
   });
 
   it("query using classUser table", async () => {
-    const classUserQuery = await connection.getRepository(ClassUser).find({
+    const classUserQuery = await getRepository(ClassUser).find({
       where: { class: class_.id },
       relations: ["class", "user"],
     });
@@ -76,7 +75,7 @@ describe("Create and Query ClassUser", () => {
   });
 
   it("query using class table", async () => {
-    const classQuery = await connection.getRepository(Class).find({
+    const classQuery = await getRepository(Class).find({
       where: { id: class_.id },
       relations: ["classUsers", "classUsers.user"],
     });
@@ -91,7 +90,7 @@ describe("Create and Query ClassUser", () => {
   });
 
   it("query using user table", async () => {
-    const userQuery = await connection.getRepository(User).find({
+    const userQuery = await getRepository(User).find({
       where: { id: user1.id },
       relations: ["classUsers", "classUsers.class"],
     });
