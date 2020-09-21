@@ -1,18 +1,21 @@
-import { postgres } from "../../../ormconfig";
-import { Connection, createConnection } from "typeorm";
+import { getRepository } from "typeorm";
 import { RelationshipType } from "../../types/relationships";
 import { Person } from "../../entities/user/Person";
 import { Relationship } from "../../entities/user/Relationship";
 import { Gender } from "../../types/persons";
+import ApiServer from "../../server";
+import { synchronize } from "../../utils/tests";
 
-let connection: Connection;
+let server: ApiServer;
 
 beforeAll(async () => {
-  connection = await createConnection(postgres);
+  server = new ApiServer();
+  await server.initialize();
+  await synchronize(server);
 });
 
 afterAll(async () => {
-  await connection.close();
+  await server.close();
 });
 
 describe("Relationship", () => {
@@ -24,17 +27,18 @@ describe("Relationship", () => {
       const fatherData = new Person("B", Gender.MALE);
 
       // this assumes the order is guaranteed
-      const [savedYouth, savedFather] = await connection
-        .getRepository(Person)
-        .save([youthData, fatherData]);
+      const [savedYouth, savedFather] = await getRepository(Person).save([
+        youthData,
+        fatherData,
+      ]);
 
       youth = savedYouth;
       father = savedFather;
     });
 
     afterAll(async () => {
-      const personRepository = connection.getRepository(Person);
-      const rsRepository = connection.getRepository(Relationship);
+      const personRepository = getRepository(Person);
+      const rsRepository = getRepository(Relationship);
 
       await rsRepository.delete({});
       await personRepository.delete({});
@@ -46,20 +50,16 @@ describe("Relationship", () => {
         father,
         RelationshipType.FATHER
       );
-      const savedFather = await connection
-        .getRepository(Relationship)
-        .save(relationship);
+      const savedFather = await getRepository(Relationship).save(relationship);
 
       expect(savedFather).toBeTruthy();
     });
 
     it("query using relationship table", async () => {
-      const getRelationships = await connection
-        .getRepository(Relationship)
-        .find({
-          where: { youth: { id: youth.id } },
-          relations: ["youth", "family_member"],
-        });
+      const getRelationships = await getRepository(Relationship).find({
+        where: { youth: { id: youth.id } },
+        relations: ["youth", "family_member"],
+      });
 
       expect(getRelationships.length).toBe(1);
       expect(getRelationships[0].youth.name).toBe(youth.name);
@@ -68,7 +68,7 @@ describe("Relationship", () => {
 
     describe("query using person table", () => {
       it("search for father and get related youth", async () => {
-        const fatherQuery = await connection.getRepository(Person).find({
+        const fatherQuery = await getRepository(Person).find({
           where: { id: father.id },
           relations: ["youths", "youths.youth"],
         });
@@ -81,7 +81,7 @@ describe("Relationship", () => {
       });
 
       it("search for youth and get related father", async () => {
-        const youthQuery = await connection.getRepository(Person).find({
+        const youthQuery = await getRepository(Person).find({
           where: { id: youth.id },
           relations: ["family_members", "family_members.family_member"],
         });

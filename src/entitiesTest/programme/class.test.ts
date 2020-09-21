@@ -1,40 +1,39 @@
 import { validate } from "class-validator";
-import { postgres } from "../../../ormconfig";
-import { Connection, createConnection } from "typeorm";
+import { getRepository } from "typeorm";
 import { Class } from "../../entities/programme/Class";
 import { Programme } from "../../entities/programme/Programme";
+import ApiServer from "../../server";
+import { synchronize } from "../../utils/tests";
 
-let connection: Connection;
+let server: ApiServer;
 
 beforeAll(async () => {
-  connection = await createConnection(postgres);
+  server = new ApiServer();
+  await server.initialize();
 });
 
-afterEach(async () => {
-  const classRepository = connection.getRepository(Class);
-  const programmeRepository = connection.getRepository(Programme);
-
-  await classRepository.delete({});
-  await programmeRepository.delete({});
+beforeEach(async () => {
+  await synchronize(server);
 });
 
 afterAll(async () => {
-  await connection.close();
+  await server.close();
 });
 
 describe("Create class", () => {
   let programme: Programme;
+
   beforeEach(async () => {
     const programmeData = new Programme("First Programme!");
-    programme = await connection.getRepository(Programme).save(programmeData);
+    programme = await getRepository(Programme).save(programmeData);
   });
 
   it("with valid name", async () => {
-    const classData = new Class("First Programme - class 1", programme);
+    const classData = new Class("First Programme - Class 1", programme);
     const errors = await validate(classData);
     expect(errors).toHaveLength(0);
 
-    const saved = await connection.getRepository(Class).save(classData);
+    const saved = await getRepository(Class).save(classData);
     expect(saved.id).toBeTruthy();
   });
 
@@ -49,27 +48,30 @@ describe("Query programme and class", () => {
   let programme: Programme;
   let class1: Class;
   let class2: Class;
+
   beforeEach(async () => {
     const programmeData = new Programme("X Programme!");
-    const class1Data = new Class("X Programme - class 1", programmeData);
-    const class2Data = new Class("X Programme - class 2", programmeData);
+    const class1Data = new Class("X Programme - Class 1", programmeData);
+    const class2Data = new Class("X Programme - Class 2", programmeData);
 
-    programme = await connection.getRepository(Programme).save(programmeData);
-    class1 = await connection.getRepository(Class).save(class1Data);
-    class2 = await connection.getRepository(Class).save(class2Data);
+    programme = await getRepository(Programme).save(programmeData);
+    class1 = await getRepository(Class).save(class1Data);
+    class2 = await getRepository(Class).save(class2Data);
   });
 
   it("Query programme for class", async () => {
-    const programmeQuery = await connection.getRepository(Programme).find({
+    const programmeQuery: Programme[] = await getRepository(Programme).find({
       where: { id: programme.id },
       relations: ["classes"],
     });
     expect(programmeQuery).toHaveLength(1);
     expect(programmeQuery[0].classes).toHaveLength(2);
+    expect(programmeQuery[0].classes.includes(class1));
+    expect(programmeQuery[0].classes.includes(class2));
   });
 
   it("Query class for programme", async () => {
-    const classQuery = await connection.getRepository(Class).find({
+    const classQuery: Class[] = await getRepository(Class).find({
       where: { id: class1.id },
       relations: ["programme"],
     });

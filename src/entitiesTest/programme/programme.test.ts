@@ -1,21 +1,24 @@
 import { validate } from "class-validator";
-import { postgres } from "../../../ormconfig";
-import { Connection, createConnection } from "typeorm";
+import { getRepository } from "typeorm";
 import { Programme } from "../../entities/programme/Programme";
+import ApiServer from "../../server";
+import { synchronize } from "../../utils/tests";
 
-let connection: Connection;
+let server: ApiServer;
 
 beforeAll(async () => {
-  connection = await createConnection(postgres);
+  server = new ApiServer();
+  await server.initialize();
+  await synchronize(server);
 });
 
 afterAll(async () => {
-  await connection.close();
+  await server.close();
 });
 
 describe("Create programme", () => {
   afterEach(async () => {
-    const programmeRepository = connection.getRepository(Programme);
+    const programmeRepository = getRepository(Programme);
     await programmeRepository.delete({});
   });
 
@@ -24,7 +27,7 @@ describe("Create programme", () => {
     const errors = await validate(programme);
     expect(errors).toHaveLength(0);
 
-    const saved = await connection.getRepository(Programme).save(programme);
+    const saved = await getRepository(Programme).save(programme);
     expect(saved.id).toBeTruthy();
   });
 
