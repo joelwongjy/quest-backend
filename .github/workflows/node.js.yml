@@ -26,8 +26,8 @@ jobs:
         image: postgres
         # Provide the password for postgres
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: pass
           POSTGRES_DB: db
         # Set health checks to wait until postgres has started
         options: >-
@@ -54,8 +54,9 @@ jobs:
           POSTGRES_HOST: localhost
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USERNAME: user
+          POSTGRES_PASSWORD: pass
           POSTGRES_NAME: db
           POSTGRES_DISABLE_SSL: true
+          JWT_SECRET: teamQuestIsTheBest
           
