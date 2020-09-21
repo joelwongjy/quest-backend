@@ -38,15 +38,7 @@ describe("Create and Query ClassUser", () => {
   });
 
   afterAll(async () => {
-    const classUserRepository = getRepository(ClassUser);
-    const programmeRepository = getRepository(Programme);
-    const classRepository = getRepository(Class);
-    const userRepository = getRepository(User);
-
-    await classUserRepository.delete({});
-    await classRepository.delete({});
-    await programmeRepository.delete({});
-    await userRepository.delete({});
+    await synchronize(server);
   });
 
   it("create classUsers", async () => {

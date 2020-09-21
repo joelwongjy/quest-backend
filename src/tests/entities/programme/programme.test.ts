@@ -18,8 +18,7 @@ afterAll(async () => {
 
 describe("Create programme", () => {
   afterEach(async () => {
-    const programmeRepository = getRepository(Programme);
-    await programmeRepository.delete({});
+    await synchronize(server);
   });
 
   it("with valid name", async () => {

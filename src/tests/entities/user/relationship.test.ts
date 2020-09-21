@@ -37,11 +37,7 @@ describe("Relationship", () => {
     });
 
     afterAll(async () => {
-      const personRepository = getRepository(Person);
-      const rsRepository = getRepository(Relationship);
-
-      await rsRepository.delete({});
-      await personRepository.delete({});
+      await synchronize(server);
     });
 
     it("saves to relationship table", async () => {
