@@ -20,7 +20,7 @@ describe("GET /users/self", () => {
   it("should allow a User to get his own data", async () => {
     const response = await request(server.server)
       .get(`${fixtures.api}/users/self`)
-      .set("Authorization", fixtures.userAccessToken)
+      .set("Authorization", fixtures.teacherAccessToken)
       .send();
     expect(response.status).toEqual(200);
   });
@@ -30,7 +30,7 @@ describe("PATCH /users/self", () => {
   it("should allow a User to edit his own data", async () => {
     const response = await request(server.server)
       .patch(`${fixtures.api}/users/self`)
-      .set("Authorization", fixtures.userAccessToken)
+      .set("Authorization", fixtures.teacherAccessToken)
       .send();
     expect(response.status).toEqual(200);
   });
