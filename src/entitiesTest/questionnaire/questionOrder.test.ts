@@ -1,26 +1,24 @@
 import { validate } from "class-validator";
-import { postgres } from "../../../ormconfig";
-import { Connection, createConnection } from "typeorm";
+import { getRepository } from "typeorm";
 import { QuestionOrder } from "../../entities/questionnaire/QuestionOrder";
 import { Question } from "../../entities/questionnaire/Question";
 import { QuestionType } from "../../types/questions";
+import ApiServer from "../../server";
+import { synchronize } from "../../utils/tests";
 
-let connection: Connection;
+let server: ApiServer;
 
 beforeAll(async () => {
-  connection = await createConnection(postgres);
+  server = new ApiServer();
+  await server.initialize();
 });
 
-afterEach(async () => {
-  const questionOrderRepository = connection.getRepository(QuestionOrder);
-  const questionRepository = connection.getRepository(Question);
-
-  await questionOrderRepository.delete({});
-  await questionRepository.delete({});
+beforeEach(async () => {
+  await synchronize(server);
 });
 
 afterAll(async () => {
-  await connection.close();
+  await server.close();
 });
 
 describe("Create questionOrder", () => {
@@ -36,9 +34,9 @@ describe("Create questionOrder", () => {
     const errors = await validate(questionOrder);
     expect(errors.length).toBe(0);
 
-    const newQuestionOrder = await connection
-      .getRepository(QuestionOrder)
-      .save(questionOrder);
+    const newQuestionOrder = await getRepository(QuestionOrder).save(
+      questionOrder
+    );
     expect(newQuestionOrder).toBeTruthy();
   });
 

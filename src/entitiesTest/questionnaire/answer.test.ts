@@ -1,29 +1,25 @@
 import { validate } from "class-validator";
-import { postgres } from "../../../ormconfig";
-import { Connection, createConnection } from "typeorm";
+import { getRepository } from "typeorm";
 import { Answer } from "../../entities/questionnaire/Answer";
 import { Option } from "../../entities/questionnaire/Option";
 import { Question } from "../../entities/questionnaire/Question";
 import { QuestionType } from "../../types/questions";
+import ApiServer from "../../server";
+import { synchronize } from "../../utils/tests";
 
-let connection: Connection;
+let server: ApiServer;
 
 beforeAll(async () => {
-  connection = await createConnection(postgres);
+  server = new ApiServer();
+  await server.initialize();
 });
 
-afterEach(async () => {
-  const answerRepository = connection.getRepository(Answer);
-  const optionRepository = connection.getRepository(Option);
-  const questionRepository = connection.getRepository(Question);
-
-  await answerRepository.delete({});
-  await optionRepository.delete({});
-  await questionRepository.delete({});
+beforeEach(async () => {
+  await synchronize(server);
 });
 
 afterAll(async () => {
-  await connection.close();
+  await server.close();
 });
 
 describe("Create answer", () => {
@@ -39,7 +35,7 @@ describe("Create answer", () => {
     const errors = await validate(answer);
     expect(errors.length).toBe(0);
 
-    const newAnswer = await connection.getRepository(Answer).save(answer);
+    const newAnswer = await getRepository(Answer).save(answer);
     expect(newAnswer).toBeTruthy();
   });
 
@@ -56,7 +52,7 @@ describe("Create answer", () => {
     const errors = await validate(answer);
     expect(errors.length).toBe(0);
 
-    const newAnswer = await connection.getRepository(Answer).save(answer);
+    const newAnswer = await getRepository(Answer).save(answer);
     expect(newAnswer).toBeTruthy();
   });
 

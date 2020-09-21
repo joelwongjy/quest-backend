@@ -1,24 +1,22 @@
 import { validate } from "class-validator";
-import { postgres } from "../../../ormconfig";
-import { Connection, createConnection } from "typeorm";
+import { getRepository } from "typeorm";
 import { QuestionnaireWindow } from "../../entities/questionnaire/QuestionnaireWindow";
+import ApiServer from "../../server";
+import { synchronize } from "../../utils/tests";
 
-let connection: Connection;
+let server: ApiServer;
 
 beforeAll(async () => {
-  connection = await createConnection(postgres);
+  server = new ApiServer();
+  await server.initialize();
 });
 
-afterEach(async () => {
-  const questionnaireWindowRepository = connection.getRepository(
-    QuestionnaireWindow
-  );
-
-  await questionnaireWindowRepository.delete({});
+beforeEach(async () => {
+  await synchronize(server);
 });
 
 afterAll(async () => {
-  await connection.close();
+  await server.close();
 });
 
 describe("Create questionnaireWindow", () => {
@@ -32,9 +30,9 @@ describe("Create questionnaireWindow", () => {
     const errors = await validate(questionnaireWindow);
     expect(errors.length).toBe(0);
 
-    const newQuestionnaireWindow = await connection
-      .getRepository(QuestionnaireWindow)
-      .save(questionnaireWindow);
+    const newQuestionnaireWindow = await getRepository(
+      QuestionnaireWindow
+    ).save(questionnaireWindow);
 
     expect(newQuestionnaireWindow).toBeTruthy();
   });

@@ -1,22 +1,23 @@
 import { validate } from "class-validator";
-import { postgres } from "../../../ormconfig";
-import { Connection, createConnection } from "typeorm";
+import { getRepository } from "typeorm";
 import { QuestionType } from "../../types/questions";
 import { Question } from "../../entities/questionnaire/Question";
+import ApiServer from "../../server";
+import { synchronize } from "../../utils/tests";
 
-let connection: Connection;
+let server: ApiServer;
 
 beforeAll(async () => {
-  connection = await createConnection(postgres);
+  server = new ApiServer();
+  await server.initialize();
 });
 
-afterEach(async () => {
-  const questionRepository = connection.getRepository(Question);
-  await questionRepository.delete({});
+beforeEach(async () => {
+  await synchronize(server);
 });
 
 afterAll(async () => {
-  await connection.close();
+  await server.close();
 });
 
 describe("Create question", () => {
@@ -27,7 +28,7 @@ describe("Create question", () => {
     const errors = await validate(question);
     expect(errors.length).toBe(0);
 
-    const newQuestion = await connection.getRepository(Question).save(question);
+    const newQuestion = await getRepository(Question).save(question);
     expect(newQuestion).toBeTruthy();
   });
 

@@ -1,6 +1,6 @@
 import { IsOptional } from "class-validator";
 import { Column } from "typeorm";
-import { DiscardableData } from "entities";
+import { DiscardableData } from "../types/entities";
 import { Base } from "./Base";
 
 export abstract class Discardable extends Base {
