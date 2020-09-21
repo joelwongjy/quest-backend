@@ -5,6 +5,7 @@ import { QuestionnaireType } from "../../types/questionnaires";
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
 import { QuestionSet } from "./QuestionSet";
 import { ProgrammeQuestionnaire } from "./ProgrammeQuestionnaire";
+import { ClassQuestionnaire } from "./ClassQuestionnaire";
 
 @Entity()
 export class Questionnaire extends Discardable {
@@ -43,4 +44,10 @@ export class Questionnaire extends Discardable {
     (programmeQuestionnaire) => programmeQuestionnaire.questionnaire
   )
   programmeQuestionnaires!: ProgrammeQuestionnaire[];
+
+  @OneToMany(
+    (type) => ClassQuestionnaire,
+    (classQuestionnaire) => classQuestionnaire.questionnaire
+  )
+  classQuestionnaires!: ClassQuestionnaire[];
 }

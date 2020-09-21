@@ -1,6 +1,7 @@
 import { IsNotEmpty } from "class-validator";
 import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
 import { Discardable } from "../Discardable";
+import { ClassQuestionnaire } from "../questionnaire/ClassQuestionnaire";
 import { ClassUser } from "./ClassUser";
 import { Programme } from "./Programme";
 
@@ -23,4 +24,10 @@ export class Class extends Discardable {
 
   @OneToMany((type) => ClassUser, (classUser) => classUser.class)
   classUsers!: ClassUser[];
+
+  @OneToMany(
+    (type) => ClassQuestionnaire,
+    (classQuestionnaire) => classQuestionnaire.class
+  )
+  classQuestionnaires!: ClassQuestionnaire[];
 }
