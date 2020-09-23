@@ -20,7 +20,7 @@ afterAll(async () => {
 
 describe("Create questionOrder", () => {
   afterEach(async () => {
-    await getRepository(Option).delete({});
+    await getRepository(QuestionOrder).delete({});
   });
 
   it("with valid order and question", async () => {

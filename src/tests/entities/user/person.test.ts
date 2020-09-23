@@ -11,9 +11,6 @@ let server: ApiServer;
 beforeAll(async () => {
   server = new ApiServer();
   await server.initialize();
-});
-
-beforeEach(async () => {
   await synchronize(server);
 });
 
@@ -22,6 +19,11 @@ afterAll(async () => {
 });
 
 describe("Create person", () => {
+  afterEach(async () => {
+    await getRepository(Person).delete({});
+    await getRepository(User).delete({});
+  });
+
   it("with valid name", async () => {
     let person: Person;
 
