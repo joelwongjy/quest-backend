@@ -7,15 +7,16 @@ import { Questionnaire } from "./Questionnaire";
 export class QuestionSet extends Discardable {
   entityName = "QuestionSet";
 
-  constructor() {
+  constructor(questionnaire: Questionnaire) {
     super();
+    this.questionnaire = questionnaire;
   }
 
   @ManyToOne(
     (type) => Questionnaire,
     (questionnaire) => questionnaire.question_sets
   )
-  questionnaire!: Questionnaire;
+  questionnaire: Questionnaire;
 
   @OneToMany(
     (type) => QuestionOrder,
