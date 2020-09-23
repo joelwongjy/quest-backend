@@ -12,9 +12,6 @@ let server: ApiServer;
 beforeAll(async () => {
   server = new ApiServer();
   await server.initialize();
-});
-
-beforeEach(async () => {
   await synchronize(server);
 });
 
@@ -23,6 +20,10 @@ afterAll(async () => {
 });
 
 describe("Create answer", () => {
+  afterEach(async () => {
+    await getRepository(Answer).delete({});
+  });
+
   it("with valid question and option", async () => {
     let answer: Answer;
     let option: Option;

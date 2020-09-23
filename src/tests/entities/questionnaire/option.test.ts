@@ -11,9 +11,6 @@ let server: ApiServer;
 beforeAll(async () => {
   server = new ApiServer();
   await server.initialize();
-});
-
-beforeEach(async () => {
   await synchronize(server);
 });
 
@@ -22,6 +19,10 @@ afterAll(async () => {
 });
 
 describe("Create option", () => {
+  afterEach(async () => {
+    await getRepository(Option).delete({});
+  });
+
   it("with valid option_text", async () => {
     let option: Option;
     let question: Question;
