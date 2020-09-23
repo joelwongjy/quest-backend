@@ -1,5 +1,5 @@
-import { IsNotEmpty } from "class-validator";
-import { Column, Entity, OneToMany } from "typeorm";
+import { IsNotEmpty, validateOrReject } from "class-validator";
+import { Column, Entity, OneToMany, BeforeInsert, BeforeUpdate } from "typeorm";
 import { Discardable } from "../Discardable";
 import { QuestionnaireType } from "../../types/questionnaires";
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
@@ -50,4 +50,11 @@ export class Questionnaire extends Discardable {
     (classQuestionnaire) => classQuestionnaire.questionnaire
   )
   classQuestionnaires!: ClassQuestionnaire[];
+
+  // Hook to ensure entity does not have null option and null answer
+  @BeforeInsert()
+  @BeforeUpdate()
+  async validate() {
+    await validateOrReject(this);
+  }
 }
