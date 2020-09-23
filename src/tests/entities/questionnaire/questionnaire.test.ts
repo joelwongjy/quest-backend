@@ -18,6 +18,10 @@ afterAll(async () => {
 });
 
 describe("Create questionnaire", () => {
+  afterEach(async () => {
+    await getRepository(Questionnaire).delete({});
+  });
+
   it("with valid name and type", async () => {
     let data: Questionnaire = new Questionnaire(
       "Youth Development Framework",

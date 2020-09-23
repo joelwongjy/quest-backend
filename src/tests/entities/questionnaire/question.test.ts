@@ -10,9 +10,6 @@ let server: ApiServer;
 beforeAll(async () => {
   server = new ApiServer();
   await server.initialize();
-});
-
-beforeEach(async () => {
   await synchronize(server);
 });
 
@@ -21,6 +18,10 @@ afterAll(async () => {
 });
 
 describe("Create question", () => {
+  afterEach(async () => {
+    await getRepository(Question).delete({});
+  });
+
   it("with valid question_text", async () => {
     let question: Question;
 

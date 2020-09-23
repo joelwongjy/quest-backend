@@ -9,9 +9,6 @@ let server: ApiServer;
 beforeAll(async () => {
   server = new ApiServer();
   await server.initialize();
-});
-
-beforeEach(async () => {
   await synchronize(server);
 });
 
@@ -20,6 +17,10 @@ afterAll(async () => {
 });
 
 describe("Create questionnaireWindow", () => {
+  afterEach(async () => {
+    await getRepository(QuestionnaireWindow).delete({});
+  });
+
   it("with valid start and end date", async () => {
     let questionnaireWindow: QuestionnaireWindow;
     let startDate: Date = new Date("2019-05-20");
