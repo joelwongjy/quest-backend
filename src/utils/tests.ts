@@ -1,10 +1,10 @@
 import faker from "faker";
-import { Programme } from "../entities/Programme";
+import { Programme } from "../entities/programme/Programme";
 import { getRepository } from "typeorm";
-import { User } from "../entities/User";
+import { User } from "../entities/user/User";
 import ApiServer from "../server";
-import { Class } from "../entities/Class";
-import { ClassUser } from "../entities/ClassUser";
+import { Class } from "../entities/programme/Class";
+import { ClassUser } from "../entities/programme/ClassUser";
 import { ClassUserRole } from "../types/classUsers";
 
 faker.seed(127);

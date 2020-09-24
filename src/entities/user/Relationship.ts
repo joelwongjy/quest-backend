@@ -1,8 +1,8 @@
 import { IsEnum } from "class-validator";
 import { Column, Entity, ManyToOne } from "typeorm";
 import { Person } from "./Person";
-import { RelationshipType } from "../types/relationships";
-import { Discardable } from "./Discardable";
+import { RelationshipType } from "../../types/relationships";
+import { Discardable } from "../Discardable";
 
 @Entity()
 export class Relationship extends Discardable {

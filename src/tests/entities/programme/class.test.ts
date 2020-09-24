@@ -1,9 +1,9 @@
 import { validate } from "class-validator";
 import { getRepository } from "typeorm";
-import { Class } from "../../entities/Class";
-import { Programme } from "../../entities/Programme";
-import ApiServer from "../../server";
-import { synchronize } from "../../utils/tests";
+import { Class } from "../../../entities/programme/Class";
+import { Programme } from "../../../entities/programme/Programme";
+import ApiServer from "../../../server";
+import { synchronize } from "../../../utils/tests";
 
 let server: ApiServer;
 
@@ -22,6 +22,7 @@ afterAll(async () => {
 
 describe("Create class", () => {
   let programme: Programme;
+
   beforeEach(async () => {
     const programmeData = new Programme("First Programme!");
     programme = await getRepository(Programme).save(programmeData);
@@ -47,6 +48,7 @@ describe("Query programme and class", () => {
   let programme: Programme;
   let class1: Class;
   let class2: Class;
+
   beforeEach(async () => {
     const programmeData = new Programme("X Programme!");
     const class1Data = new Class("X Programme - Class 1", programmeData);
@@ -58,7 +60,7 @@ describe("Query programme and class", () => {
   });
 
   it("Query programme for class", async () => {
-    const programmeQuery = await getRepository(Programme).find({
+    const programmeQuery: Programme[] = await getRepository(Programme).find({
       where: { id: programme.id },
       relations: ["classes"],
     });
@@ -69,7 +71,7 @@ describe("Query programme and class", () => {
   });
 
   it("Query class for programme", async () => {
-    const classQuery = await getRepository(Class).find({
+    const classQuery: Class[] = await getRepository(Class).find({
       where: { id: class1.id },
       relations: ["programme"],
     });

@@ -4,7 +4,7 @@ import {
   ValidatorConstraintInterface,
 } from "class-validator";
 import { getRepository } from "typeorm";
-import { User } from "../entities/User";
+import { User } from "../entities/user/User";
 
 @ValidatorConstraint()
 class IsUniqueUsername implements ValidatorConstraintInterface {

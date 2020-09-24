@@ -1,8 +1,8 @@
 import { validate } from "class-validator";
 import { getRepository } from "typeorm";
-import { Programme } from "../../entities/Programme";
-import ApiServer from "../../server";
-import { synchronize } from "../../utils/tests";
+import { Programme } from "../../../entities/programme/Programme";
+import ApiServer from "../../../server";
+import { synchronize } from "../../../utils/tests";
 
 let server: ApiServer;
 
@@ -18,8 +18,7 @@ afterAll(async () => {
 
 describe("Create programme", () => {
   afterEach(async () => {
-    const programmeRepository = getRepository(Programme);
-    await programmeRepository.delete({});
+    await synchronize(server);
   });
 
   it("with valid name", async () => {

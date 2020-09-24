@@ -1,19 +1,16 @@
 import { validate } from "class-validator";
 import { getRepository, QueryFailedError } from "typeorm";
-import { Gender } from "../../types/persons";
-import { Person } from "../../entities/Person";
-import { User } from "../../entities/User";
-import ApiServer from "../../server";
-import { synchronize } from "../../utils/tests";
+import { Gender } from "../../../types/persons";
+import { Person } from "../../../entities/user/Person";
+import { User } from "../../../entities/user/User";
+import ApiServer from "../../../server";
+import { synchronize } from "../../../utils/tests";
 
 let server: ApiServer;
 
 beforeAll(async () => {
   server = new ApiServer();
   await server.initialize();
-});
-
-beforeEach(async () => {
   await synchronize(server);
 });
 
@@ -22,6 +19,11 @@ afterAll(async () => {
 });
 
 describe("Create person", () => {
+  afterEach(async () => {
+    await getRepository(Person).delete({});
+    await getRepository(User).delete({});
+  });
+
   it("with valid name", async () => {
     let person: Person;
 

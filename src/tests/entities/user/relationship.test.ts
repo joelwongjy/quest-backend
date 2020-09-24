@@ -1,10 +1,10 @@
 import { getRepository } from "typeorm";
-import { RelationshipType } from "../../types/relationships";
-import { Person } from "../../entities/Person";
-import { Relationship } from "../../entities/Relationship";
-import { Gender } from "../../types/persons";
-import ApiServer from "../../server";
-import { synchronize } from "../../utils/tests";
+import { RelationshipType } from "../../../types/relationships";
+import { Person } from "../../../entities/user/Person";
+import { Relationship } from "../../../entities/user/Relationship";
+import { Gender } from "../../../types/persons";
+import ApiServer from "../../../server";
+import { synchronize } from "../../../utils/tests";
 
 let server: ApiServer;
 
@@ -37,11 +37,7 @@ describe("Relationship", () => {
     });
 
     afterAll(async () => {
-      const personRepository = getRepository(Person);
-      const rsRepository = getRepository(Relationship);
-
-      await rsRepository.delete({});
-      await personRepository.delete({});
+      await synchronize(server);
     });
 
     it("saves to relationship table", async () => {
