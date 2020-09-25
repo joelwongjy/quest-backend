@@ -51,7 +51,7 @@ describe("Use User to test Base", () => {
     expect(savedUser.createdAt === savedUser.updatedAt);
   });
 
-  it("returns valid baseData via getBase method", async () => {
+  it("returns valid BaseData via getBase method", async () => {
     const user: User = new User("username", "name", "password");
     const savedUser = await getRepository(User).save(user);
     expect(savedUser).toBeTruthy();
