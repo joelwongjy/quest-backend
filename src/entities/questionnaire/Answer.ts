@@ -1,12 +1,12 @@
 import { Column, Entity, ManyToOne, BeforeInsert, BeforeUpdate } from "typeorm";
-import { Base } from "../Base";
 import { Question } from "./Question";
 import { Option } from "./Option";
 import { IsNotEmpty, ValidateIf, validateOrReject } from "class-validator";
 import { Attempt } from "./Attempt";
+import { Discardable } from "../Discardable";
 
 @Entity()
-export class Answer extends Base {
+export class Answer extends Discardable {
   entityName = "Answer";
 
   constructor(question: Question, option?: Option, answer?: string) {

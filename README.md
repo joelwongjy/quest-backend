@@ -360,7 +360,7 @@ However, this is not always desirable in production, since TypeORM may make chan
 To create migrations, we can run
 
 ```bash
-yarn typeorm migration:create -n MigrationName
+(export NODE_ENV=development; yarn typeorm migration:create -n MigrationName)
 ```
 
 You can then fill in the `up` and `down` functions. To run them in development, we can do
