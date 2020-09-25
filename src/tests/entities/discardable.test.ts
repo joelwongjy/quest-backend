@@ -21,7 +21,7 @@ afterAll(async () => {
 });
 
 // Unfortunately there is great difficulty in creating
-// a mock just to test Base, due to the fixed schema
+// a mock just to test Discardable, due to the fixed schema
 describe("Use User to test Discardable", () => {
   beforeEach(async () => {
     await synchronize(server);
