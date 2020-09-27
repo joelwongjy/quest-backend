@@ -1,6 +1,6 @@
 # Quest Backend
 
-![CI Badge](https://github.com/dsc-team-quest/backend/workflows/Quest%20Backend%20CI/badge.svg)
+![CI Badge](https://github.com/dsc-team-quest/backend/workflows/Node%20CI/badge.svg)
 
 To be built!
 
