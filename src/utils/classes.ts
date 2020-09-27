@@ -5,14 +5,14 @@ import { ClassUserRole } from "../types/classUsers";
 
 export function allowedRole(role: ClassUserRole, requiredRole: ClassUserRole) {
   return (
-    role === ClassUserRole.TEACHER ||
-    requiredRole === ClassUserRole.STUDENT ||
-    (requiredRole === ClassUserRole.ADMIN && role === ClassUserRole.ADMIN)
+    role === ClassUserRole.ADMIN || // can do everything
+    requiredRole === ClassUserRole.STUDENT || // minimum clearance
+    (requiredRole === ClassUserRole.TEACHER && role === ClassUserRole.TEACHER) // in-between
   );
 }
 
 export const allowedRequester = async (
-  userId: number,
+  classUserId: number,
   classId: number | string,
   requiredRole: ClassUserRole
 ): Promise<false | { class_: Class; requester: ClassUser }> => {
@@ -23,7 +23,7 @@ export const allowedRequester = async (
     return false;
   }
   const requester = class_.classUsers!.find(
-    (classUser) => classUser.id === userId && !classUser.discardedAt
+    (classUser) => classUser.id === classUserId && !classUser.discardedAt
   );
   if (!requester || !allowedRole(requester.role, requiredRole)) {
     return false;
