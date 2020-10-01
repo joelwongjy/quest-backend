@@ -56,8 +56,10 @@ jobs:
             ${{ runner.os }}-${{ matrix.node-version }}-yarn-
       - name: Install dependencies
         run: yarn install
-      - name: Run tests
-        run: yarn test:ci
+      - uses: mattallty/jest-github-action@v1
+        name: Run tests
+        with:
+          test-command: "yarn test:ci"
         env:
           # The hostname used to communicate with the PostgreSQL service container
           POSTGRES_HOST: localhost
@@ -68,3 +70,4 @@ jobs:
           POSTGRES_NAME: db
           POSTGRES_DISABLE_SSL: true
           JWT_SECRET: teamQuestIsTheBest
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
