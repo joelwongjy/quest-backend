@@ -84,6 +84,8 @@ const PROGRAMME_SEED: ProgrammeSeed[] = [
   },
 ];
 
+const COMMON_STUDENT: UserSeed = ["XX-Student", ClassUserRole.STUDENT];
+
 export async function seed(
   _request: Request,
   response: Response
@@ -105,11 +107,13 @@ export async function seed(
 }
 
 async function seedUserIfAbsent(user: User, person: Person): Promise<User> {
-  const repo = getRepository(User);
+  const userRepo = getRepository(User);
+  const personRepo = getRepository(Person);
+
   const { username } = user;
 
   // return if username already exists
-  const findUser = await repo.findOne({
+  const findUser = await userRepo.findOne({
     where: { username: username },
   });
   if (findUser) {
@@ -119,11 +123,10 @@ async function seedUserIfAbsent(user: User, person: Person): Promise<User> {
   // create new user
   await validateOrReject(person);
   await validateOrReject(user);
-  const seededPerson = await repo.save(person);
-  const seededUser = await repo.save(user);
+  const seededPerson = await personRepo.save(person);
+  const seededUser = await userRepo.save(user);
   seededPerson.user = seededUser;
-  await repo.save(seededPerson);
-
+  await personRepo.save(seededPerson);
   return seededUser;
 }
 
@@ -132,9 +135,10 @@ async function seedProgrammesClasses(
 ): Promise<ProgrammeSeed[] | string> {
   const programmeRepo = getRepository(Programme);
   const classRepo = getRepository(Class);
+  const classUserRepo = getRepository(ClassUser);
 
   try {
-    await Promise.all(
+    const seededClasses = await Promise.all(
       seed.map(async (seed) => {
         const { name, classes } = seed;
 
@@ -152,7 +156,7 @@ async function seedProgrammesClasses(
         const seededProgramme = await programmeRepo.save(programme);
 
         // save all classes
-        await Promise.all(
+        return await Promise.all(
           classes.map(async (classTemplate) => {
             const { name, users } = classTemplate;
 
@@ -160,8 +164,29 @@ async function seedProgrammesClasses(
             await validateOrReject(class_);
             const seededClass = await classRepo.save(class_);
             await seedClassWithUsers(seededClass, users);
+            return seededClass;
           })
         );
+      })
+    );
+
+    // add a common student to all classes
+    const commonStudentName = COMMON_STUDENT[0];
+    const commonStudent = await seedUserIfAbsent(
+      new User(commonStudentName, commonStudentName, DEFAULT_PASSWORD),
+      new Person(commonStudentName, Gender.FEMALE)
+    );
+    await Promise.all(
+      seededClasses.map(async (classes) => {
+        classes?.map(async (class_) => {
+          const classUserData = new ClassUser(
+            class_,
+            commonStudent,
+            COMMON_STUDENT[1]
+          );
+
+          await classUserRepo.save(classUserData);
+        });
       })
     );
 
