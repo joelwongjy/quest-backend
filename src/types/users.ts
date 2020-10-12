@@ -9,6 +9,7 @@ export interface UserPostData {
   username: string;
   name: string;
   password?: string | null;
+  defaultUserRole?: DefaultUserRole | null;
 }
 
 export interface UserPatchData {
