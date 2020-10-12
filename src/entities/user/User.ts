@@ -22,7 +22,7 @@ export class User extends Discardable {
     super();
     this.username = username;
     this.password = password ? hashSync(password) : null;
-    this.defaultRole = defaultRole ?? DefaultUserRole.GUEST;
+    this.defaultRole = defaultRole ?? DefaultUserRole.USER;
     this.name = name;
   }
 

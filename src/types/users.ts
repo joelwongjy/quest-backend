@@ -2,7 +2,7 @@ import { DiscardableData, isDiscardableData } from "./entities";
 
 export enum DefaultUserRole {
   ADMIN = "Admin",
-  GUEST = "Guest",
+  USER = "User",
 }
 
 export interface UserPostData {
