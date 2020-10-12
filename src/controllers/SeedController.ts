@@ -7,6 +7,8 @@ import { Programme } from "../entities/programme/Programme";
 import { Class } from "../entities/programme/Class";
 import { ClassUserRole } from "../types/classUsers";
 import { ClassUser } from "../entities/programme/ClassUser";
+import { Person } from "../entities/user/Person";
+import { Gender } from "../types/persons";
 
 const DEFAULT_PASSWORD = "password";
 
@@ -92,7 +94,7 @@ export async function seed(
     DEFAULT_PASSWORD,
     DefaultUserRole.ADMIN
   );
-  await seedUserIfAbsent(superuser);
+  await seedUserIfAbsent(superuser, new Person("superuser", Gender.FEMALE));
   await seedProgrammesClasses(PROGRAMME_SEED);
 
   response.status(200).json({
@@ -102,7 +104,7 @@ export async function seed(
   });
 }
 
-async function seedUserIfAbsent(user: User): Promise<User> {
+async function seedUserIfAbsent(user: User, person: Person): Promise<User> {
   const repo = getRepository(User);
   const { username } = user;
 
@@ -115,8 +117,12 @@ async function seedUserIfAbsent(user: User): Promise<User> {
   }
 
   // create new user
+  await validateOrReject(person);
   await validateOrReject(user);
+  const seededPerson = await repo.save(person);
   const seededUser = await repo.save(user);
+  seededPerson.user = seededUser;
+  await repo.save(seededPerson);
 
   return seededUser;
 }
@@ -175,7 +181,8 @@ async function seedClassWithUsers(
     users.map(async (userTuple) => {
       const name = userTuple[0];
       const user = await seedUserIfAbsent(
-        new User(name, name, DEFAULT_PASSWORD)
+        new User(name, name, DEFAULT_PASSWORD),
+        new Person(name, Gender.MALE)
       );
 
       const classUser = new ClassUser(class_, user, userTuple[1]);
