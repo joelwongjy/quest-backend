@@ -1,11 +1,9 @@
-# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+# This workflow will do a clean install of node dependencies, build the source code,
+# run tests and have the coverage commented on a pull request to master
 
-name: Node CI
+name: Coverage CI
 
 on:
-  push:
-    branches: [master]
   pull_request:
     branches: [master]
 
@@ -15,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x, 14.x]
+        node-version: [12.x]
 
     # Service containers to run with `container-job`
     services:
@@ -54,10 +52,10 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}-yarn-
-      - name: Install dependencies
-        run: yarn install
-      - name: Run tests
-        run: yarn test:ci
+      - uses: mattallty/jest-github-action@v1
+        name: Run tests
+        with:
+          test-command: "yarn test:ci"
         env:
           # The hostname used to communicate with the PostgreSQL service container
           POSTGRES_HOST: localhost
