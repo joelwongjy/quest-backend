@@ -16,14 +16,13 @@ export async function create(
     "password",
     "name"
   );
-  const user = new User(username, password, name);
+  const user = new User(username, name, password);
   const errors = await validate(user);
   if (errors.length > 0) {
-    console.log(errors);
     let error = "Something went wrong. Please try again!";
     errors.forEach((e) => {
       if (e.property && e.property === "username") {
-        error = "Username already exists!";
+        error = "Username is either invalid or already exists!";
       }
     });
     response.status(400).json({ error });
