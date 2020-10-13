@@ -43,6 +43,7 @@ export class User extends Discardable {
   @Column({
     type: "enum",
     enum: DefaultUserRole,
+    default: DefaultUserRole.USER,
   })
   @IsEnum(DefaultUserRole)
   defaultRole: DefaultUserRole;
