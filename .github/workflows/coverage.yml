@@ -52,8 +52,10 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}-yarn-
+      - name: Install dependencies
+        run: yarn install
       - uses: mattallty/jest-github-action@v1
-        name: Run tests
+        name: Run tests and get coverage
         with:
           test-command: "yarn test:ci"
         env:
