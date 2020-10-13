@@ -66,3 +66,4 @@ jobs:
           POSTGRES_NAME: db
           POSTGRES_DISABLE_SSL: true
           JWT_SECRET: teamQuestIsTheBest
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
