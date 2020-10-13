@@ -9,6 +9,9 @@ import { ClassUserRole } from "../types/classUsers";
 
 faker.seed(127);
 
+const teacherPassword = "setMeUp?";
+const studentPassword = "safeAndSound!";
+
 export async function synchronize(apiServer: ApiServer) {
   if (!apiServer.connection) {
     throw new Error("Connection failed to initialise");
@@ -27,8 +30,10 @@ export class Fixtures {
   public class_: Class;
   public teacher: ClassUser;
   public teacherAccessToken: string;
+  public teacherPassword: string;
   public student: ClassUser;
   public studentAccessToken: string;
+  public studentPassword: string;
 
   // Not instantiated
   // Empty for now
@@ -46,10 +51,12 @@ export class Fixtures {
     this.teacherAccessToken = `Bearer ${
       teacher.user!.createAuthenticationToken().accessToken
     }`;
+    this.teacherPassword = teacherPassword;
     this.student = student;
     this.studentAccessToken = `Bearer ${
       student.user!.createAuthenticationToken().accessToken
     }`;
+    this.studentPassword = studentPassword;
   }
 
   public async createClassUser(role: ClassUserRole, class_?: Class) {
@@ -76,7 +83,7 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
 
   const teacher = new ClassUser(
     class_,
-    new User("admin", "Admin", "setMeUp?"),
+    new User("admin", "Admin", teacherPassword),
     ClassUserRole.TEACHER
   );
   classUsers.push(teacher);
@@ -84,7 +91,7 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
 
   const student = new ClassUser(
     class_,
-    new User("student", "Student", "safeAndSound!"),
+    new User("student", "Student", studentPassword),
     ClassUserRole.STUDENT
   );
   classUsers.push(student);
