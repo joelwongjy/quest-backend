@@ -1,11 +1,11 @@
 import { hashSync } from "bcryptjs";
-import { IsNotEmpty, IsString, Validate } from "class-validator";
+import { IsEnum, IsNotEmpty, IsString, Validate } from "class-validator";
 import { sign } from "jsonwebtoken";
 import { Column, Entity, OneToMany } from "typeorm";
 import IsUniqueUsername from "../../constraints/IsUniqueUsername";
 import { AuthenticationData } from "../../types/auth";
 import { BearerTokenType } from "../../types/tokens";
-import { UserData } from "../../types/users";
+import { DefaultUserRole, UserData } from "../../types/users";
 import { Discardable } from "../Discardable";
 import { ClassUser } from "../programme/ClassUser";
 
@@ -13,10 +13,16 @@ import { ClassUser } from "../programme/ClassUser";
 export class User extends Discardable {
   entityName = "User";
 
-  constructor(username: string, name: string, password?: string) {
+  constructor(
+    username: string,
+    name: string,
+    password?: string,
+    defaultRole?: DefaultUserRole
+  ) {
     super();
     this.username = username;
     this.password = password ? hashSync(password) : null;
+    this.defaultRole = defaultRole ?? DefaultUserRole.USER;
     this.name = name;
   }
 
@@ -33,6 +39,14 @@ export class User extends Discardable {
 
   @Column({ type: "character varying", nullable: true, select: false })
   password: string | null;
+
+  @Column({
+    type: "enum",
+    enum: DefaultUserRole,
+    default: DefaultUserRole.USER,
+  })
+  @IsEnum(DefaultUserRole)
+  defaultRole: DefaultUserRole;
 
   @OneToMany((type) => ClassUser, (classUser) => classUser.user)
   classUsers!: ClassUser[];

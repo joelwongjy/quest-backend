@@ -1,9 +1,15 @@
 import { DiscardableData, isDiscardableData } from "./entities";
 
+export enum DefaultUserRole {
+  ADMIN = "Admin",
+  USER = "User",
+}
+
 export interface UserPostData {
   username: string;
   name: string;
   password?: string | null;
+  defaultUserRole?: DefaultUserRole | null;
 }
 
 export interface UserPatchData {
