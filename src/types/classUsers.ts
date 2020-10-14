@@ -7,8 +7,7 @@ export enum ClassUserRole {
   ADMIN = "Admin",
 }
 
-export interface ClassUserListData extends DiscardableData {
-  class: ClassData;
+export interface ClassUserListData extends DiscardableData, ClassData {
   role: ClassUserRole;
 }
 

@@ -45,7 +45,7 @@ export class ClassUser extends Discardable {
       this.class || (await getRepository(Class).findOneOrFail(this.classId));
     return {
       ...this.getBase(),
-      class: _class.getData(),
+      ..._class.getData(), // will overwrite classUser's id and dates, which is intended
       role: this.role,
     };
   };
