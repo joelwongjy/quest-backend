@@ -1,6 +1,7 @@
 import { Column, Entity, ManyToOne } from "typeorm";
 import { Discardable } from "../Discardable";
 import { Questionnaire } from "./Questionnaire";
+import { QuestionSet } from "./QuestionSet";
 
 @Entity()
 export class QuestionnaireWindow extends Discardable {
@@ -17,6 +18,12 @@ export class QuestionnaireWindow extends Discardable {
 
   @Column({ type: "timestamp without time zone" })
   close_at: Date;
+
+  @ManyToOne(
+    (type) => QuestionSet,
+    (question_set) => question_set.questionnaire_windows
+  )
+  question_set!: QuestionSet;
 
   @ManyToOne(
     (type) => Questionnaire,

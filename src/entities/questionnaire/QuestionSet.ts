@@ -1,22 +1,17 @@
-import { Entity, ManyToOne, OneToMany } from "typeorm";
+import { Entity, OneToMany } from "typeorm";
 import { Discardable } from "../Discardable";
 import { QuestionOrder } from "./QuestionOrder";
-import { Questionnaire } from "./Questionnaire";
+import { QuestionnaireWindow } from "./QuestionnaireWindow";
 
 @Entity()
 export class QuestionSet extends Discardable {
   entityName = "QuestionSet";
 
-  constructor(questionnaire: Questionnaire) {
-    super();
-    this.questionnaire = questionnaire;
-  }
-
-  @ManyToOne(
-    (type) => Questionnaire,
-    (questionnaire) => questionnaire.question_sets
+  @OneToMany(
+    (type) => QuestionnaireWindow,
+    (questionnaireWindow) => questionnaireWindow.question_set
   )
-  questionnaire: Questionnaire;
+  questionnaire_windows!: QuestionnaireWindow[];
 
   @OneToMany(
     (type) => QuestionOrder,

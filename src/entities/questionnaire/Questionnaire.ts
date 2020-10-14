@@ -3,7 +3,6 @@ import { Column, Entity, OneToMany, BeforeInsert, BeforeUpdate } from "typeorm";
 import { Discardable } from "../Discardable";
 import { QuestionnaireType } from "../../types/questionnaires";
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
-import { QuestionSet } from "./QuestionSet";
 import { ProgrammeQuestionnaire } from "./ProgrammeQuestionnaire";
 import { ClassQuestionnaire } from "./ClassQuestionnaire";
 
@@ -26,12 +25,6 @@ export class Questionnaire extends Discardable {
     enum: QuestionnaireType,
   })
   questionnaire_type: QuestionnaireType;
-
-  @OneToMany(
-    (type) => QuestionSet,
-    (questionSets) => questionSets.questionnaire
-  )
-  question_sets!: QuestionSet[];
 
   @OneToMany(
     (type) => QuestionnaireWindow,
