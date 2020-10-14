@@ -3,7 +3,6 @@ import { Column, Entity, OneToMany, BeforeInsert, BeforeUpdate } from "typeorm";
 import { Discardable } from "../Discardable";
 import { QuestionnaireType } from "../../types/questionnaires";
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
-import { QuestionSet } from "./QuestionSet";
 import { ProgrammeQuestionnaire } from "./ProgrammeQuestionnaire";
 import { ClassQuestionnaire } from "./ClassQuestionnaire";
 
@@ -11,10 +10,10 @@ import { ClassQuestionnaire } from "./ClassQuestionnaire";
 export class Questionnaire extends Discardable {
   entityName = "Questionnaire";
 
-  constructor(name: string, questionnaire_type: QuestionnaireType) {
+  constructor(name: string, questionnaireType: QuestionnaireType) {
     super();
     this.name = name;
-    this.questionnaire_type = questionnaire_type;
+    this.questionnaireType = questionnaireType;
   }
 
   @Column()
@@ -25,19 +24,13 @@ export class Questionnaire extends Discardable {
     type: "enum",
     enum: QuestionnaireType,
   })
-  questionnaire_type: QuestionnaireType;
-
-  @OneToMany(
-    (type) => QuestionSet,
-    (questionSets) => questionSets.questionnaire
-  )
-  question_sets!: QuestionSet[];
+  questionnaireType: QuestionnaireType;
 
   @OneToMany(
     (type) => QuestionnaireWindow,
     (questionnaireWindow) => questionnaireWindow.questionnaire
   )
-  questionnaire_windows!: QuestionnaireWindow[];
+  questionnaireWindows!: QuestionnaireWindow[];
 
   @OneToMany(
     (type) => ProgrammeQuestionnaire,

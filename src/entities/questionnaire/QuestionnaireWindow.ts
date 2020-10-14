@@ -1,26 +1,35 @@
+import { IsNotEmpty } from "class-validator";
 import { Column, Entity, ManyToOne } from "typeorm";
 import { Discardable } from "../Discardable";
 import { Questionnaire } from "./Questionnaire";
+import { QuestionSet } from "./QuestionSet";
 
 @Entity()
 export class QuestionnaireWindow extends Discardable {
   entityName = "QuestionnaireWindow";
 
-  constructor(open_at: Date, close_at: Date) {
+  constructor(openAt: Date, closeAt: Date) {
     super();
-    this.open_at = open_at;
-    this.close_at = close_at;
+    this.openAt = openAt;
+    this.closeAt = closeAt;
   }
 
   @Column({ type: "timestamp without time zone" })
-  open_at: Date;
+  openAt: Date;
 
   @Column({ type: "timestamp without time zone" })
-  close_at: Date;
+  closeAt: Date;
+
+  @IsNotEmpty()
+  @ManyToOne((type) => QuestionSet, { nullable: false })
+  mainSet!: QuestionSet;
+
+  @ManyToOne((type) => QuestionSet, { nullable: true })
+  sharedSet!: QuestionSet | null;
 
   @ManyToOne(
     (type) => Questionnaire,
-    (questionnaire) => questionnaire.questionnaire_windows
+    (questionnaire) => questionnaire.questionnaireWindows
   )
   questionnaire!: Questionnaire;
 }

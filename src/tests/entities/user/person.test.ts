@@ -51,7 +51,7 @@ describe("Create person", () => {
     expect(errors).toHaveLength(1);
   });
 
-  it("with valid mobile_phone", async () => {
+  it("with valid mobilePhone", async () => {
     let person: Person;
 
     person = new Person("Bobby", Gender.MALE, undefined, "91234567");
@@ -59,7 +59,7 @@ describe("Create person", () => {
     expect(errors).toHaveLength(0);
   });
 
-  it("with invalid mobile_phone", async () => {
+  it("with invalid mobilePhone", async () => {
     let person: Person;
 
     person = new Person("Bobby", Gender.MALE, undefined, "9123456");

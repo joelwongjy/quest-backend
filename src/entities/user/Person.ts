@@ -21,8 +21,8 @@ export class Person extends Discardable {
     name: string,
     gender: Gender,
     email?: string,
-    mobile_number?: string,
-    home_number?: string,
+    mobileNumber?: string,
+    homeNumber?: string,
     birthday?: null,
     user?: User
   ) {
@@ -30,8 +30,8 @@ export class Person extends Discardable {
     this.name = name;
     this.gender = gender;
     this.email = email ?? null;
-    this.mobile_number = mobile_number ?? null;
-    this.home_number = home_number ?? null;
+    this.mobileNumber = mobileNumber ?? null;
+    this.homeNumber = homeNumber ?? null;
     this.birthday = birthday ?? null;
     this.user = user ?? null;
   }
@@ -55,12 +55,12 @@ export class Person extends Discardable {
   @Column({ type: "character varying", nullable: true })
   @IsOptional()
   @IsPhoneNumber("SG")
-  mobile_number: string | null;
+  mobileNumber: string | null;
 
   @Column({ type: "character varying", nullable: true })
   @IsOptional()
   @IsPhoneNumber("SG")
-  home_number: string | null;
+  homeNumber: string | null;
 
   @Column({ type: "date", nullable: true })
   birthday: Date | null;
@@ -72,10 +72,10 @@ export class Person extends Discardable {
 
   @OneToMany(
     (type) => Relationship,
-    (relationship) => relationship.family_member
+    (relationship) => relationship.familyMember
   )
   youths!: Relationship[];
 
   @OneToMany((type) => Relationship, (relationship) => relationship.youth)
-  family_members!: Relationship[];
+  familyMembers!: Relationship[];
 }
