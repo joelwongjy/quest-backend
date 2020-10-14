@@ -1,5 +1,6 @@
 import { ClassUserData } from "./classUsers";
 import { DiscardableData, isDiscardableData } from "./entities";
+import { ProgrammeData } from "./programmes";
 
 export enum DefaultUserRole {
   ADMIN = "Admin",
@@ -33,7 +34,7 @@ export interface UserData extends UserListData, ContactData {
   // birthday?: Date;
   // gender: string;
   classes: ClassUserData[];
-  // programs: Program[];
+  programmes: ProgrammeData[];
 }
 
 export function isUserListData(data: any): data is UserListData {
