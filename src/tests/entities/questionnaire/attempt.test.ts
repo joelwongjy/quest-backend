@@ -7,6 +7,8 @@ import ApiServer from "../../../server";
 import { synchronize } from "../../../utils/tests";
 import { Question } from "../../../entities/questionnaire/Question";
 import { QuestionType } from "../../../types/questions";
+import { QuestionOrder } from "../../../entities/questionnaire/QuestionOrder";
+import { QuestionSet } from "../../../entities/questionnaire/QuestionSet";
 
 let server: ApiServer;
 
@@ -28,10 +30,26 @@ describe("Create attempt", () => {
     const userData = new User("Bobby", "Bobby");
     user = await getRepository(User).save(userData);
 
+    const question = new Question(
+      "How are you today?",
+      QuestionType.SHORT_ANSWER
+    );
+    const newQuestion = await getRepository(Question).save(question);
+
+    const questionOrder = new QuestionOrder(1, newQuestion);
+    const newQuestionOrder = await getRepository(QuestionOrder).save(
+      questionOrder
+    );
+
+    const questionSet = new QuestionSet();
+    questionSet.questionOrders = [newQuestionOrder];
+    const newQuestionSet = await getRepository(QuestionSet).save(questionSet);
+
     const windowData = new QuestionnaireWindow(
       new Date("2020/01/01"),
       new Date("2020/01/20")
     );
+    windowData.mainSet = newQuestionSet;
     window = await getRepository(QuestionnaireWindow).save(windowData);
   });
 
@@ -48,12 +66,12 @@ describe("Create attempt", () => {
 
     const attemptQuery = await getRepository(Attempt).find({
       where: { id: saved.id },
-      relations: ["user", "questionnaire_window"],
+      relations: ["user", "questionnaireWindow"],
     });
 
     expect(attemptQuery).toHaveLength(1);
     expect(attemptQuery[0].user.id).toBe(user.id);
-    expect(attemptQuery[0].questionnaire_window.id).toBe(window.id);
+    expect(attemptQuery[0].questionnaireWindow.id).toBe(window.id);
   });
 
   it("construct attempt with 2 answers", async () => {

@@ -10,20 +10,20 @@ export class Relationship extends Discardable {
 
   constructor(
     youth: Person,
-    family_member: Person,
+    familyMember: Person,
     relationshipType: RelationshipType
   ) {
     super();
     this.youth = youth;
-    this.family_member = family_member;
+    this.familyMember = familyMember;
     this.relationship = relationshipType;
   }
 
-  @ManyToOne((type) => Person, (youth) => youth.family_members)
+  @ManyToOne((type) => Person, (youth) => youth.familyMembers)
   youth: Person;
 
-  @ManyToOne((type) => Person, (family_member) => family_member.youths)
-  family_member: Person;
+  @ManyToOne((type) => Person, (familyMember) => familyMember.youths)
+  familyMember: Person;
 
   @Column({
     type: "enum",

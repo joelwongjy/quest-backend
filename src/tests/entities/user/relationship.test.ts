@@ -54,12 +54,12 @@ describe("Relationship", () => {
     it("query using relationship table", async () => {
       const getRelationships = await getRepository(Relationship).find({
         where: { youth: { id: youth.id } },
-        relations: ["youth", "family_member"],
+        relations: ["youth", "familyMember"],
       });
 
       expect(getRelationships.length).toBe(1);
       expect(getRelationships[0].youth.name).toBe(youth.name);
-      expect(getRelationships[0].family_member.name).toBe(father.name);
+      expect(getRelationships[0].familyMember.name).toBe(father.name);
     });
 
     describe("query using person table", () => {
@@ -79,13 +79,13 @@ describe("Relationship", () => {
       it("search for youth and get related father", async () => {
         const youthQuery = await getRepository(Person).find({
           where: { id: youth.id },
-          relations: ["family_members", "family_members.family_member"],
+          relations: ["familyMembers", "familyMembers.familyMember"],
         });
 
         expect(youthQuery.length).toBe(1);
-        expect(youthQuery[0].family_members?.length).toBe(1);
-        youthQuery[0].family_members?.forEach((relationship) => {
-          expect(relationship.family_member.name).toBe(father.name);
+        expect(youthQuery[0].familyMembers?.length).toBe(1);
+        youthQuery[0].familyMembers?.forEach((relationship) => {
+          expect(relationship.familyMember.name).toBe(father.name);
         });
       });
     });
