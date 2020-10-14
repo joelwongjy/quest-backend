@@ -1,4 +1,8 @@
 import { validate } from "class-validator";
+import { Question } from "../../../entities/questionnaire/Question";
+import { QuestionOrder } from "../../../entities/questionnaire/QuestionOrder";
+import { QuestionSet } from "../../../entities/questionnaire/QuestionSet";
+import { QuestionType } from "../../../types/questions";
 import { getRepository } from "typeorm";
 import { QuestionnaireWindow } from "../../../entities/questionnaire/QuestionnaireWindow";
 import ApiServer from "../../../server";
@@ -18,16 +22,34 @@ afterAll(async () => {
 
 describe("Create questionnaireWindow", () => {
   afterEach(async () => {
-    await getRepository(QuestionnaireWindow).delete({});
+    await synchronize(server);
   });
 
-  it("with valid start and end date", async () => {
+  it("with valid arguments", async () => {
     let questionnaireWindow: QuestionnaireWindow;
     let startDate: Date = new Date("2019-05-20");
     let endDate: Date = new Date("2020-05-27");
 
-    questionnaireWindow = new QuestionnaireWindow(startDate, endDate);
+    const question = new Question(
+      "How are you today?",
+      QuestionType.SHORT_ANSWER
+    );
+    const newQuestion = await getRepository(Question).save(question);
+    expect(newQuestion.id).toBeTruthy();
 
+    const questionOrder = new QuestionOrder(1, newQuestion);
+    const newQuestionOrder = await getRepository(QuestionOrder).save(
+      questionOrder
+    );
+    expect(newQuestionOrder.id).toBeTruthy();
+
+    const questionSet = new QuestionSet();
+    questionSet.question_orders = [newQuestionOrder];
+    const newQuestionSet = await getRepository(QuestionSet).save(questionSet);
+    expect(newQuestionSet.id).toBeTruthy();
+
+    questionnaireWindow = new QuestionnaireWindow(startDate, endDate);
+    questionnaireWindow.main_set = newQuestionSet;
     const errors = await validate(questionnaireWindow);
     expect(errors.length).toBe(0);
 
@@ -35,6 +57,6 @@ describe("Create questionnaireWindow", () => {
       QuestionnaireWindow
     ).save(questionnaireWindow);
 
-    expect(newQuestionnaireWindow).toBeTruthy();
+    expect(newQuestionnaireWindow.id).toBeTruthy();
   });
 });
