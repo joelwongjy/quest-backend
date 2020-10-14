@@ -1,4 +1,5 @@
 import { IsNotEmpty } from "class-validator";
+import { ClassData, ClassListData } from "src/types/classes";
 import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
 import { Discardable } from "../Discardable";
 import { ClassQuestionnaire } from "../questionnaire/ClassQuestionnaire";
@@ -30,4 +31,13 @@ export class Class extends Discardable {
     (classQuestionnaire) => classQuestionnaire.class
   )
   classQuestionnaires!: ClassQuestionnaire[];
+
+  getListData = (): ClassListData => ({
+    ...this.getBase(),
+    name: this.name,
+  });
+
+  getData = (): ClassData => ({
+    ...this.getListData(),
+  });
 }
