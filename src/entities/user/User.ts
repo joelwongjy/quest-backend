@@ -1,11 +1,11 @@
 import { hashSync } from "bcryptjs";
 import { IsEnum, IsNotEmpty, IsString, Validate } from "class-validator";
 import { sign } from "jsonwebtoken";
-import { Column, Entity, OneToMany } from "typeorm";
+import { Column, Entity, getRepository, OneToMany } from "typeorm";
 import IsUniqueUsername from "../../constraints/IsUniqueUsername";
 import { AuthenticationData } from "../../types/auth";
 import { BearerTokenType } from "../../types/tokens";
-import { DefaultUserRole, UserData } from "../../types/users";
+import { DefaultUserRole, UserListData, UserData } from "../../types/users";
 import { Discardable } from "../Discardable";
 import { ClassUser } from "../programme/ClassUser";
 
@@ -71,9 +71,19 @@ export class User extends Discardable {
     return { accessToken };
   };
 
-  getData = (): UserData => ({
+  getListData = (): UserListData => ({
     ...this.getBase(),
     username: this.username,
     name: this.name,
   });
+
+  getData = async (): Promise<UserData> => {
+    const classUsers =
+      this.classUsers ||
+      (await getRepository(ClassUser).find({ userId: this.id }));
+    return {
+      ...this.getListData(),
+      classes: await Promise.all(classUsers.map((cu) => cu.getData())),
+    };
+  };
 }
