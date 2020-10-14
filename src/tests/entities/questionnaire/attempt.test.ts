@@ -42,14 +42,14 @@ describe("Create attempt", () => {
     );
 
     const questionSet = new QuestionSet();
-    questionSet.question_orders = [newQuestionOrder];
+    questionSet.questionOrders = [newQuestionOrder];
     const newQuestionSet = await getRepository(QuestionSet).save(questionSet);
 
     const windowData = new QuestionnaireWindow(
       new Date("2020/01/01"),
       new Date("2020/01/20")
     );
-    windowData.main_set = newQuestionSet;
+    windowData.mainSet = newQuestionSet;
     window = await getRepository(QuestionnaireWindow).save(windowData);
   });
 
@@ -66,12 +66,12 @@ describe("Create attempt", () => {
 
     const attemptQuery = await getRepository(Attempt).find({
       where: { id: saved.id },
-      relations: ["user", "questionnaire_window"],
+      relations: ["user", "questionnaireWindow"],
     });
 
     expect(attemptQuery).toHaveLength(1);
     expect(attemptQuery[0].user.id).toBe(user.id);
-    expect(attemptQuery[0].questionnaire_window.id).toBe(window.id);
+    expect(attemptQuery[0].questionnaireWindow.id).toBe(window.id);
   });
 
   it("construct attempt with 2 answers", async () => {

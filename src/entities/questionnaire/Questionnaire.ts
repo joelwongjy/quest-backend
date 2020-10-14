@@ -10,10 +10,10 @@ import { ClassQuestionnaire } from "./ClassQuestionnaire";
 export class Questionnaire extends Discardable {
   entityName = "Questionnaire";
 
-  constructor(name: string, questionnaire_type: QuestionnaireType) {
+  constructor(name: string, questionnaireType: QuestionnaireType) {
     super();
     this.name = name;
-    this.questionnaire_type = questionnaire_type;
+    this.questionnaireType = questionnaireType;
   }
 
   @Column()
@@ -24,13 +24,13 @@ export class Questionnaire extends Discardable {
     type: "enum",
     enum: QuestionnaireType,
   })
-  questionnaire_type: QuestionnaireType;
+  questionnaireType: QuestionnaireType;
 
   @OneToMany(
     (type) => QuestionnaireWindow,
     (questionnaireWindow) => questionnaireWindow.questionnaire
   )
-  questionnaire_windows!: QuestionnaireWindow[];
+  questionnaireWindows!: QuestionnaireWindow[];
 
   @OneToMany(
     (type) => ProgrammeQuestionnaire,

@@ -8,7 +8,7 @@ export class QuestionSet extends Discardable {
 
   @OneToMany(
     (type) => QuestionOrder,
-    (question_order) => question_order.question_set
+    (questionOrder) => questionOrder.questionSet
   )
-  question_orders!: QuestionOrder[];
+  questionOrders!: QuestionOrder[];
 }

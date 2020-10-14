@@ -7,19 +7,19 @@ import { QuestionType } from "../../types/questions";
 export class Question extends Discardable {
   entityName = "Question";
 
-  constructor(question_text: string, question_type: QuestionType) {
+  constructor(questionText: string, questionType: QuestionType) {
     super();
-    this.question_text = question_text;
-    this.question_type = question_type;
+    this.questionText = questionText;
+    this.questionType = questionType;
   }
 
   @Column()
   @IsNotEmpty()
-  question_text: string;
+  questionText: string;
 
   @Column({
     type: "enum",
     enum: QuestionType,
   })
-  question_type: QuestionType;
+  questionType: QuestionType;
 }

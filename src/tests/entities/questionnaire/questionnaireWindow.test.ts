@@ -44,12 +44,12 @@ describe("Create questionnaireWindow", () => {
     expect(newQuestionOrder.id).toBeTruthy();
 
     const questionSet = new QuestionSet();
-    questionSet.question_orders = [newQuestionOrder];
+    questionSet.questionOrders = [newQuestionOrder];
     const newQuestionSet = await getRepository(QuestionSet).save(questionSet);
     expect(newQuestionSet.id).toBeTruthy();
 
     questionnaireWindow = new QuestionnaireWindow(startDate, endDate);
-    questionnaireWindow.main_set = newQuestionSet;
+    questionnaireWindow.mainSet = newQuestionSet;
     const errors = await validate(questionnaireWindow);
     expect(errors.length).toBe(0);
 

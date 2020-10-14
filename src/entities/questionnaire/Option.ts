@@ -7,15 +7,15 @@ import { Question } from "./Question";
 export class Option extends Discardable {
   entityName = "Option";
 
-  constructor(option_text: string, question: Question) {
+  constructor(optionText: string, question: Question) {
     super();
-    this.option_text = option_text;
+    this.optionText = optionText;
     this.question = question;
   }
 
   @Column()
   @IsNotEmpty()
-  option_text: string;
+  optionText: string;
 
   @ManyToOne((type) => Question)
   question: Question;

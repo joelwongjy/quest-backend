@@ -8,17 +8,17 @@ import { QuestionnaireWindow } from "./QuestionnaireWindow";
 export class Attempt extends Discardable {
   entityName = "Attempt";
 
-  constructor(user: User, questionnaire_window: QuestionnaireWindow) {
+  constructor(user: User, questionnaireWindow: QuestionnaireWindow) {
     super();
     this.user = user;
-    this.questionnaire_window = questionnaire_window;
+    this.questionnaireWindow = questionnaireWindow;
   }
 
   @ManyToOne((type) => User)
   user: User;
 
   @ManyToOne((type) => QuestionnaireWindow)
-  questionnaire_window: QuestionnaireWindow;
+  questionnaireWindow: QuestionnaireWindow;
 
   @OneToMany((type) => Answer, (answer) => answer.attempt)
   answers!: Answer[];

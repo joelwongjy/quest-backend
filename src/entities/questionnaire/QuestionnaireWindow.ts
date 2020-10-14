@@ -8,28 +8,28 @@ import { QuestionSet } from "./QuestionSet";
 export class QuestionnaireWindow extends Discardable {
   entityName = "QuestionnaireWindow";
 
-  constructor(open_at: Date, close_at: Date) {
+  constructor(openAt: Date, closeAt: Date) {
     super();
-    this.open_at = open_at;
-    this.close_at = close_at;
+    this.openAt = openAt;
+    this.closeAt = closeAt;
   }
 
   @Column({ type: "timestamp without time zone" })
-  open_at: Date;
+  openAt: Date;
 
   @Column({ type: "timestamp without time zone" })
-  close_at: Date;
+  closeAt: Date;
 
   @IsNotEmpty()
   @ManyToOne((type) => QuestionSet, { nullable: false })
-  main_set!: QuestionSet;
+  mainSet!: QuestionSet;
 
   @ManyToOne((type) => QuestionSet, { nullable: true })
-  shared_set!: QuestionSet | null;
+  sharedSet!: QuestionSet | null;
 
   @ManyToOne(
     (type) => Questionnaire,
-    (questionnaire) => questionnaire.questionnaire_windows
+    (questionnaire) => questionnaire.questionnaireWindows
   )
   questionnaire!: Questionnaire;
 }
