@@ -8,9 +8,9 @@ export enum DefaultUserRole {
 
 export interface UserPostData {
   username: string;
-  name: string;
-  password?: string | null;
-  defaultUserRole?: DefaultUserRole | null;
+  name?: string;
+  password: string | null;
+  defaultUserRole?: DefaultUserRole;
 }
 
 export interface UserPatchData {
