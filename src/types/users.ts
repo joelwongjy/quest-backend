@@ -1,3 +1,4 @@
+import { ClassUserData } from "./classUsers";
 import { DiscardableData, isDiscardableData } from "./entities";
 
 export enum DefaultUserRole {
@@ -17,12 +18,23 @@ export interface UserPatchData {
   name: string;
 }
 
+export interface ContactData {
+  mobileNumber?: string;
+  homeNumber?: string;
+  email?: string;
+}
+
 export interface UserListData extends DiscardableData {
   username: string;
   name: string;
 }
 
-export interface UserData extends UserListData {}
+export interface UserData extends UserListData, ContactData {
+  // birthday?: Date;
+  // gender: string;
+  classes: ClassUserData[];
+  // programs: Program[];
+}
 
 export function isUserListData(data: any): data is UserListData {
   return (
