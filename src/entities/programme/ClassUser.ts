@@ -45,18 +45,12 @@ export class ClassUser extends Discardable {
       this.class || (await getRepository(Class).findOneOrFail(this.classId));
     return {
       ...this.getBase(),
-      ..._class.getListData(), // will overwrite classUser's id and dates, which is intended
+      ...(await _class.getListData()), // will overwrite classUser's id and dates, which is intended
       role: this.role,
     };
   };
 
-  getData = async (): Promise<ClassUserData> => {
-    const _class =
-      this.class || (await getRepository(Class).findOneOrFail(this.classId));
-    return {
-      ...this.getBase(),
-      ...(await _class.getData()), // will overwrite classUser's id and dates, which is intended
-      role: this.role,
-    };
-  };
+  getData = async (): Promise<ClassUserData> => ({
+    ...(await this.getListData()),
+  });
 }

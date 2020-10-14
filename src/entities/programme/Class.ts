@@ -35,18 +35,20 @@ export class Class extends Discardable {
   )
   classQuestionnaires!: ClassQuestionnaire[];
 
-  getListData = (): ClassListData => ({
-    ...this.getBase(),
-    name: this.name,
-  });
-
-  getData = async (): Promise<ClassData> => {
+  getListData = async (): Promise<ClassListData> => {
     const programme =
       this.programme ||
       (await getRepository(Programme).findOneOrFail(this.programmeId));
     return {
-      ...this.getListData(),
-      programme: programme.getData(),
+      ...this.getBase(),
+      name: this.name,
+      programme: programme.getListData(),
+    };
+  };
+
+  getData = async (): Promise<ClassData> => {
+    return {
+      ...(await this.getListData()),
     };
   };
 }
