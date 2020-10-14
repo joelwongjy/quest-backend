@@ -1,6 +1,6 @@
 import { IsNotEmpty } from "class-validator";
-import { ClassData, ClassListData } from "src/types/classes";
 import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
+import { ClassData, ClassListData } from "../../types/classes";
 import { Discardable } from "../Discardable";
 import { ClassQuestionnaire } from "../questionnaire/ClassQuestionnaire";
 import { ClassUser } from "./ClassUser";
