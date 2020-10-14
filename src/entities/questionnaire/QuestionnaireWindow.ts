@@ -1,3 +1,4 @@
+import { IsNotEmpty } from "class-validator";
 import { Column, Entity, ManyToOne } from "typeorm";
 import { Discardable } from "../Discardable";
 import { Questionnaire } from "./Questionnaire";
@@ -19,11 +20,12 @@ export class QuestionnaireWindow extends Discardable {
   @Column({ type: "timestamp without time zone" })
   close_at: Date;
 
-  @ManyToOne(
-    (type) => QuestionSet,
-    (question_set) => question_set.questionnaire_windows
-  )
-  question_set!: QuestionSet;
+  @IsNotEmpty()
+  @ManyToOne((type) => QuestionSet, { nullable: false })
+  main_set!: QuestionSet;
+
+  @ManyToOne((type) => QuestionSet, { nullable: true })
+  shared_set!: QuestionSet | null;
 
   @ManyToOne(
     (type) => Questionnaire,
