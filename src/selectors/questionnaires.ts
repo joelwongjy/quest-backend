@@ -7,14 +7,11 @@ import { QuestionnaireListData } from "../types/questionnaires";
 export async function getQuestionnaires(): Promise<QuestionnaireListData[]> {
   const result: QuestionnaireListData[] = [];
 
-  const questionnairesAndWindows: Questionnaire[] = await getRepository(
-    Questionnaire
-  )
+  const questionnaires: Questionnaire[] = await getRepository(Questionnaire)
     .createQueryBuilder("questionnaire")
-    .innerJoin("questionnaire.questionnaireWindows", "windows")
     .getMany();
 
-  for (let questionnaire of questionnairesAndWindows) {
+  for (let questionnaire of questionnaires) {
     const {
       id,
       name,
@@ -24,7 +21,15 @@ export async function getQuestionnaires(): Promise<QuestionnaireListData[]> {
       updatedAt,
     } = questionnaire;
     const status = questionnaire.questionnaireStatus;
-    for (let window of questionnaireWindows) {
+
+    const windows: QuestionnaireWindow[] = await getRepository(
+      QuestionnaireWindow
+    )
+      .createQueryBuilder("window")
+      .where("window.questionnaireId = :id", { id: id })
+      .getMany();
+
+    for (let window of windows) {
       const startAt = window.openAt;
       const endAt = window.closeAt;
       result.push({
