@@ -3,6 +3,7 @@ import * as QuestionnaireController from "../../controllers/QuestionnaireControl
 
 export const router = Router();
 
+router.get("/questionnaires", QuestionnaireController.getQuestionnaireListData);
 router.post("/create", QuestionnaireController.create);
 
 export default router;
