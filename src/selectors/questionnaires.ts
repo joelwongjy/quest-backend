@@ -26,7 +26,7 @@ export async function getQuestionnaires(): Promise<QuestionnaireListData[]> {
       QuestionnaireWindow
     )
       .createQueryBuilder("window")
-      .where("window.questionnaireId = :id", { id: id })
+      .where("window.questionnaire.id = :id", { id: id })
       .getMany();
 
     for (let window of windows) {
