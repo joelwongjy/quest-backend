@@ -1,5 +1,18 @@
+import { DiscardableData } from "./entities";
+
 export enum QuestionnaireType {
-  PRE_POST,
-  RECURRING,
-  ONE_TIME,
+  ONE_TIME = "ONE TIME",
+  PRE_POST = "PRE POST",
+}
+
+export enum QuestionnaireStatus {
+  DRAFT = "DRAFT",
+  PUBLISHED = "PUBLISHED",
+}
+
+export interface QuestionnaireListData extends DiscardableData {
+  name: string;
+  startAt: Date;
+  endAt: Date;
+  status: QuestionnaireStatus;
 }

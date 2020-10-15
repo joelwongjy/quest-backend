@@ -1,5 +1,6 @@
 import { IsNotEmpty } from "class-validator";
-import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
+import { Column, Entity, getRepository, ManyToOne, OneToMany } from "typeorm";
+import { ClassData, ClassListData } from "../../types/classes";
 import { Discardable } from "../Discardable";
 import { ClassQuestionnaire } from "../questionnaire/ClassQuestionnaire";
 import { ClassUser } from "./ClassUser";
@@ -30,4 +31,26 @@ export class Class extends Discardable {
     (classQuestionnaire) => classQuestionnaire.class
   )
   classQuestionnaires!: ClassQuestionnaire[];
+
+  getListData = async (): Promise<ClassListData> => {
+    const programme =
+      this.programme ||
+      (
+        await getRepository(Class).findOneOrFail({
+          where: { id: this.id },
+          relations: ["programme"],
+        })
+      ).programme;
+    return {
+      ...this.getBase(),
+      name: this.name,
+      programme: programme.getListData(),
+    };
+  };
+
+  getData = async (): Promise<ClassData> => {
+    return {
+      ...(await this.getListData()),
+    };
+  };
 }

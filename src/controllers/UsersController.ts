@@ -10,13 +10,14 @@ export async function create(
   request: Request,
   response: Response
 ): Promise<void> {
-  const { username, password, name } = pick(
+  const { username, password, name, defaultUserRole } = pick(
     request.body,
     "username",
     "password",
-    "name"
+    "name",
+    "defaultUserRole"
   );
-  const user = new User(username, name, password);
+  const user = new User(username, name, password, defaultUserRole);
   const errors = await validate(user);
   if (errors.length > 0) {
     let error = "Something went wrong. Please try again!";
@@ -31,7 +32,7 @@ export async function create(
   await getRepository(User).save(user);
 
   const data = {
-    user: user.getData(),
+    user: await user.getData(),
     ...user.createAuthenticationToken(),
   };
   response.status(201).json(data);
@@ -55,7 +56,7 @@ export async function showSelf(
   }
 
   try {
-    const data = user.getData();
+    const data = await user.getData();
     response.status(200).json({ user: data });
   } catch (error) {
     response.sendStatus(400);
@@ -82,7 +83,7 @@ export async function updateSelf(
     Object.assign(user, pick(request.body, "name"));
     await getRepository(User).save(user);
 
-    const data = user.getData();
+    const data = await user.getData();
     response.status(200).json({ user: data });
   } catch (error) {
     response.sendStatus(400);
