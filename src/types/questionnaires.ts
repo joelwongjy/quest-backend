@@ -12,6 +12,7 @@ export enum QuestionnaireStatus {
 }
 
 export interface QuestionnairePostData {
+  name: string;
   type: QuestionnaireType;
   questionWindows: QuestionnaireWindowPostData[];
   sharedQuestions: QuestionPostData[];
