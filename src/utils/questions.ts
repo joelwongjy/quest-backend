@@ -3,7 +3,11 @@ import { assert } from "console";
 import { getRepository } from "typeorm";
 import { Question } from "../entities/questionnaire/Question";
 import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
-import { QuestionPostData, QuestionType } from "../types/questions";
+import {
+  OptionPostData,
+  QuestionPostData,
+  QuestionType,
+} from "../types/questions";
 import { Option } from "../entities/questionnaire/Option";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
 
@@ -49,7 +53,7 @@ export async function createLongAnswerQuestion(
 
 export async function createMCQ(
   questionText: string,
-  optionsText: string[],
+  optionsText: OptionPostData[],
   order: number
 ): Promise<QuestionOrder> {
   const rv = await _createQuestion(
@@ -62,8 +66,8 @@ export async function createMCQ(
   assert(!!question.id);
 
   const options: Option[] = await Promise.all(
-    optionsText.map(async (text) => {
-      const data = new Option(text, question);
+    optionsText.map(async (option) => {
+      const data = new Option(option.optionText, question);
       await validateOrReject(data);
       return data;
     })

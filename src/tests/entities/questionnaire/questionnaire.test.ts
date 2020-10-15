@@ -94,8 +94,8 @@ describe("Create questionnaire using util methods", () => {
   it("create one-time", async () => {
     const input: QuestionnaireWindowPostData[] = [
       {
-        openAt: OPEN_AT,
-        closeAt: CLOSE_AT,
+        startAt: OPEN_AT,
+        endAt: CLOSE_AT,
         questions: QUESTIONS,
       },
     ];
@@ -142,13 +142,13 @@ describe("Create questionnaire using util methods", () => {
   it("create before-after", async () => {
     const input: QuestionnaireWindowPostData[] = [
       {
-        openAt: OPEN_AT,
-        closeAt: CLOSE_AT,
+        startAt: OPEN_AT,
+        endAt: CLOSE_AT,
         questions: BEFORE,
       },
       {
-        openAt: OPEN_AT_AFTER,
-        closeAt: CLOSE_AT_AFTER,
+        startAt: OPEN_AT_AFTER,
+        endAt: CLOSE_AT_AFTER,
         questions: AFTER,
       },
     ];

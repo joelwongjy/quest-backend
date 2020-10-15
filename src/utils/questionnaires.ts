@@ -48,9 +48,9 @@ export async function createBeforeAfterQuestionnaireWindow(
   after: QuestionnaireWindowPostData,
   sharedSet: QuestionPostData[]
 ): Promise<[QuestionnaireWindow, QuestionnaireWindow]> {
-  const { questions: preSet, openAt: preStart, closeAt: preEnd } = before;
+  const { questions: preSet, startAt: preStart, endAt: preEnd } = before;
 
-  const { questions: postSet, openAt: postStart, closeAt: postEnd } = after;
+  const { questions: postSet, startAt: postStart, endAt: postEnd } = after;
 
   const beforeData = await createQuestionSet(preSet);
   const afterData = await createQuestionSet(postSet);
@@ -114,10 +114,10 @@ export async function createQuestionnaireWithQuestions(
     type === QuestionnaireType.ONE_TIME
   ) {
     // one-time
-    const { openAt, closeAt, questions } = questionnaireWindows[0];
+    const { startAt, endAt, questions } = questionnaireWindows[0];
     const window = await createOneTimeQuestionnaireWindow(
-      openAt,
-      closeAt,
+      startAt,
+      endAt,
       questions
     );
 

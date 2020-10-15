@@ -10,7 +10,7 @@ export async function create(
   response: Response
 ): Promise<void> {
   const {
-    name,
+    title,
     type,
     questionWindows,
     sharedQuestions,
@@ -19,10 +19,10 @@ export async function create(
   } = request.body;
 
   let newQuestionnaire = await createQuestionnaireWithQuestions(
-    name,
+    title,
     type,
     questionWindows,
-    sharedQuestions
+    sharedQuestions.questions
   );
 
   newQuestionnaire = await associateQuestionnaireWithClassesAndProgrammes(

@@ -9,5 +9,13 @@ export interface QuestionPostData {
   order: number;
   questionType: QuestionType;
   questionText: string;
-  options?: string[];
+  options?: OptionPostData[];
+}
+
+export interface OptionPostData {
+  optionText: string;
+}
+
+export interface QuestionSetPostData {
+  questions: QuestionPostData[];
 }
