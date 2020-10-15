@@ -16,12 +16,12 @@ export class Questionnaire extends Discardable {
   constructor(
     name: string,
     questionnaireType: QuestionnaireType,
-    questionnaireStatus: QuestionnaireStatus
+    questionnaireStatus?: QuestionnaireStatus
   ) {
     super();
     this.name = name;
     this.questionnaireType = questionnaireType;
-    this.questionnaireStatus = questionnaireStatus;
+    this.questionnaireStatus = questionnaireStatus ?? QuestionnaireStatus.DRAFT;
   }
 
   @Column()
