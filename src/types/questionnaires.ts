@@ -16,6 +16,8 @@ export interface QuestionnairePostData {
   type: QuestionnaireType;
   questionWindows: QuestionnaireWindowPostData[];
   sharedQuestions: QuestionPostData[];
+  classes: number[];
+  programmes: number[];
 }
 
 export interface QuestionnaireWindowPostData {
