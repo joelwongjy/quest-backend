@@ -14,8 +14,8 @@ export async function create(
     type,
     questionWindows,
     sharedQuestions,
-    classes,
-    programmes,
+    classes = [],
+    programmes = [],
   } = request.body;
 
   let newQuestionnaire = await createQuestionnaireWithQuestions(
