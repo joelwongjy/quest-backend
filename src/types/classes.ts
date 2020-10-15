@@ -3,7 +3,7 @@ import { ProgrammeData } from "./programmes";
 
 export interface ClassListData extends DiscardableData {
   name: string;
-  programme: ProgrammeListData;
+  programme: ProgrammeData;
 }
 
 // TODO: Add students, etc. to Class Data
