@@ -9,6 +9,6 @@ const routes = Router();
 routes.use("/auth", auth);
 routes.use("/users", users);
 routes.use("/seed", seed);
-routes.use("/questionnaire", questionnaire);
+routes.use("/questionnaires", questionnaire);
 
 export default routes;
