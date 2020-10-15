@@ -1,7 +1,10 @@
 import { IsNotEmpty, validateOrReject } from "class-validator";
 import { Column, Entity, OneToMany, BeforeInsert, BeforeUpdate } from "typeorm";
 import { Discardable } from "../Discardable";
-import { QuestionnaireType } from "../../types/questionnaires";
+import {
+  QuestionnaireType,
+  QuestionnaireStatus,
+} from "../../types/questionnaires";
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
 import { ProgrammeQuestionnaire } from "./ProgrammeQuestionnaire";
 import { ClassQuestionnaire } from "./ClassQuestionnaire";
@@ -10,10 +13,15 @@ import { ClassQuestionnaire } from "./ClassQuestionnaire";
 export class Questionnaire extends Discardable {
   entityName = "Questionnaire";
 
-  constructor(name: string, questionnaireType: QuestionnaireType) {
+  constructor(
+    name: string,
+    questionnaireType: QuestionnaireType,
+    questionnaireStatus: QuestionnaireStatus
+  ) {
     super();
     this.name = name;
     this.questionnaireType = questionnaireType;
+    this.questionnaireStatus = questionnaireStatus;
   }
 
   @Column()
@@ -25,6 +33,12 @@ export class Questionnaire extends Discardable {
     enum: QuestionnaireType,
   })
   questionnaireType: QuestionnaireType;
+
+  @Column({
+    type: "enum",
+    enum: QuestionnaireStatus,
+  })
+  questionnaireStatus: QuestionnaireStatus;
 
   @OneToMany(
     (type) => QuestionnaireWindow,
