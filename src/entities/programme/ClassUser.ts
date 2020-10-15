@@ -20,14 +20,8 @@ export class ClassUser extends Discardable {
     this.role = role;
   }
 
-  @Column()
-  userId!: number;
-
   @ManyToOne((type) => User, (user) => user.classUsers)
   user: User;
-
-  @Column()
-  classId!: number;
 
   @ManyToOne((type) => Class, (class_) => class_.classUsers)
   class: Class;
@@ -42,7 +36,13 @@ export class ClassUser extends Discardable {
 
   getListData = async (): Promise<ClassUserListData> => {
     const _class =
-      this.class || (await getRepository(Class).findOneOrFail(this.classId));
+      this.class ||
+      (
+        await getRepository(ClassUser).findOneOrFail({
+          where: { id: this.id },
+          relations: ["class"],
+        })
+      ).class;
     return {
       ...this.getBase(),
       ...(await _class.getListData()), // will overwrite classUser's id and dates, which is intended

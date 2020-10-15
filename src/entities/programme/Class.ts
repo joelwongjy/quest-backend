@@ -20,9 +20,6 @@ export class Class extends Discardable {
   @IsNotEmpty()
   name: string;
 
-  @Column()
-  programmeId!: number;
-
   @ManyToOne((type) => Programme, (programme) => programme.classes)
   programme: Programme;
 
@@ -38,7 +35,12 @@ export class Class extends Discardable {
   getListData = async (): Promise<ClassListData> => {
     const programme =
       this.programme ||
-      (await getRepository(Programme).findOneOrFail(this.programmeId));
+      (
+        await getRepository(Class).findOneOrFail({
+          where: { id: this.id },
+          relations: ["programme"],
+        })
+      ).programme;
     return {
       ...this.getBase(),
       name: this.name,

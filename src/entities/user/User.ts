@@ -101,7 +101,12 @@ export class User extends Discardable {
     // Else return only those accessible to them
     const classUsers =
       this.classUsers ||
-      (await getRepository(ClassUser).find({ userId: this.id }));
+      (
+        await getRepository(User).findOneOrFail({
+          where: { id: this.id },
+          relations: ["classUsers"],
+        })
+      ).classUsers;
     const programmes = _.uniqBy(
       await Promise.all(
         classUsers.map(async (c) => (await c.getData()).programme)

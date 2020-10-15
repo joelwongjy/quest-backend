@@ -54,7 +54,11 @@ describe("Create and Query ClassUser", () => {
 
   it("query using classUser table", async () => {
     const classUserQuery: ClassUser[] = await getRepository(ClassUser).find({
-      where: { classId: class_.id },
+      where: {
+        class: {
+          id: class_.id,
+        },
+      },
       relations: ["class", "user"],
     });
 
