@@ -1,4 +1,4 @@
-import { validate, validateOrReject, validateSync } from "class-validator";
+import { validateOrReject } from "class-validator";
 import { assert } from "console";
 import { getRepository } from "typeorm";
 import { Question } from "../entities/questionnaire/Question";
@@ -19,8 +19,7 @@ async function _createQuestion(
   const orderData = new QuestionOrder(order, question);
   const newOrder = await getRepository(QuestionOrder).save(orderData);
 
-  // TODO: Check if this object has the db id for qnOrder and qn
-  // right now, assume it does for the createMCQ() helper
+  // This object has the db id for qnOrder and qn
   return newOrder;
 }
 
@@ -71,9 +70,6 @@ export async function createMCQ(
   );
   await getRepository(Option).save(options);
 
-  // TODO: verify if rv.questions.options array is updated. IDT so.
-  // not updating it now, in case caller does rv.save() on their own again - will cause options list to update
-  // even though this update should be safe
   return rv;
 }
 

@@ -85,11 +85,12 @@ export async function createQuestionnaireWithQuestions(
   name: string,
   type: QuestionnaireType,
   questionnaireWindows: QuestionnaireWindowPostData[],
-  sharedQuestions: QuestionPostData[]
+  sharedQuestions?: QuestionPostData[]
 ): Promise<Questionnaire> {
   if (
     questionnaireWindows.length === 2 &&
-    type === QuestionnaireType.PRE_POST
+    type === QuestionnaireType.PRE_POST &&
+    sharedQuestions
   ) {
     // before-after
     const before = questionnaireWindows[0];
@@ -128,7 +129,7 @@ export async function createQuestionnaireWithQuestions(
   }
 
   throw new Error(
-    `Invalid length of questionnaireWindows - received ${questionnaireWindows.length}`
+    `Invalid arguments - received ${questionnaireWindows.length} windows with ${type} as desired type`
   );
 }
 
