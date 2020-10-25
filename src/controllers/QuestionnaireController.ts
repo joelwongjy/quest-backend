@@ -6,6 +6,10 @@ import {
   associateQuestionnaireWithClassesAndProgrammes,
   createQuestionnaireWithQuestions,
 } from "../utils/questionnaires";
+import { AccessTokenSignedPayload } from "../types/tokens";
+import { getRepository } from "typeorm";
+import { User } from "../entities/user/User";
+import { DefaultUserRole } from "../types/users";
 
 export async function getQuestionnaireListData(
   _request: Request,
@@ -27,6 +31,17 @@ export async function create(
     classes = [],
     programmes = [],
   } = request.body;
+  const payload = response.locals.payload as AccessTokenSignedPayload;
+  const { userId } = payload;
+
+  const user = await getRepository(User).findOne({
+    where: { id: userId },
+    select: ["id", "defaultRole"],
+  });
+  if (!user || user.defaultRole != DefaultUserRole.ADMIN) {
+    response.sendStatus(401);
+    return;
+  }
 
   let newQuestionnaire = await createQuestionnaireWithQuestions(
     title,
@@ -41,6 +56,5 @@ export async function create(
     newQuestionnaire
   );
 
-  // TODO: this is... weird
   response.status(200).json({ success: true, id: newQuestionnaire.id });
 }
