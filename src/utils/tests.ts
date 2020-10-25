@@ -6,9 +6,11 @@ import ApiServer from "../server";
 import { Class } from "../entities/programme/Class";
 import { ClassUser } from "../entities/programme/ClassUser";
 import { ClassUserRole } from "../types/classUsers";
+import { DefaultUserRole } from "../types/users";
 
 faker.seed(127);
 
+const adminPassword = "theAdminUser";
 const teacherPassword = "setMeUp?";
 const studentPassword = "safeAndSound!";
 
@@ -28,6 +30,8 @@ export class Fixtures {
   // Instantiated
   public programme: Programme;
   public class_: Class;
+  public admin: User;
+  public adminAccessToken: string;
   public teacher: ClassUser;
   public teacherAccessToken: string;
   public teacherPassword: string;
@@ -41,11 +45,16 @@ export class Fixtures {
   constructor(
     programme: Programme,
     class_: Class,
+    admin: User,
     teacher: ClassUser,
     student: ClassUser
   ) {
     this.faker = faker;
     this.programme = programme;
+    this.admin = admin;
+    this.adminAccessToken = `Bearer ${
+      admin.createAuthenticationToken().accessToken
+    }`;
     this.class_ = class_;
     this.teacher = teacher;
     this.teacherAccessToken = `Bearer ${
@@ -81,9 +90,17 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
   const classUsers: ClassUser[] = [];
   const users: User[] = [];
 
+  const admin = new User(
+    "admin",
+    "Admin",
+    adminPassword,
+    DefaultUserRole.ADMIN
+  );
+  users.push(admin);
+
   const teacher = new ClassUser(
     class_,
-    new User("admin", "Admin", teacherPassword),
+    new User("teacher", "Teacher", teacherPassword),
     ClassUserRole.TEACHER
   );
   classUsers.push(teacher);
@@ -102,5 +119,5 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
   await getRepository(Class).save(class_);
   await getRepository(ClassUser).save(classUsers);
 
-  return new Fixtures(programme, class_, teacher, student);
+  return new Fixtures(programme, class_, admin, teacher, student);
 }

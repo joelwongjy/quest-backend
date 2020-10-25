@@ -57,4 +57,5 @@ export async function create(
   );
 
   response.status(200).json({ success: true, id: newQuestionnaire.id });
+  return;
 }

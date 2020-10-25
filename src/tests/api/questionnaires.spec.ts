@@ -1,0 +1,114 @@
+import request from "supertest";
+import ApiServer from "../../server";
+import {
+  QuestionnairePostData,
+  QuestionnaireType,
+} from "../../types/questionnaires";
+import { QuestionType } from "../../types/questions";
+import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
+
+const QUESTIONNAIRE_ONE_TIME: QuestionnairePostData = {
+  title: "My One Time Questionnaire",
+  type: QuestionnaireType.ONE_TIME,
+  questionWindows: [
+    {
+      startAt: new Date("2020/03/01"),
+      endAt: new Date("2020/03/20"),
+      questions: [
+        {
+          order: 1,
+          questionType: QuestionType.SHORT_ANSWER,
+          questionText: "How was your March Holidays?",
+        },
+      ],
+    },
+  ],
+  sharedQuestions: {
+    questions: [],
+  },
+};
+
+const QUESTIONNAIRE_BEFORE_AFTER: QuestionnairePostData = {
+  title: "My Before/After Questionnaire!",
+  type: QuestionnaireType.PRE_POST,
+  questionWindows: [
+    {
+      startAt: new Date("2020/01/01"),
+      endAt: new Date("2020/01/20"),
+      questions: [
+        {
+          order: 1,
+          questionType: QuestionType.SHORT_ANSWER,
+          questionText: "How are you feeling in January?",
+        },
+      ],
+    },
+    {
+      startAt: new Date("2020/02/01"),
+      endAt: new Date("2020/02/20"),
+      questions: [
+        {
+          order: 1,
+          questionType: QuestionType.SHORT_ANSWER,
+          questionText: "How are you feeling in February?",
+        },
+      ],
+    },
+  ],
+  sharedQuestions: {
+    questions: [
+      {
+        order: 1,
+        questionType: QuestionType.SHORT_ANSWER,
+        questionText: "What is your name?",
+      },
+    ],
+  },
+};
+
+let server: ApiServer;
+let fixtures: Fixtures;
+
+beforeAll(async () => {
+  server = new ApiServer();
+  await server.initialize();
+  await synchronize(server);
+  fixtures = await loadFixtures(server);
+});
+
+afterAll(async () => {
+  await server.close();
+});
+
+describe("POST /questionnaires/create", () => {
+  it("should create one-time questionnaires", async () => {
+    const response = await request(server.server)
+      .post(`${fixtures.api}/questionnaires/create`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(QUESTIONNAIRE_ONE_TIME);
+    expect(response.status).toEqual(200);
+  });
+
+  it("should create before-after questionnaire", async () => {
+    const response = await request(server.server)
+      .post(`${fixtures.api}/questionnaires/create`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(QUESTIONNAIRE_BEFORE_AFTER);
+    expect(response.status).toEqual(200);
+  });
+
+  it("should return 401 if not logged in", async () => {
+    const response = await request(server.server)
+      .post(`${fixtures.api}/questionnaires/create`)
+      .send(QUESTIONNAIRE_ONE_TIME);
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 401 if not admin", async () => {
+    const response = await request(server.server)
+      .post(`${fixtures.api}/questionnaires/create`)
+      .set("Authorization", fixtures.teacherAccessToken)
+      .send(QUESTIONNAIRE_ONE_TIME);
+    expect(response.status).toBe(401);
+  });
+});
