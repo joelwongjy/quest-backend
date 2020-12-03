@@ -7,6 +7,13 @@ import { Class } from "../entities/programme/Class";
 import { ClassUser } from "../entities/programme/ClassUser";
 import { ClassUserRole } from "../types/classUsers";
 import { DefaultUserRole } from "../types/users";
+import { Questionnaire } from "../entities/questionnaire/Questionnaire";
+import { QuestionType } from "../types/questions";
+import {
+  QuestionnaireType,
+  QuestionnaireWindowPostData,
+} from "../types/questionnaires";
+import { createQuestionnaireWithQuestions } from "./questionnaires";
 
 faker.seed(127);
 
@@ -41,6 +48,12 @@ export class Fixtures {
 
   // Not instantiated
   // Empty for now
+
+  // readonly data - used to generate the other sample questionnaires
+  public shortAnswerQuestions: Readonly<string[]> = [
+    "SA1. What is your name?",
+    "SA2. When is your birthday?",
+  ];
 
   constructor(
     programme: Programme,
@@ -80,6 +93,30 @@ export class Fixtures {
     const accessToken =
       "Bearer " + user.createAuthenticationToken().accessToken;
     return { classUser, accessToken };
+  }
+
+  public async createSampleOneTimeQuestionnaire() {
+    const window: QuestionnaireWindowPostData[] = [
+      {
+        startAt: new Date("2020/01/01"),
+        endAt: new Date("2020/01/15"),
+        questions: this.shortAnswerQuestions.map((questionText, order) => {
+          return {
+            order,
+            questionType: QuestionType.SHORT_ANSWER,
+            questionText,
+          };
+        }),
+      },
+    ];
+
+    const result: Questionnaire = await createQuestionnaireWithQuestions(
+      "Sample One-Time Questionnaire",
+      QuestionnaireType.ONE_TIME,
+      window
+    );
+
+    return result;
   }
 }
 

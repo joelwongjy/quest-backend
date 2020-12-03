@@ -1,4 +1,5 @@
 import request from "supertest";
+import { Questionnaire } from "../../entities/questionnaire/Questionnaire";
 import ApiServer from "../../server";
 import {
   QuestionnairePostData,
@@ -111,4 +112,38 @@ describe("POST /questionnaires/create", () => {
       .send(QUESTIONNAIRE_ONE_TIME);
     expect(response.status).toBe(401);
   });
+});
+
+describe("DELETE /questionnaires/delete", () => {
+  let questionnaire: Questionnaire;
+
+  beforeAll(async () => {
+    questionnaire = await fixtures.createSampleOneTimeQuestionnaire();
+  });
+
+  it("should return 200 if valid id and admin", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/questionnaires/delete/${questionnaire.id}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toEqual(200);
+  });
+
+  it("it should return 404 if invalid id", async () => {
+    const invalidId = questionnaire.id + 23;
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/questionnaires/delete/${invalidId}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toEqual(404);
+  });
+
+  it("should return 401 if not logged in", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/questionnaires/delete/${questionnaire.id}`)
+      .send();
+    expect(response.status).toEqual(401);
+  });
+
+  it.todo("should return 401 if not admin");
 });
