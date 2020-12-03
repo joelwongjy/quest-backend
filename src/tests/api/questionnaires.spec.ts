@@ -1,5 +1,7 @@
 import request from "supertest";
+import { getRepository } from "typeorm";
 import { Questionnaire } from "../../entities/questionnaire/Questionnaire";
+import { QuestionnaireWindow } from "../../entities/questionnaire/QuestionnaireWindow";
 import ApiServer from "../../server";
 import {
   QuestionnairePostData,
@@ -117,7 +119,7 @@ describe("POST /questionnaires/create", () => {
 describe("DELETE /questionnaires/delete", () => {
   let questionnaire: Questionnaire;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     questionnaire = await fixtures.createSampleOneTimeQuestionnaire();
   });
 
@@ -127,6 +129,23 @@ describe("DELETE /questionnaires/delete", () => {
       .set("Authorization", fixtures.adminAccessToken)
       .send();
     expect(response.status).toEqual(200);
+
+    const searchQnnaire = await getRepository(Questionnaire).findOne({
+      where: { id: questionnaire.id },
+    });
+    expect(searchQnnaire).toBeFalsy();
+
+    const createdWindows = questionnaire.questionnaireWindows.map((window) => {
+      return {
+        id: window.id,
+      };
+    });
+    expect(createdWindows.length).toBeGreaterThan(0);
+    expect(createdWindows[0].id).toBeTruthy();
+    const searchWindows = await getRepository(QuestionnaireWindow).find({
+      where: createdWindows,
+    });
+    expect(searchWindows).toHaveLength(0);
   });
 
   it("it should return 404 if invalid id", async () => {
@@ -136,6 +155,11 @@ describe("DELETE /questionnaires/delete", () => {
       .set("Authorization", fixtures.adminAccessToken)
       .send();
     expect(response.status).toEqual(404);
+
+    const searchQnnaire = await getRepository(Questionnaire).findOne(
+      questionnaire.id
+    );
+    expect(searchQnnaire?.id).toEqual(questionnaire.id);
   });
 
   it("should return 401 if not logged in", async () => {
@@ -143,6 +167,11 @@ describe("DELETE /questionnaires/delete", () => {
       .delete(`${fixtures.api}/questionnaires/delete/${questionnaire.id}`)
       .send();
     expect(response.status).toEqual(401);
+
+    const searchQnnaire = await getRepository(Questionnaire).findOne(
+      questionnaire.id
+    );
+    expect(searchQnnaire?.id).toEqual(questionnaire.id);
   });
 
   it.todo("should return 401 if not admin");
