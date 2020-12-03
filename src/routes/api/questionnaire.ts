@@ -9,5 +9,6 @@ router.get("/", QuestionnaireController.getQuestionnaireListData);
 
 router.use(checkBearerToken(BearerTokenType.AccessToken));
 router.post("/create", QuestionnaireController.create);
+router.delete("/delete/:id", QuestionnaireController.softDelete);
 
 export default router;

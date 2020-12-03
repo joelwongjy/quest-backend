@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import { QuestionnaireListData } from "../types/questionnaires";
+import {
+  QuestionnaireDeleteData,
+  QuestionnaireListData,
+} from "../types/questionnaires";
 import { getQuestionnaires } from "../selectors/questionnaires";
 import { QuestionnairePostData } from "../types/questionnaires";
 import {
@@ -10,6 +13,8 @@ import { AccessTokenSignedPayload } from "../types/tokens";
 import { getRepository } from "typeorm";
 import { User } from "../entities/user/User";
 import { DefaultUserRole } from "../types/users";
+import { Questionnaire } from "../entities/questionnaire/Questionnaire";
+import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
 
 export async function getQuestionnaireListData(
   _request: Request,
@@ -57,5 +62,40 @@ export async function create(
   );
 
   response.status(200).json({ success: true, id: newQuestionnaire.id });
+  return;
+}
+
+export async function softDelete(
+  request: Request<QuestionnaireDeleteData, any, any, any>,
+  response: Response
+) {
+  const { id } = request.params;
+  const questionnaire = await getRepository(Questionnaire).findOne({
+    where: { id },
+    relations: ["questionnaireWindows"],
+  });
+
+  if (!questionnaire) {
+    response.sendStatus(404);
+    return;
+  }
+
+  // unlikely to happen based on create
+  // TODO: Need to type this and communicate to front-end properly in case it happens
+  if (!questionnaire?.questionnaireWindows.length) {
+    response
+      .status(400)
+      .json({ message: `Questionnaire ${id} has 0 associated windows.` });
+    return;
+  }
+
+  // soft-delete the questionnaire
+  await getRepository(Questionnaire).softRemove(questionnaire);
+
+  await getRepository(QuestionnaireWindow).softRemove(
+    questionnaire?.questionnaireWindows!
+  );
+
+  response.sendStatus(200);
   return;
 }
