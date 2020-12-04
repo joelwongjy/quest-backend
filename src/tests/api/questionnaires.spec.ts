@@ -146,7 +146,7 @@ describe("DELETE /questionnaires/delete for Pre-Post Questionnaires", () => {
 
     // check windows have been deleted
     const createdWindows = questionnaire.questionnaireWindows;
-    expect(createdWindows.length).toBeGreaterThan(0);
+    expect(createdWindows).toHaveLength(2);
     expect(createdWindows[0].id).toBeTruthy();
     const searchWindows = await getRepository(QuestionnaireWindow).find({
       where: createdWindows.map((window) => Object.assign({ id: window.id })),
@@ -154,10 +154,17 @@ describe("DELETE /questionnaires/delete for Pre-Post Questionnaires", () => {
     expect(searchWindows).toHaveLength(0);
 
     // check questionSets have been deleted
-    const createdSets = questionnaire.questionnaireWindows.map(
-      (window) => window.mainSet
-    );
-    expect(createdSets.length).toBeGreaterThan(0);
+    let hasSharedSet = false;
+    const createdSets: QuestionSet[] = [];
+    questionnaire.questionnaireWindows.forEach((window) => {
+      createdSets.push(window.mainSet);
+
+      if (window.sharedSet && !hasSharedSet) {
+        createdSets.push(window.sharedSet);
+        hasSharedSet = true;
+      }
+    });
+    expect(createdSets).toHaveLength(3);
     expect(createdSets[0].id).toBeTruthy();
     const searchSets = await getRepository(QuestionSet).find({
       where: createdSets.map((set) => Object.assign({ id: set.id })),
@@ -165,10 +172,7 @@ describe("DELETE /questionnaires/delete for Pre-Post Questionnaires", () => {
     expect(searchSets).toHaveLength(0);
 
     // check questionOrders have been deleted
-    const createdOrders = _.flatMap(
-      questionnaire.questionnaireWindows,
-      (window) => window.mainSet.questionOrders
-    );
+    const createdOrders = _.flatMap(createdSets, (set) => set.questionOrders);
     expect(createdOrders.length).toBeGreaterThan(0);
     expect(createdOrders[0].id).toBeTruthy();
     const searchOrders = await getRepository(QuestionOrder).find({
