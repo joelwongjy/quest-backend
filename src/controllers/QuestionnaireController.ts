@@ -15,6 +15,8 @@ import { User } from "../entities/user/User";
 import { DefaultUserRole } from "../types/users";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
+import { QuestionSet } from "../entities/questionnaire/QuestionSet";
+import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
 
 export async function getQuestionnaireListData(
   _request: Request,
@@ -72,7 +74,13 @@ export async function softDelete(
   const { id } = request.params;
   const questionnaire = await getRepository(Questionnaire).findOne({
     where: { id },
-    relations: ["questionnaireWindows"],
+    relations: [
+      "questionnaireWindows",
+      "questionnaireWindows.mainSet",
+      "questionnaireWindows.mainSet.questionOrders",
+      "questionnaireWindows.sharedSet",
+      "questionnaireWindows.sharedSet.questionOrders",
+    ],
   });
 
   if (!questionnaire) {
@@ -80,21 +88,36 @@ export async function softDelete(
     return;
   }
 
-  // unlikely to happen based on create
-  // TODO: Need to type this and communicate to front-end properly in case it happens
-  if (!questionnaire?.questionnaireWindows.length) {
-    response
-      .status(400)
-      .json({ message: `Questionnaire ${id} has 0 associated windows.` });
-    return;
-  }
-
   // soft-delete the questionnaire
   await getRepository(Questionnaire).softRemove(questionnaire);
 
+  // soft-delete the windows
   await getRepository(QuestionnaireWindow).softRemove(
-    questionnaire?.questionnaireWindows!
+    questionnaire.questionnaireWindows!
   );
+
+  const questionSets: QuestionSet[] = [];
+  let questionOrders: QuestionOrder[] = [];
+  let includesSharedSet = false;
+  questionnaire.questionnaireWindows.forEach((window) => {
+    if (window.mainSet) {
+      questionSets.push(window.mainSet);
+      questionOrders = questionOrders.concat(window.mainSet.questionOrders);
+    }
+
+    if (window.sharedSet && !includesSharedSet) {
+      questionSets.push(window.sharedSet);
+      questionOrders = questionOrders.concat(window.sharedSet.questionOrders);
+
+      includesSharedSet = true;
+    }
+  });
+
+  // soft-delete the sets
+  await getRepository(QuestionSet).softRemove(questionSets);
+
+  // soft-delete the question orders
+  await getRepository(QuestionOrder).softRemove(questionOrders);
 
   response.sendStatus(200);
   return;
