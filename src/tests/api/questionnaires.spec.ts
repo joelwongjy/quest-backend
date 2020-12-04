@@ -1,7 +1,10 @@
+import _ from "lodash";
 import request from "supertest";
 import { getRepository } from "typeorm";
 import { Questionnaire } from "../../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../../entities/questionnaire/QuestionnaireWindow";
+import { QuestionOrder } from "../../entities/questionnaire/QuestionOrder";
+import { QuestionSet } from "../../entities/questionnaire/QuestionSet";
 import ApiServer from "../../server";
 import {
   QuestionnairePostData,
@@ -130,22 +133,43 @@ describe("DELETE /questionnaires/delete", () => {
       .send();
     expect(response.status).toEqual(200);
 
+    // check questionnaire has been deleted
     const searchQnnaire = await getRepository(Questionnaire).findOne({
       where: { id: questionnaire.id },
     });
     expect(searchQnnaire).toBeFalsy();
 
-    const createdWindows = questionnaire.questionnaireWindows.map((window) => {
-      return {
-        id: window.id,
-      };
-    });
+    // check windows have been deleted
+    const createdWindows = questionnaire.questionnaireWindows;
     expect(createdWindows.length).toBeGreaterThan(0);
     expect(createdWindows[0].id).toBeTruthy();
     const searchWindows = await getRepository(QuestionnaireWindow).find({
-      where: createdWindows,
+      where: createdWindows.map((window) => Object.assign({ id: window.id })),
     });
     expect(searchWindows).toHaveLength(0);
+
+    // check questionSets have been deleted
+    const createdSets = questionnaire.questionnaireWindows.map(
+      (window) => window.mainSet
+    );
+    expect(createdSets.length).toBeGreaterThan(0);
+    expect(createdSets[0].id).toBeTruthy();
+    const searchSets = await getRepository(QuestionSet).find({
+      where: createdSets.map((set) => Object.assign({ id: set.id })),
+    });
+    expect(searchSets).toHaveLength(0);
+
+    // check questionOrders have been deleted
+    const createdOrders = _.flatMap(
+      questionnaire.questionnaireWindows,
+      (window) => window.mainSet.questionOrders
+    );
+    expect(createdOrders.length).toBeGreaterThan(0);
+    expect(createdOrders[0].id).toBeTruthy();
+    const searchOrders = await getRepository(QuestionOrder).find({
+      where: createdOrders.map((order) => Object.assign({ id: order.id })),
+    });
+    expect(searchOrders).toHaveLength(0);
   });
 
   it("it should return 404 if invalid id", async () => {
