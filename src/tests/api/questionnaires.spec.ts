@@ -119,11 +119,15 @@ describe("POST /questionnaires/create", () => {
   });
 });
 
-describe("DELETE /questionnaires/delete", () => {
+describe("DELETE /questionnaires/delete for Pre-Post Questionnaires", () => {
   let questionnaire: Questionnaire;
 
   beforeEach(async () => {
-    questionnaire = await fixtures.createSampleOneTimeQuestionnaire();
+    questionnaire = await fixtures.createSamplePrePostQuestionnaire();
+  });
+
+  afterAll(async () => {
+    await synchronize(server);
   });
 
   it("should return 200 if valid id and admin", async () => {
@@ -199,4 +203,24 @@ describe("DELETE /questionnaires/delete", () => {
   });
 
   it.todo("should return 401 if not admin");
+});
+
+describe("DELETE /questionnaires/delete for One-Time Questionnaires", () => {
+  let questionnaire: Questionnaire;
+
+  beforeEach(async () => {
+    questionnaire = await fixtures.createSampleOneTimeQuestionnaire();
+  });
+
+  afterAll(async () => {
+    await synchronize(server);
+  });
+
+  it("should return 200 if valid id and admin", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/questionnaires/delete/${questionnaire.id}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toEqual(200);
+  });
 });
