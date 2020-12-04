@@ -9,10 +9,7 @@ import {
   associateQuestionnaireWithClassesAndProgrammes,
   createQuestionnaireWithQuestions,
 } from "../utils/questionnaires";
-import { AccessTokenSignedPayload } from "../types/tokens";
 import { getRepository } from "typeorm";
-import { User } from "../entities/user/User";
-import { DefaultUserRole } from "../types/users";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
@@ -38,17 +35,6 @@ export async function create(
     classes = [],
     programmes = [],
   } = request.body;
-  const payload = response.locals.payload as AccessTokenSignedPayload;
-  const { userId } = payload;
-
-  const user = await getRepository(User).findOne({
-    where: { id: userId },
-    select: ["id", "defaultRole"],
-  });
-  if (!user || user.defaultRole != DefaultUserRole.ADMIN) {
-    response.sendStatus(401);
-    return;
-  }
 
   let newQuestionnaire = await createQuestionnaireWithQuestions(
     title,

@@ -128,6 +128,7 @@ describe("DELETE /questionnaires/delete for Pre-Post Questionnaires", () => {
 
   afterAll(async () => {
     await synchronize(server);
+    fixtures = await loadFixtures(server);
   });
 
   it("should return 200 if valid id and admin", async () => {
@@ -202,7 +203,18 @@ describe("DELETE /questionnaires/delete for Pre-Post Questionnaires", () => {
     expect(searchQnnaire?.id).toEqual(questionnaire.id);
   });
 
-  it.todo("should return 401 if not admin");
+  it("should return 401 if not admin", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/questionnaires/delete/${questionnaire.id}`)
+      .set("Authorization", fixtures.studentAccessToken)
+      .send();
+    expect(response.status).toEqual(401);
+
+    const searchQnnaire = await getRepository(Questionnaire).findOne(
+      questionnaire.id
+    );
+    expect(searchQnnaire?.id).toEqual(questionnaire.id);
+  });
 });
 
 describe("DELETE /questionnaires/delete for One-Time Questionnaires", () => {
@@ -214,6 +226,7 @@ describe("DELETE /questionnaires/delete for One-Time Questionnaires", () => {
 
   afterAll(async () => {
     await synchronize(server);
+    fixtures = await loadFixtures(server);
   });
 
   it("should return 200 if valid id and admin", async () => {
