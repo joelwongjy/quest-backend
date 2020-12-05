@@ -38,28 +38,30 @@ describe("Use User to test Discardable", () => {
     const user: User = new User("username", "name", "password");
     const savedUser = await getRepository(User).save(user);
     expect(savedUser).toBeTruthy();
-    await getRepository(User).update(savedUser.id, { discardedAt: new Date() });
-    const updatedUser = await getRepository(User).findOne(savedUser.id);
-    expect(updatedUser).toBeTruthy();
-    expect(updatedUser!.discardedAt).toBeTruthy();
-    expect(updatedUser!.discardedAt).toBeInstanceOf(Date);
-  });
 
-  it("can be filtered out after soft deletion", async () => {
-    const user: User = new User("username", "name", "password");
-    const savedUser = await getRepository(User).save(user);
-    await getRepository(User).update(savedUser.id, { discardedAt: new Date() });
-    const foundUser = await getRepository(User).findOne(savedUser.id, {
-      where: { discardedAt: IsNull() },
+    await getRepository(User).softRemove(user);
+    const removedUser = await getRepository(User).findOne(savedUser.id);
+    expect(removedUser).toBeFalsy();
+
+    const userStillPresent = await getRepository(User).findOne({
+      where: { id: savedUser.id },
+      withDeleted: true,
     });
-    expect(foundUser).toBeFalsy();
+    expect(userStillPresent).toBeTruthy();
+    expect(userStillPresent!.id).toEqual(savedUser.id);
   });
 
-  it("returns valid DiscardableData via getBase method", async () => {
+  it("can restore soft deletion", async () => {
     const user: User = new User("username", "name", "password");
     const savedUser = await getRepository(User).save(user);
     expect(savedUser).toBeTruthy();
-    const baseData = savedUser.getBase();
-    expect(isDiscardableData(baseData));
+
+    await getRepository(User).softRemove(user);
+    const removedUser = await getRepository(User).findOne(savedUser.id);
+    expect(removedUser).toBeFalsy();
+
+    await getRepository(User).recover(savedUser);
+    const restoredUser = await getRepository(User).findOne(savedUser.id);
+    expect(restoredUser).toBeTruthy();
   });
 });

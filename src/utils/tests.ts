@@ -7,6 +7,13 @@ import { Class } from "../entities/programme/Class";
 import { ClassUser } from "../entities/programme/ClassUser";
 import { ClassUserRole } from "../types/classUsers";
 import { DefaultUserRole } from "../types/users";
+import { Questionnaire } from "../entities/questionnaire/Questionnaire";
+import { QuestionSetPostData, QuestionType } from "../types/questions";
+import {
+  QuestionnaireType,
+  QuestionnaireWindowPostData,
+} from "../types/questionnaires";
+import { createQuestionnaireWithQuestions } from "./questionnaires";
 
 faker.seed(127);
 
@@ -41,6 +48,53 @@ export class Fixtures {
 
   // Not instantiated
   // Empty for now
+
+  // readonly data - used to generate the other sample questionnaires
+  public shortAnswerQuestionsSet1: Readonly<string[]> = [
+    "What is your name?",
+    "When is your birthday?",
+  ];
+  public shortAnswerQuestionsSet2: Readonly<string[]> = [
+    "Where is your favourite drink?",
+    "What is your favourite food?",
+  ];
+  public shortAnswerQuestionsSet3: Readonly<string[]> = [
+    "Where do you live?",
+    "What is your favourite color?",
+  ];
+  public sampleWindow1: Readonly<QuestionnaireWindowPostData> = {
+    startAt: new Date("2020/01/01"),
+    endAt: new Date("2020/01/15"),
+    questions: this.shortAnswerQuestionsSet1.map((questionText, order) => {
+      return {
+        order,
+        questionType: QuestionType.SHORT_ANSWER,
+        questionText,
+      };
+    }),
+  };
+  public sampleWindow2: Readonly<QuestionnaireWindowPostData> = {
+    startAt: new Date("2020/03/01"),
+    endAt: new Date("2020/03/15"),
+    questions: this.shortAnswerQuestionsSet2.map((questionText, order) => {
+      return {
+        order,
+        questionType: QuestionType.SHORT_ANSWER,
+        questionText,
+      };
+    }),
+  };
+  public sampleWindow3: Readonly<QuestionnaireWindowPostData> = {
+    startAt: new Date("2020/05/01"),
+    endAt: new Date("2020/05/15"),
+    questions: this.shortAnswerQuestionsSet3.map((questionText, order) => {
+      return {
+        order,
+        questionType: QuestionType.SHORT_ANSWER,
+        questionText,
+      };
+    }),
+  };
 
   constructor(
     programme: Programme,
@@ -80,6 +134,30 @@ export class Fixtures {
     const accessToken =
       "Bearer " + user.createAuthenticationToken().accessToken;
     return { classUser, accessToken };
+  }
+
+  public async createSampleOneTimeQuestionnaire() {
+    const result: Questionnaire = await createQuestionnaireWithQuestions(
+      "Sample One-Time Questionnaire",
+      QuestionnaireType.ONE_TIME,
+      [this.sampleWindow1]
+    );
+
+    return result;
+  }
+
+  public async createSamplePrePostQuestionnaire() {
+    const beforeWindow: QuestionnaireWindowPostData = this.sampleWindow1;
+    const afterWindow: QuestionnaireWindowPostData = this.sampleWindow2;
+
+    const result: Questionnaire = await createQuestionnaireWithQuestions(
+      "Sample Before-After Questionnaire",
+      QuestionnaireType.PRE_POST,
+      [beforeWindow, afterWindow],
+      this.sampleWindow3.questions
+    );
+
+    return result;
   }
 }
 

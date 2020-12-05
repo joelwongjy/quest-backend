@@ -32,3 +32,7 @@ export interface QuestionnaireListData extends DiscardableData {
   endAt: Date;
   status: QuestionnaireStatus;
 }
+
+export interface QuestionnaireDeleteData {
+  id: number;
+}
