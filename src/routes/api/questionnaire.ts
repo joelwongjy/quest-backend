@@ -8,7 +8,7 @@ import { BearerTokenType } from "../../types/tokens";
 
 export const router = Router();
 
-router.get("/", QuestionnaireController.getQuestionnaireListData);
+router.get("/", QuestionnaireController.index);
 
 router.use(checkBearerToken(BearerTokenType.AccessToken));
 router.use(checkIfAdmin());

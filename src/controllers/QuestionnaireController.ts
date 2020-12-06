@@ -3,7 +3,7 @@ import {
   QuestionnaireDeleteData,
   QuestionnaireListData,
 } from "../types/questionnaires";
-import { getQuestionnaires } from "../selectors/questionnaires";
+import { selectQuestionnaireData } from "../selectors/questionnaires";
 import { QuestionnairePostData } from "../types/questionnaires";
 import {
   associateQuestionnaireWithClassesAndProgrammes,
@@ -15,12 +15,12 @@ import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWind
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
 import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
 
-export async function getQuestionnaireListData(
+export async function index(
   _request: Request,
   response: Response
 ): Promise<void> {
-  const questionnaireListData: QuestionnaireListData[] = await getQuestionnaires();
-  response.status(200).json({ questionnaireListData });
+  const questionnaireListData: QuestionnaireListData[] = await selectQuestionnaireData();
+  response.status(200).json({ questionnaires: questionnaireListData });
 }
 
 export async function create(
@@ -39,8 +39,8 @@ export async function create(
   let newQuestionnaire = await createQuestionnaireWithQuestions(
     title,
     type,
-    questionWindows,
-    sharedQuestions.questions
+    questionWindows ?? [],
+    sharedQuestions?.questions ?? []
   );
 
   newQuestionnaire = await associateQuestionnaireWithClassesAndProgrammes(

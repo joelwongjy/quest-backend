@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { addHours } from "date-fns";
 import { BaseData } from "../types/entities";
 
 export abstract class Base {
@@ -17,8 +18,8 @@ export abstract class Base {
 
   getBase = (): BaseData => ({
     id: this.id,
-    createdAt: this.createdAt,
-    updatedAt: this.updatedAt,
+    createdAt: addHours(this.createdAt, 8),
+    updatedAt: addHours(this.updatedAt, 8),
   });
 
   abstract entityName: string;

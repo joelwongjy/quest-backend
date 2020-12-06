@@ -1,9 +1,17 @@
 import { IsNotEmpty, validateOrReject } from "class-validator";
-import { Column, Entity, OneToMany, BeforeInsert, BeforeUpdate } from "typeorm";
+import {
+  Column,
+  Entity,
+  OneToMany,
+  BeforeInsert,
+  BeforeUpdate,
+  getRepository,
+} from "typeorm";
 import { Discardable } from "../Discardable";
 import {
   QuestionnaireType,
   QuestionnaireStatus,
+  QuestionnaireListData,
 } from "../../types/questionnaires";
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
 import { ProgrammeQuestionnaire } from "./ProgrammeQuestionnaire";
@@ -64,4 +72,23 @@ export class Questionnaire extends Discardable {
   async validate() {
     await validateOrReject(this);
   }
+
+  getListDataList = async (): Promise<QuestionnaireListData[]> => {
+    const windows =
+      this.questionnaireWindows ||
+      (
+        await getRepository(Questionnaire).findOneOrFail({
+          where: { id: this.id },
+          relations: ["questionnaireWindows"],
+        })
+      ).questionnaireWindows;
+
+    return windows.map((w: QuestionnaireWindow) => ({
+      ...this.getBase(),
+      name: this.name,
+      status: this.questionnaireStatus,
+      startAt: w.openAt,
+      endAt: w.closeAt,
+    }));
+  };
 }
