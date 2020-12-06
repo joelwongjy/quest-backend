@@ -8,7 +8,7 @@ import { ClassUser } from "../entities/programme/ClassUser";
 import { ClassUserRole } from "../types/classUsers";
 import { DefaultUserRole } from "../types/users";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
-import { QuestionSetPostData, QuestionType } from "../types/questions";
+import { QuestionType } from "../types/questions";
 import {
   QuestionnaireType,
   QuestionnaireWindowPostData,
