@@ -37,8 +37,12 @@ export interface QuestionnaireListData extends DiscardableData {
   status: QuestionnaireStatus;
 }
 
-export interface QuestionnaireIdData {
+export interface QuestionnaireId {
   id: number;
+}
+
+export interface QuestionnaireWindowId extends QuestionnaireId {
+  windowId: string;
 }
 
 export interface QuestionnaireWindowData
@@ -47,9 +51,16 @@ export interface QuestionnaireWindowData
   windowId: number;
 }
 
-export interface QuestionnaireData
+export interface QuestionnaireFullData
   extends Omit<QuestionnairePostData, "questionWindows" | "sharedQuestions"> {
   questionnaireId: number;
   questionWindows: QuestionnaireWindowData[];
+  sharedQuestions: QuestionSetData;
+}
+
+export interface QuestionnaireOneWindowData
+  extends Omit<QuestionnaireFullData, "questionWindows">,
+    QuestionnaireWindowData {
+  questionnaireId: number;
   sharedQuestions: QuestionSetData;
 }

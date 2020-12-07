@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import {
-  QuestionnaireData,
-  QuestionnaireIdData,
+  QuestionnaireFullData,
+  QuestionnaireId,
   QuestionnaireListData,
+  QuestionnaireOneWindowData,
+  QuestionnaireWindowId,
 } from "../types/questionnaires";
 import { selectQuestionnaireData } from "../selectors/questionnaires";
 import { QuestionnairePostData } from "../types/questionnaires";
@@ -56,7 +58,7 @@ export async function create(
 }
 
 export async function softDelete(
-  request: Request<QuestionnaireIdData, any, any, any>,
+  request: Request<QuestionnaireId, any, any, any>,
   response: Response
 ) {
   const { id } = request.params;
@@ -112,8 +114,8 @@ export async function softDelete(
 }
 
 export async function show(
-  request: Request<QuestionnaireIdData, any, any, any>,
-  response: Response<QuestionnaireData | Message>
+  request: Request<QuestionnaireId, any, any, any>,
+  response: Response<QuestionnaireFullData | Message>
 ): Promise<void> {
   const { id } = request.params;
 
@@ -125,9 +127,43 @@ export async function show(
 
     if (!qnnaire) {
       response.sendStatus(404);
+      return;
     }
 
-    const result = await qnnaire!.getData();
+    const result = await qnnaire!.getAllWindows();
+    response.status(200).json(result);
+    return;
+  } catch (e) {
+    response.status(400).json({ message: e.message });
+    return;
+  }
+}
+
+export async function showWindow(
+  request: Request<QuestionnaireWindowId, any, any, any>,
+  response: Response<QuestionnaireOneWindowData | Message>
+): Promise<void> {
+  const { id, windowId } = request.params;
+
+  try {
+    const qnnaire = await getRepository(Questionnaire).findOne({
+      select: ["id"],
+      where: { id },
+    });
+    if (!qnnaire) {
+      response.sendStatus(404);
+      return;
+    }
+
+    const windowIdInt = parseInt(windowId, 10);
+    if (isNaN(windowIdInt)) {
+      response
+        .sendStatus(400)
+        .json({ message: `Invalid windowId received (is: ${windowId})` });
+      return;
+    }
+
+    const result = await qnnaire!.getWindow(windowIdInt);
     response.status(200).json(result);
     return;
   } catch (e) {

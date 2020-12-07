@@ -12,15 +12,14 @@ import {
   QuestionnaireType,
   QuestionnaireStatus,
   QuestionnaireListData,
-  QuestionnaireData,
+  QuestionnaireFullData,
   QuestionnaireWindowData,
+  QuestionnaireOneWindowData,
 } from "../../types/questionnaires";
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
 import { ProgrammeQuestionnaire } from "./ProgrammeQuestionnaire";
 import { ClassQuestionnaire } from "./ClassQuestionnaire";
 import { QuestionData, QuestionSetData } from "../../types/questions";
-import { QuestionSet } from "./QuestionSet";
-import e from "express";
 import { QuestionOrder } from "./QuestionOrder";
 
 @Entity()
@@ -101,8 +100,9 @@ export class Questionnaire extends Discardable {
   /**
    * Converts questionnaire instance to a 'flattened' version for the controller.
    * Note: it does not update the instance attributes
+   * @throws if there is no valid questionnaire id, or qnnaire's sharedSets are not created properly
    */
-  getData = async (): Promise<QuestionnaireData> => {
+  getAllWindows = async (): Promise<QuestionnaireFullData> => {
     const qnnaire = await getRepository(Questionnaire).findOne({
       where: { id: this.id },
       relations: [
@@ -155,7 +155,7 @@ export class Questionnaire extends Discardable {
       questions,
     };
 
-    const result: QuestionnaireData = {
+    const result: QuestionnaireFullData = {
       questionnaireId: qnnaire.id,
       title: qnnaire.name,
       type: qnnaire.questionnaireType,
@@ -163,6 +163,37 @@ export class Questionnaire extends Discardable {
       sharedQuestions,
     };
     return result;
+  };
+
+  /**
+   * Converts questionnaire instance to a 'flattened' version for the controller.
+   * Note: it does not update instance attributes
+   * @param windowId the window to generate
+   * @throws if given windowId does not match a window in the instance
+   */
+  getWindow = async (windowId: number): Promise<QuestionnaireOneWindowData> => {
+    const fullQnnaire = await this.getAllWindows();
+
+    const matchingWindow = fullQnnaire.questionWindows.filter(
+      (windowData) => windowData.windowId === windowId
+    );
+    const hasMatchingWindow = matchingWindow.length === 1;
+    if (!hasMatchingWindow) {
+      throw new Error(
+        `Could not find window with id: ${windowId} in specified questionnaire` +
+          `id: ${this.id}`
+      );
+    }
+
+    const { questionnaireId, title, type, sharedQuestions } = fullQnnaire;
+
+    return {
+      questionnaireId,
+      title,
+      type,
+      ...matchingWindow[0],
+      sharedQuestions,
+    };
   };
 }
 
