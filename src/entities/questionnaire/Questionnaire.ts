@@ -12,10 +12,16 @@ import {
   QuestionnaireType,
   QuestionnaireStatus,
   QuestionnaireListData,
+  QuestionnaireData,
+  QuestionnaireWindowData,
 } from "../../types/questionnaires";
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
 import { ProgrammeQuestionnaire } from "./ProgrammeQuestionnaire";
 import { ClassQuestionnaire } from "./ClassQuestionnaire";
+import { QuestionData, QuestionSetData } from "../../types/questions";
+import { QuestionSet } from "./QuestionSet";
+import e from "express";
+import { QuestionOrder } from "./QuestionOrder";
 
 @Entity()
 export class Questionnaire extends Discardable {
@@ -91,4 +97,93 @@ export class Questionnaire extends Discardable {
       endAt: w.closeAt,
     }));
   };
+
+  /**
+   * Converts questionnaire instance to a 'flattened' version for the controller.
+   * Note: it does not update the instance attributes
+   */
+  getData = async (): Promise<QuestionnaireData> => {
+    const qnnaire = await getRepository(Questionnaire).findOne({
+      where: { id: this.id },
+      relations: [
+        "questionnaireWindows",
+        "questionnaireWindows.mainSet",
+        "questionnaireWindows.sharedSet",
+        "questionnaireWindows.mainSet.questionOrders",
+        "questionnaireWindows.sharedSet.questionOrders",
+        "questionnaireWindows.mainSet.questionOrders.question",
+        "questionnaireWindows.sharedSet.questionOrders.question",
+      ],
+    });
+
+    if (!qnnaire) {
+      throw new Error(`Could not find questionnaire (id: ${this.id})`);
+    }
+
+    // check if sharedSets is valid
+    const commonSharedSets = qnnaire.questionnaireWindows
+      .map((w) => w.sharedSet?.id)
+      .filter(Boolean) as number[];
+    const isValidPrePostQnnaire =
+      commonSharedSets.length === 2 &&
+      commonSharedSets[0] === commonSharedSets[1];
+    const isValidOneTimeQnnaire = commonSharedSets.length === 0;
+    if (!isValidPrePostQnnaire && !isValidOneTimeQnnaire) {
+      throw new Error(`Invalid questionnaire found in db (id: ${this.id})`);
+    }
+
+    // convert each window's mainSet's relations to desired object structure
+    const questionWindows: QuestionnaireWindowData[] = qnnaire.questionnaireWindows.map(
+      (window) => {
+        const { id: windowId, openAt: startAt, closeAt: endAt } = window;
+
+        const questions: QuestionData[] = window.mainSet.questionOrders.map(
+          _convertQnOrderRelations
+        );
+
+        return { windowId, startAt, endAt, questions };
+      }
+    );
+
+    // sharedSet
+    let questions: QuestionData[] = [];
+    if (isValidPrePostQnnaire) {
+      const sharedSet = qnnaire.questionnaireWindows[0].sharedSet;
+      questions = sharedSet!.questionOrders.map(_convertQnOrderRelations);
+    }
+    const sharedQuestions: QuestionSetData = {
+      questions,
+    };
+
+    const result: QuestionnaireData = {
+      questionnaireId: qnnaire.id,
+      title: qnnaire.name,
+      type: qnnaire.questionnaireType,
+      questionWindows,
+      sharedQuestions,
+    };
+    return result;
+  };
+}
+
+function _convertQnOrderRelations(qnOrder: QuestionOrder): QuestionData {
+  {
+    const { id: qnOrderId, order, question } = qnOrder;
+    const { questionType, questionText, options } = question;
+    const optionsWithId = options.map((o) => {
+      const { id: optionId, optionText } = o;
+      return {
+        optionId,
+        optionText,
+      };
+    });
+
+    return {
+      qnOrderId,
+      order,
+      questionType,
+      questionText,
+      options: optionsWithId,
+    };
+  }
 }

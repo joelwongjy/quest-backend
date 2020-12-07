@@ -15,6 +15,7 @@ import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
 import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
+import { Message } from "../types/errors";
 
 export async function index(
   _request: Request,
@@ -112,8 +113,25 @@ export async function softDelete(
 
 export async function show(
   request: Request<QuestionnaireIdData, any, any, any>,
-  response: Response<QuestionnaireData>
+  response: Response<QuestionnaireData | Message>
 ): Promise<void> {
-  response.sendStatus(403);
-  return;
+  const { id } = request.params;
+
+  try {
+    const qnnaire = await getRepository(Questionnaire).findOne({
+      select: ["id"],
+      where: { id },
+    });
+
+    if (!qnnaire) {
+      response.sendStatus(404);
+    }
+
+    const result = await qnnaire!.getData();
+    response.status(200).json(result);
+    return;
+  } catch (e) {
+    response.status(400).json({ message: e.message });
+    return;
+  }
 }
