@@ -1,5 +1,9 @@
 import { DiscardableData } from "./entities";
-import { QuestionPostData, QuestionSetPostData } from "./questions";
+import {
+  QuestionPostData,
+  QuestionSetData,
+  QuestionSetPostData,
+} from "./questions";
 
 export enum QuestionnaireType {
   ONE_TIME = "ONE TIME",
@@ -33,6 +37,19 @@ export interface QuestionnaireListData extends DiscardableData {
   status: QuestionnaireStatus;
 }
 
-export interface QuestionnaireDeleteData {
+export interface QuestionnaireIdData {
   id: number;
+}
+
+export interface QuestionnaireWindowData
+  extends Omit<QuestionnaireWindowPostData, "questions">,
+    QuestionSetData {
+  windowId: number;
+}
+
+export interface QuestionnaireData
+  extends Omit<QuestionnairePostData, "questionWindows" | "sharedQuestions"> {
+  questionnaireId: number;
+  questionWindows: QuestionnaireWindowData[];
+  sharedQuestions: QuestionSetData;
 }

@@ -11,6 +11,8 @@ export const router = Router();
 router.get("/", QuestionnaireController.index);
 
 router.use(checkBearerToken(BearerTokenType.AccessToken));
+router.get("/:id", QuestionnaireController.show);
+
 router.use(checkIfAdmin());
 router.post("/create", QuestionnaireController.create);
 router.delete("/delete/:id", QuestionnaireController.softDelete);

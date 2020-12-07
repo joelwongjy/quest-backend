@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import {
-  QuestionnaireDeleteData,
+  QuestionnaireData,
+  QuestionnaireIdData,
   QuestionnaireListData,
 } from "../types/questionnaires";
 import { selectQuestionnaireData } from "../selectors/questionnaires";
@@ -54,7 +55,7 @@ export async function create(
 }
 
 export async function softDelete(
-  request: Request<QuestionnaireDeleteData, any, any, any>,
+  request: Request<QuestionnaireIdData, any, any, any>,
   response: Response
 ) {
   const { id } = request.params;
@@ -106,5 +107,13 @@ export async function softDelete(
   await getRepository(QuestionOrder).softRemove(questionOrders);
 
   response.sendStatus(200);
+  return;
+}
+
+export async function show(
+  request: Request<QuestionnaireIdData, any, any, any>,
+  response: Response<QuestionnaireData>
+): Promise<void> {
+  response.sendStatus(403);
   return;
 }
