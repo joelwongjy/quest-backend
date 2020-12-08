@@ -151,14 +151,16 @@ export class Questionnaire extends Discardable {
     );
 
     // sharedSet
-    let questions: QuestionData[] = [];
+    let questions: QuestionData[] | undefined = undefined;
     if (isValidPrePostQnnaire) {
       const sharedSet = qnnaire.questionnaireWindows[0].sharedSet;
       questions = sharedSet!.questionOrders.map(_convertQnOrderRelations);
     }
-    const sharedQuestions: QuestionSetData = {
-      questions,
-    };
+    const sharedQuestions: QuestionSetData | undefined = questions
+      ? {
+          questions,
+        }
+      : undefined;
 
     const result: QuestionnaireFullData = {
       questionnaireId: qnnaire.id,

@@ -55,12 +55,11 @@ export interface QuestionnaireFullData
   extends Omit<QuestionnairePostData, "questionWindows" | "sharedQuestions"> {
   questionnaireId: number;
   questionWindows: QuestionnaireWindowData[];
-  sharedQuestions: QuestionSetData;
+  sharedQuestions: QuestionSetData | undefined;
 }
 
 export interface QuestionnaireOneWindowData
   extends Omit<QuestionnaireFullData, "questionWindows">,
     QuestionnaireWindowData {
   questionnaireId: number;
-  sharedQuestions: QuestionSetData;
 }
