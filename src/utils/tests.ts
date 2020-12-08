@@ -62,6 +62,24 @@ export class Fixtures {
     "Where do you live?",
     "What is your favourite color?",
   ];
+  public longAnswerQuestionsSet1: Readonly<string[]> = [
+    "Tell us about your dreams!",
+  ];
+  public moodQuestionsSet1: Readonly<string[]> = [
+    "Hello! How are you feeling today?",
+  ];
+  public moodOptions = ["Great!", "Normal", "Lousy"];
+  public scaleAnswerQuestionsSet1: Readonly<string[]> = [
+    "Rate your experience from 1 to 5",
+  ];
+  public scaleOptions = ["1", "2", "3", "4", "5"];
+  public mcqQuestion1: Readonly<string> = "Which of these options do you like?";
+  public mcqQuestion1Options: Readonly<string[]> = [
+    "Option A",
+    "Option B",
+    "Option C",
+  ];
+
   public sampleWindow1: Readonly<QuestionnaireWindowPostData> = {
     startAt: new Date("2020/01/01"),
     endAt: new Date("2020/01/15"),

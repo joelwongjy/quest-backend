@@ -1,11 +1,13 @@
 import { QuestionSet } from "../../../entities/questionnaire/QuestionSet";
 import { getRepository } from "typeorm";
 import ApiServer from "../../../server";
-import { synchronize } from "../../../utils/tests";
+import { Fixtures, loadFixtures, synchronize } from "../../../utils/tests";
 import { QuestionPostData, QuestionType } from "../../../types/questions";
 import { createQuestionSet } from "../../../utils/questions";
+import { Question } from "../../../entities/questionnaire/Question";
 
 let server: ApiServer;
+let fixtures: Fixtures;
 
 beforeAll(async () => {
   server = new ApiServer();
@@ -33,45 +35,176 @@ describe("Create QuestionSet", () => {
 });
 
 describe("Create questionSets using util methods", () => {
-  afterEach(async () => {
+  let shortAnswerQns: Readonly<string[]>;
+  let longAnswerQns: Readonly<string[]>;
+  let moodQns: Readonly<string[]>;
+  let scaleQns: Readonly<string[]>;
+  let mcqQn: Readonly<string>;
+
+  let moodOptions: Readonly<string[]>;
+  let scaleOptions: Readonly<string[]>;
+  let mcqOptions: Readonly<string[]>;
+
+  let shortAnswerPostList: QuestionPostData[];
+  let longAnswerPostList: QuestionPostData[];
+  let moodQnsPostList: QuestionPostData[];
+  let scaleQnsPostList: QuestionPostData[];
+  let mcqQnsPostList: QuestionPostData[];
+
+  const mapFunction = (questionType: QuestionType) => (
+    prompt: string,
+    index: number
+  ): QuestionPostData => {
+    return {
+      order: index,
+      questionType: questionType,
+      questionText: prompt,
+    };
+  };
+
+  const didCreationMethodLoadRelationIds = (
+    qnSet: QuestionSet,
+    qnOrdersLength: number
+  ): boolean => {
+    const hasQnSetId = Boolean(qnSet.id);
+    const hasQuestionOrderLength =
+      qnSet.questionOrders.length === qnOrdersLength;
+    const hasQnOrderId = Boolean(qnSet.questionOrders[0].id);
+    const hasQnId = Boolean(qnSet.questionOrders[0].question.id);
+    return hasQnSetId && hasQuestionOrderLength && hasQnOrderId && hasQnId;
+  };
+
+  beforeAll(async () => {
+    await synchronize(server);
+    fixtures = await loadFixtures(server);
+
+    shortAnswerQns = fixtures.shortAnswerQuestionsSet1;
+    longAnswerQns = fixtures.longAnswerQuestionsSet1;
+    moodQns = fixtures.moodQuestionsSet1;
+    scaleQns = fixtures.scaleAnswerQuestionsSet1;
+    mcqQn = fixtures.mcqQuestion1;
+
+    moodOptions = fixtures.moodOptions;
+    scaleOptions = fixtures.scaleOptions;
+    mcqOptions = fixtures.mcqQuestion1Options;
+
+    shortAnswerPostList = shortAnswerQns.map(
+      mapFunction(QuestionType.SHORT_ANSWER)
+    );
+    longAnswerPostList = longAnswerQns.map(
+      mapFunction(QuestionType.LONG_ANSWER)
+    );
+    moodQnsPostList = moodQns
+      .map(mapFunction(QuestionType.MOOD))
+      .map((data) => {
+        const options = moodOptions.map((optionText) => {
+          return {
+            optionText,
+          };
+        });
+        return { ...data, options };
+      });
+    scaleQnsPostList = scaleQns
+      .map(mapFunction(QuestionType.SCALE))
+      .map((data) => {
+        const options = scaleOptions.map((optionText) => {
+          return {
+            optionText,
+          };
+        });
+        return { ...data, options };
+      });
+    mcqQnsPostList = [mcqQn]
+      .map(mapFunction(QuestionType.MULTIPLE_CHOICE))
+      .map((data) => {
+        const options = mcqOptions.map((optionText) => {
+          return {
+            optionText,
+          };
+        });
+        return { ...data, options };
+      });
+  });
+
+  afterAll(async () => {
     await synchronize(server);
   });
 
   it("create short answer questions", async () => {
-    const QUESTION_1 = "How are you?";
-    const QUESTION_2 = "Have you eaten?";
-    const QUESTIONS: QuestionPostData[] = [QUESTION_1, QUESTION_2].map(
-      (text, index) => {
-        return {
-          order: index,
-          questionType: QuestionType.SHORT_ANSWER,
-          questionText: text,
-        };
-      }
-    );
-    const questionSet = await createQuestionSet(QUESTIONS);
+    const questionSet = await createQuestionSet(shortAnswerPostList);
+    expect(
+      didCreationMethodLoadRelationIds(questionSet, shortAnswerPostList.length)
+    ).toBe(true);
 
-    expect(questionSet.id).toBeTruthy();
-    expect(questionSet.questionOrders.length).toBe(2);
-    expect(questionSet.questionOrders[0].id).toBeTruthy();
-    expect(questionSet.questionOrders[0].question.id).toBeTruthy();
-
-    const searchResult = await getRepository(QuestionSet).findOneOrFail({
+    const searchResult = await getRepository(QuestionSet).findOne({
       where: { id: questionSet.id },
       relations: ["questionOrders", "questionOrders.question"],
     });
-
-    const { questionOrders } = searchResult;
-    expect(questionOrders).toHaveLength(2);
+    const { questionOrders } = searchResult!;
+    expect(questionOrders).toHaveLength(shortAnswerPostList.length);
 
     const questionTexts = questionOrders.map((q) => q.question.questionText);
     const questionType = questionOrders.map((q) => q.question.questionType);
 
-    expect(questionTexts).toContain(QUESTION_1);
-    expect(questionTexts).toContain(QUESTION_2);
+    shortAnswerQns.forEach((qn) => {
+      expect(questionTexts).toContain(qn);
+    });
     expect(questionType).toContain(QuestionType.SHORT_ANSWER);
   });
 
-  it.todo("create long answer questions");
-  it.todo("create MCQs");
+  it("create long answer questions", async () => {
+    const questionSet = await createQuestionSet(longAnswerPostList);
+    expect(
+      didCreationMethodLoadRelationIds(questionSet, longAnswerPostList.length)
+    ).toBe(true);
+
+    const searchResult = await getRepository(QuestionSet).findOne({
+      where: { id: questionSet.id },
+      relations: ["questionOrders", "questionOrders.question"],
+    });
+    const { questionOrders } = searchResult!;
+    expect(questionOrders).toHaveLength(longAnswerPostList.length);
+  });
+
+  it("create MCQs", async () => {
+    const questionSet = await createQuestionSet(mcqQnsPostList);
+    expect(
+      didCreationMethodLoadRelationIds(questionSet, mcqQnsPostList.length)
+    ).toBe(true);
+
+    const searchResult = await getRepository(QuestionSet).findOne({
+      where: { id: questionSet.id },
+      relations: ["questionOrders", "questionOrders.question"],
+    });
+    const { questionOrders } = searchResult!;
+    expect(questionOrders).toHaveLength(mcqQnsPostList.length);
+  });
+
+  it("create mood questions", async () => {
+    const questionSet = await createQuestionSet(moodQnsPostList);
+    expect(
+      didCreationMethodLoadRelationIds(questionSet, moodQnsPostList.length)
+    ).toBe(true);
+
+    const searchResult = await getRepository(QuestionSet).findOne({
+      where: { id: questionSet.id },
+      relations: ["questionOrders", "questionOrders.question"],
+    });
+    const { questionOrders } = searchResult!;
+    expect(questionOrders).toHaveLength(moodQnsPostList.length);
+  });
+
+  it("create scale questions", async () => {
+    const questionSet = await createQuestionSet(scaleQnsPostList);
+    expect(
+      didCreationMethodLoadRelationIds(questionSet, scaleQnsPostList.length)
+    ).toBe(true);
+
+    const searchResult = await getRepository(QuestionSet).findOne({
+      where: { id: questionSet.id },
+      relations: ["questionOrders", "questionOrders.question"],
+    });
+    const { questionOrders } = searchResult!;
+    expect(questionOrders).toHaveLength(scaleQnsPostList.length);
+  });
 });
