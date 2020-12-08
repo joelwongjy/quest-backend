@@ -17,6 +17,6 @@ export class Option extends Discardable {
   @IsNotEmpty()
   optionText: string;
 
-  @ManyToOne((type) => Question)
+  @ManyToOne((type) => Question, (question) => question.options)
   question: Question;
 }
