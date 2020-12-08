@@ -3,6 +3,7 @@ import { getRepository } from "typeorm";
 import { Answer } from "../../../entities/questionnaire/Answer";
 import { Option } from "../../../entities/questionnaire/Option";
 import { Question } from "../../../entities/questionnaire/Question";
+import { QuestionOrder } from "../../../entities/questionnaire/QuestionOrder";
 import { QuestionType } from "../../../types/questions";
 import ApiServer from "../../../server";
 import { synchronize } from "../../../utils/tests";
@@ -28,10 +29,12 @@ describe("Create answer", () => {
     let answer: Answer;
     let option: Option;
     let question: Question;
+    let questionOrder: QuestionOrder;
 
     question = new Question("How are you feeling today?", QuestionType.MOOD);
     option = new Option("Awesome!", question);
-    answer = new Answer(question, option);
+    questionOrder = new QuestionOrder(1, question);
+    answer = new Answer(questionOrder, option);
 
     const errors = await validate(answer);
     expect(errors.length).toBe(0);
@@ -43,12 +46,19 @@ describe("Create answer", () => {
   it("with valid question and text answer", async () => {
     let answer: Answer;
     let question: Question;
+    let questionOrder: QuestionOrder;
 
     question = new Question(
       "How are you feeling today?",
       QuestionType.SHORT_ANSWER
     );
-    answer = new Answer(question, undefined, "I'm feeling good like I should");
+
+    questionOrder = new QuestionOrder(1, question);
+    answer = new Answer(
+      questionOrder,
+      undefined,
+      "I'm feeling good like I should"
+    );
 
     const errors = await validate(answer);
     expect(errors.length).toBe(0);
@@ -60,12 +70,14 @@ describe("Create answer", () => {
   it("with valid question but no option and no answer", async () => {
     let answer: Answer;
     let question: Question;
+    let questionOrder: QuestionOrder;
 
     question = new Question(
       "How are you feeling today?",
       QuestionType.SHORT_ANSWER
     );
-    answer = new Answer(question);
+    questionOrder = new QuestionOrder(1, question);
+    answer = new Answer(questionOrder);
 
     const errors = await validate(answer);
     expect(errors.length).not.toBe(0);
@@ -75,13 +87,20 @@ describe("Create answer", () => {
     let answerOne: Answer;
     let answerTwo: Answer;
     let question: Question;
+    let questionOrder: QuestionOrder;
 
     question = new Question(
       "What is your dream job?",
       QuestionType.SHORT_ANSWER
     );
-    answerOne = new Answer(question, undefined, "Work for Campus Impact!");
-    answerTwo = new Answer(question, undefined, "Competitive Eater. Omnomnom.");
+
+    questionOrder = new QuestionOrder(1, question);
+    answerOne = new Answer(questionOrder, undefined, "Work for Campus Impact!");
+    answerTwo = new Answer(
+      questionOrder,
+      undefined,
+      "Competitive Eater. Omnomnom."
+    );
 
     const errorsAnswerOne = await validate(answerOne);
     expect(errorsAnswerOne.length).toBe(0);

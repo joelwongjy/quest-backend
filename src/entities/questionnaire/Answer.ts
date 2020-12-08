@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, BeforeInsert, BeforeUpdate } from "typeorm";
-import { Question } from "./Question";
+import { QuestionOrder } from "./QuestionOrder";
 import { Option } from "./Option";
 import { IsNotEmpty, ValidateIf, validateOrReject } from "class-validator";
 import { Attempt } from "./Attempt";
@@ -9,16 +9,17 @@ import { Discardable } from "../Discardable";
 export class Answer extends Discardable {
   entityName = "Answer";
 
-  constructor(question: Question, option?: Option, answer?: string) {
+  constructor(questionOrder: QuestionOrder, option?: Option, answer?: string) {
     super();
-    this.question = question;
+    this.questionOrder = questionOrder;
     this.option = option ?? null;
     this.answer = answer ?? null;
   }
 
-  // for each question object, there can be multiple answer objects
-  @ManyToOne((type) => Question)
-  question: Question;
+  // for each question, there can be multiple answer objects
+  // use QuestionOrder to have reference to relevant QuestionSet as well
+  @ManyToOne((type) => QuestionOrder)
+  questionOrder: QuestionOrder;
 
   // option column may be empty if question type is text-based
   // for each option object, there can be multiple answer objects

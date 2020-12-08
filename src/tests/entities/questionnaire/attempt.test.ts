@@ -34,8 +34,8 @@ describe("Create attempt", () => {
       "How are you today?",
       QuestionType.SHORT_ANSWER
     );
-    const newQuestion = await getRepository(Question).save(question);
 
+    const newQuestion = await getRepository(Question).save(question);
     const questionOrder = new QuestionOrder(1, newQuestion);
     const newQuestionOrder = await getRepository(QuestionOrder).save(
       questionOrder
@@ -82,10 +82,15 @@ describe("Create attempt", () => {
       "Hi! How are you?",
       QuestionType.LONG_ANSWER
     );
-    const question = await getRepository(Question).save(questionData);
 
-    const answer1Data = new Answer(question, undefined, "I'm good!");
-    const answer2Data = new Answer(question, undefined, "I'm okay!");
+    const question = await getRepository(Question).save(questionData);
+    const questionOrderData = new QuestionOrder(1, question);
+    const questionOrder = await getRepository(QuestionOrder).save(
+      questionOrderData
+    );
+
+    const answer1Data = new Answer(questionOrder, undefined, "I'm good!");
+    const answer2Data = new Answer(questionOrder, undefined, "I'm okay!");
     const answer1 = await getRepository(Answer).save(answer1Data);
     const answer2 = await getRepository(Answer).save(answer2Data);
 
