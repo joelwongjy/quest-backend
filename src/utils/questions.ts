@@ -51,16 +51,13 @@ export async function createLongAnswerQuestion(
   return rv;
 }
 
-export async function createMCQ(
+async function createQuestionWithOptions(
   questionText: string,
+  questionType: QuestionType,
   optionsText: OptionPostData[],
   order: number
 ): Promise<QuestionOrder> {
-  const rv = await _createQuestion(
-    questionText,
-    QuestionType.MULTIPLE_CHOICE,
-    order
-  );
+  const rv = await _createQuestion(questionText, questionType, order);
 
   const { question } = rv;
   assert(!!question.id);
@@ -75,6 +72,45 @@ export async function createMCQ(
   await getRepository(Option).save(options);
 
   return rv;
+}
+
+export async function createMCQ(
+  questionText: string,
+  optionsText: OptionPostData[],
+  order: number
+): Promise<QuestionOrder> {
+  return await createQuestionWithOptions(
+    questionText,
+    QuestionType.MULTIPLE_CHOICE,
+    optionsText,
+    order
+  );
+}
+
+export async function createScaleQuestion(
+  questionText: string,
+  optionsText: OptionPostData[],
+  order: number
+): Promise<QuestionOrder> {
+  return await createQuestionWithOptions(
+    questionText,
+    QuestionType.SCALE,
+    optionsText,
+    order
+  );
+}
+
+export async function createMoodQuestion(
+  questionText: string,
+  optionsText: OptionPostData[],
+  order: number
+): Promise<QuestionOrder> {
+  return await createQuestionWithOptions(
+    questionText,
+    QuestionType.MOOD,
+    optionsText,
+    order
+  );
 }
 
 export async function createQuestionSet(
@@ -92,10 +128,24 @@ export async function createQuestionSet(
         case QuestionType.MULTIPLE_CHOICE:
           if (!qn.options) {
             throw new Error(
-              `Question text: ${questionText} of order ${order} has no options `
+              `MCQ Question (text: ${questionText}, order ${order}) has no options `
             );
           }
           return await createMCQ(questionText, qn.options, order);
+        case QuestionType.MOOD:
+          if (!qn.options) {
+            throw new Error(
+              `Mood Question (text: ${questionText}, order ${order}) has no options `
+            );
+          }
+          return await createMoodQuestion(questionText, qn.options, order);
+        case QuestionType.SCALE:
+          if (!qn.options) {
+            throw new Error(
+              `Scale Question (text: ${questionText}, order ${order}) has no options `
+            );
+          }
+          return await createScaleQuestion(questionText, qn.options, order);
         default:
           throw new Error(`QuestionType ${questionType} is not supported`);
       }
