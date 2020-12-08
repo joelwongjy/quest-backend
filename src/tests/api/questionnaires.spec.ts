@@ -10,6 +10,7 @@ import {
   QuestionnaireFullData,
   QuestionnaireOneWindowData,
   QuestionnairePostData,
+  QuestionnaireStatus,
   QuestionnaireType,
 } from "../../types/questionnaires";
 import { QuestionType } from "../../types/questions";
@@ -18,6 +19,7 @@ import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
 const QUESTIONNAIRE_ONE_TIME: QuestionnairePostData = {
   title: "My One Time Questionnaire",
   type: QuestionnaireType.ONE_TIME,
+  status: QuestionnaireStatus.DRAFT,
   questionWindows: [
     {
       startAt: new Date("2020/03/01"),
@@ -39,6 +41,7 @@ const QUESTIONNAIRE_ONE_TIME: QuestionnairePostData = {
 const QUESTIONNAIRE_BEFORE_AFTER: QuestionnairePostData = {
   title: "My Before/After Questionnaire!",
   type: QuestionnaireType.PRE_POST,
+  status: QuestionnaireStatus.DRAFT,
   questionWindows: [
     {
       startAt: new Date("2020/01/01"),
