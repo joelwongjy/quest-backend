@@ -45,10 +45,10 @@ export interface QuestionnaireWindowId extends QuestionnaireId {
   windowId: string;
 }
 
-export interface QuestionnaireWindowData
-  extends Omit<QuestionnaireWindowPostData, "questions">,
-    QuestionSetData {
+export interface QuestionnaireWindowData extends QuestionSetData {
   windowId: number;
+  startAt: string;
+  endAt: string;
 }
 
 export interface QuestionnaireFullData

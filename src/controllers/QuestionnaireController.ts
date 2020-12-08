@@ -158,12 +158,12 @@ export async function showWindow(
     const windowIdInt = parseInt(windowId, 10);
     if (isNaN(windowIdInt)) {
       response
-        .sendStatus(400)
+        .status(400)
         .json({ message: `Invalid windowId received (is: ${windowId})` });
       return;
     }
 
-    const result = await qnnaire!.getWindow(windowIdInt);
+    const result = await qnnaire!.getMainWindow(windowIdInt);
     response.status(200).json(result);
     return;
   } catch (e) {

@@ -7,6 +7,8 @@ import { QuestionOrder } from "../../entities/questionnaire/QuestionOrder";
 import { QuestionSet } from "../../entities/questionnaire/QuestionSet";
 import ApiServer from "../../server";
 import {
+  QuestionnaireFullData,
+  QuestionnaireOneWindowData,
   QuestionnairePostData,
   QuestionnaireType,
 } from "../../types/questionnaires";
@@ -239,5 +241,110 @@ describe("DELETE /questionnaires/delete for One-Time Questionnaires", () => {
       .set("Authorization", fixtures.adminAccessToken)
       .send();
     expect(response.status).toEqual(200);
+  });
+});
+
+describe("GET /questionnaires/:id", () => {
+  let questionnaire: Questionnaire;
+  let invalidId: number;
+
+  beforeAll(async () => {
+    questionnaire = await fixtures.createSamplePrePostQuestionnaire();
+    invalidId = questionnaire.id + 23;
+  });
+
+  afterAll(async () => {
+    await synchronize(server);
+    fixtures = await loadFixtures(server);
+  });
+
+  it("should return 200 if valid id and is admin", async () => {
+    const response = await request(server.server)
+      .get(`${fixtures.api}/questionnaires/${questionnaire.id}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toEqual(200);
+
+    // mildy problematic - if we look into the controller for this route, this is cyclic
+    const expected = await questionnaire.getAllWindows();
+    expect(response.body).toEqual<QuestionnaireFullData>(expected);
+  });
+
+  it("should return 404 if invalid id", async () => {
+    const response = await request(server.server)
+      .get(`${fixtures.api}/questionnaires/${invalidId}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toEqual(404);
+  });
+});
+
+describe("GET /questionnaires/:id/window/:windowId", () => {
+  let questionnaire: Questionnaire;
+  let validQuestionnaireId: number;
+  let invalidQuestionnaireId: number;
+  let validWindowId: number;
+  let invalidWindowId: number;
+  const nanId: string = "Unconvertable integer";
+
+  beforeAll(async () => {
+    questionnaire = await fixtures.createSamplePrePostQuestionnaire();
+
+    validQuestionnaireId = questionnaire.id;
+    invalidQuestionnaireId = validQuestionnaireId + 23;
+    // assume it exists since it is a sample
+    validWindowId = questionnaire.questionnaireWindows.map(
+      (window) => window.mainSet
+    )[0].id;
+    invalidWindowId = validWindowId + 47;
+  });
+
+  afterAll(async () => {
+    await synchronize(server);
+    fixtures = await loadFixtures(server);
+  });
+
+  it("should return 200 if valid id and logged in", async () => {
+    const response = await request(server.server)
+      .get(
+        `${fixtures.api}/questionnaires/${validQuestionnaireId}/window/${validWindowId}`
+      )
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(200);
+
+    expect(response.body).toEqual<QuestionnaireOneWindowData>(
+      await questionnaire.getMainWindow(validWindowId)
+    );
+  });
+
+  it("should return 404 if invalid questionnaire id", async () => {
+    const response = await request(server.server)
+      .get(
+        `${fixtures.api}/questionnaires/${invalidQuestionnaireId}/window/${validWindowId}`
+      )
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(404);
+  });
+
+  it("should return 400 if valid questionnaire id but invalid window id", async () => {
+    const response = await request(server.server)
+      .get(
+        `${fixtures.api}/questionnaires/${validQuestionnaireId}/window/${invalidWindowId}`
+      )
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(400);
+  });
+
+  it("should return 400 if valid questionnaire id but NaN window id", async () => {
+    const response = await request(server.server)
+      .get(
+        `${fixtures.api}/questionnaires/${validQuestionnaireId}/window/${nanId}`
+      )
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(400);
   });
 });

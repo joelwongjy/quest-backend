@@ -141,7 +141,12 @@ export class Questionnaire extends Discardable {
           _convertQnOrderRelations
         );
 
-        return { windowId, startAt, endAt, questions };
+        return {
+          windowId,
+          startAt: startAt.toString(),
+          endAt: endAt.toString(),
+          questions,
+        };
       }
     );
 
@@ -166,21 +171,24 @@ export class Questionnaire extends Discardable {
   };
 
   /**
-   * Converts questionnaire instance to a 'flattened' version for the controller.
+   * Converts a questionnaire's mainSet to a 'flattened' version for the controller.
    * Note: it does not update instance attributes
    * @param windowId the window to generate
    * @throws if given windowId does not match a window in the instance
    */
-  getWindow = async (windowId: number): Promise<QuestionnaireOneWindowData> => {
+  getMainWindow = async (
+    mainWindowId: number
+  ): Promise<QuestionnaireOneWindowData> => {
     const fullQnnaire = await this.getAllWindows();
 
+    // from getAllWindows(), questionWindows only comprises of mainSets
     const matchingWindow = fullQnnaire.questionWindows.filter(
-      (windowData) => windowData.windowId === windowId
+      (windowData) => windowData.windowId === mainWindowId
     );
     const hasMatchingWindow = matchingWindow.length === 1;
     if (!hasMatchingWindow) {
       throw new Error(
-        `Could not find window with id: ${windowId} in specified questionnaire` +
+        `Could not find window with id: ${mainWindowId} in specified questionnaire` +
           `id: ${this.id}`
       );
     }
