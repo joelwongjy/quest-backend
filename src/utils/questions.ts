@@ -8,7 +8,11 @@ import {
   QuestionPostData,
   QuestionType,
 } from "../types/questions";
-import { Option } from "../entities/questionnaire/Option";
+import {
+  MOOD_OPTIONS,
+  Option,
+  SCALE_OPTIONS,
+} from "../entities/questionnaire/Option";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
 
 async function _createQuestion(
@@ -133,19 +137,9 @@ export async function createQuestionSet(
           }
           return await createMCQ(questionText, qn.options, order);
         case QuestionType.MOOD:
-          if (!qn.options) {
-            throw new Error(
-              `Mood Question (text: ${questionText}, order ${order}) has no options `
-            );
-          }
-          return await createMoodQuestion(questionText, qn.options, order);
+          return await createMoodQuestion(questionText, MOOD_OPTIONS, order);
         case QuestionType.SCALE:
-          if (!qn.options) {
-            throw new Error(
-              `Scale Question (text: ${questionText}, order ${order}) has no options `
-            );
-          }
-          return await createScaleQuestion(questionText, qn.options, order);
+          return await createScaleQuestion(questionText, SCALE_OPTIONS, order);
         default:
           throw new Error(`QuestionType ${questionType} is not supported`);
       }
