@@ -117,10 +117,9 @@ export async function createMoodQuestion(
   );
 }
 
-export async function createQuestionSet(
+export async function createQuestionOrders(
   questions: QuestionPostData[]
-): Promise<QuestionSet> {
-  // create each question
+): Promise<QuestionOrder[]> {
   const questionOrders = await Promise.all(
     questions.map(async (qn) => {
       const { questionText, questionType, order } = qn;
@@ -145,6 +144,14 @@ export async function createQuestionSet(
       }
     })
   );
+
+  return questionOrders;
+}
+
+export async function createQuestionSet(
+  questions: QuestionPostData[]
+): Promise<QuestionSet> {
+  const questionOrders = await createQuestionOrders(questions);
 
   // aggregate them into a set
   const questionSet = new QuestionSet();

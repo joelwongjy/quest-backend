@@ -6,13 +6,16 @@ import { ClassQuestionnaire } from "../entities/questionnaire/ClassQuestionnaire
 import { ProgrammeQuestionnaire } from "../entities/questionnaire/ProgrammeQuestionnaire";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
+import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
 import {
+  QuestionnaireFullData,
   QuestionnaireType,
+  QuestionnaireWindowData,
   QuestionnaireWindowPostData,
 } from "../types/questionnaires";
-import { QuestionPostData } from "../types/questions";
-import { createQuestionSet } from "./questions";
+import { QuestionPostData, QuestionSetData } from "../types/questions";
+import { createQuestionOrders, createQuestionSet } from "./questions";
 
 async function _createQuestionnaireWindow(
   openAt: Date,
@@ -180,4 +183,157 @@ export async function associateQuestionnaireWithClassesAndProgrammes(
 
   const saved = await getRepository(Questionnaire).save(questionnaire);
   return saved;
+}
+
+/**
+ * Edits a saved questionnaire's attributes
+ * @param savedQnnaire the questionnaire to change
+ * @param editData values to edit with
+ */
+export async function updateAttributes(
+  savedQnnaire: Questionnaire,
+  editData: Omit<
+    QuestionnaireFullData,
+    "programmes" | "classes" | "questionWindows" | "sharedQuestions"
+  >
+): Promise<Questionnaire> {
+  if (!savedQnnaire.id) {
+    throw new Error(
+      `Questionnaire does not have an id. Has it been saved to database?`
+    );
+  }
+
+  savedQnnaire.name = editData.title;
+  savedQnnaire.questionnaireType = editData.type;
+  // TODO: after merging
+  // savedQnnaire.questionnaireStatus = editData.status
+
+  const updated = await getRepository(Questionnaire).save(savedQnnaire);
+  return updated;
+}
+
+/**
+ * Edits a saved questionnaire's programmes/classes relations
+ */
+export async function updateProgrammesClassesRelations(
+  savedQnnaire: Questionnaire,
+  editData: Pick<QuestionnaireFullData, "programmes" | "classes">
+): Promise<Questionnaire> {
+  // TODO: after merging
+  return savedQnnaire;
+}
+
+async function updateWindow(
+  savedWindow: QuestionnaireWindow,
+  editData: QuestionnaireWindowData,
+  sharedQnsData: QuestionSetData | undefined
+): Promise<QuestionnaireWindow> {
+  if (savedWindow.id !== editData.windowId) {
+    throw new Error(
+      `Editing refers to window with id ${editData.windowId}` +
+        `but given saved window with id ${savedWindow.id}`
+    );
+  }
+
+  savedWindow.openAt = new Date(editData.startAt);
+  savedWindow.closeAt = new Date(editData.endAt);
+
+  const updatedMainQnSet = await updateQnSet(savedWindow.mainSet, editData);
+  savedWindow.mainSet = updatedMainQnSet;
+
+  if (savedWindow.sharedSet && sharedQnsData) {
+    const updatedSharedQnSet = await updateQnSet(
+      savedWindow.sharedSet,
+      sharedQnsData
+    );
+    savedWindow.sharedSet = updatedSharedQnSet;
+  }
+
+  const updated = await getRepository(QuestionnaireWindow).save(savedWindow);
+  return updated;
+}
+
+async function updateQnSet(
+  savedQnSet: QuestionSet,
+  editData: QuestionSetData
+): Promise<QuestionSet> {
+  if (!savedQnSet.id) {
+    throw new Error(`The provided Question Set has no id`);
+  }
+
+  const qnOrders: Map<number, QuestionOrder> = new Map();
+  savedQnSet.questionOrders.forEach((order) => {
+    qnOrders.set(order.id, order);
+  });
+
+  const ordersToKeep: QuestionOrder[] = [];
+  const ordersToCreate: QuestionPostData[] = [];
+  editData.questions.forEach((qn) => {
+    const { qnOrderId } = qn;
+
+    if (qnOrderId) {
+      if (!qnOrders.has(qnOrderId)) {
+        throw new Error(
+          `Window does not contain the given question order ${qnOrderId}`
+        );
+      }
+
+      ordersToKeep.push(qnOrders.get(qnOrderId)!);
+      return;
+    } else {
+      ordersToCreate.push(qn as QuestionPostData);
+    }
+  });
+
+  const ordersToAdd = await createQuestionOrders(ordersToCreate);
+  savedQnSet.questionOrders = ordersToKeep.concat(ordersToAdd);
+
+  const updated = await getRepository(QuestionSet).save(savedQnSet);
+  return updated;
+}
+
+/**
+ * Edits a saved questionnaire's questionWindows
+ */
+export async function updateWindowRelations(
+  savedQnnaire: Questionnaire,
+  editData: Pick<QuestionnaireFullData, "questionWindows" | "sharedQuestions">
+): Promise<Questionnaire> {
+  const windows = await Promise.all(
+    savedQnnaire.questionnaireWindows.map(async (win) => {
+      const findEditWindow = editData.questionWindows.filter(
+        (w) => w.windowId === win.id
+      );
+      if (findEditWindow.length === 0) {
+        throw new Error(
+          `Could not find corresponding window (was looking for window of id ${win.id})`
+        );
+      }
+
+      const editWindowData = findEditWindow[0];
+      const updatedWindows = await updateWindow(
+        win,
+        editWindowData,
+        editData.sharedQuestions
+      );
+
+      return updatedWindows;
+    })
+  );
+
+  savedQnnaire.questionnaireWindows = windows;
+  const updated = await getRepository(Questionnaire).save(savedQnnaire);
+  return updated;
+}
+
+export async function updateQnnaire(
+  savedQnnaire: Questionnaire,
+  editData: QuestionnaireFullData
+): Promise<Questionnaire> {
+  let updated: Questionnaire;
+  updated = await updateAttributes(savedQnnaire, editData);
+  updated = await updateProgrammesClassesRelations(savedQnnaire, editData);
+  updated = await updateWindowRelations(savedQnnaire, editData);
+
+  return updated;
 }

@@ -17,5 +17,6 @@ router.use(checkIfAdmin());
 router.post("/create", QuestionnaireController.create);
 router.delete("/delete/:id", QuestionnaireController.softDelete);
 router.get("/:id", QuestionnaireController.show);
+router.post("edit/:id", QuestionnaireController.edit);
 
 export default router;
