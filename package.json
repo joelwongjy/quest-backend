@@ -56,7 +56,7 @@
     "start": "set debug=* && cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only ./src/index.ts",
     "typeorm": "node --require ts-node/register ./node_modules/typeorm/cli.js",
     "test": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles --forceExit",
-    "test:ci": "jest --verbose --forceExit --detectOpenHandles",
+    "test:ci": "jest --verbose --forceExit --runInBand",
     "coverage": "yarn test --coverage",
     "build": "tsc && cp package.json ./build/ && cd build && yarn install",
     "production": "cd build && cross-env NODE_ENV=production node ./src/index.js"
