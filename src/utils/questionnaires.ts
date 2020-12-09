@@ -209,8 +209,7 @@ export async function updateAttributes(
 
   savedQnnaire.name = editData.title;
   savedQnnaire.questionnaireType = editData.type;
-  // TODO: after merging
-  // savedQnnaire.questionnaireStatus = editData.status
+  savedQnnaire.questionnaireStatus = editData.status;
 
   const updated = await getRepository(Questionnaire).save(savedQnnaire);
   return updated;
@@ -223,8 +222,35 @@ export async function updateProgrammesClassesRelations(
   savedQnnaire: Questionnaire,
   editData: Pick<QuestionnaireEditData, "programmes" | "classes">
 ): Promise<Questionnaire> {
-  // TODO: after merging
-  return savedQnnaire;
+  const classesOR = editData.classes.map((id) => Object.assign({}, { id }));
+  const programmesOR = editData.classes.map((id) => Object.assign({}, { id }));
+  const classes = await getRepository(Class).find({
+    select: ["id"],
+    where: classesOR,
+  });
+  const programmes = await getRepository(Programme).find({
+    select: ["id"],
+    where: programmesOR,
+  });
+
+  const newClassQnnaires = classes.map((c) => {
+    return new ClassQuestionnaire(c, savedQnnaire);
+  });
+  const newProgrammeQnnaires = programmes.map((p) => {
+    return new ProgrammeQuestionnaire(p, savedQnnaire);
+  });
+
+  const savedClassQnnaires = await getRepository(ClassQuestionnaire).save(
+    newClassQnnaires
+  );
+  const savedProgrammeQnnaires = await getRepository(
+    ProgrammeQuestionnaire
+  ).save(newProgrammeQnnaires);
+
+  savedQnnaire.classQuestionnaires = savedClassQnnaires;
+  savedQnnaire.programmeQuestionnaires = savedProgrammeQnnaires;
+  const updated = await getRepository(Questionnaire).save(savedQnnaire);
+  return updated;
 }
 
 async function updateWindow(

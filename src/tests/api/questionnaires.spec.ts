@@ -37,6 +37,8 @@ const QUESTIONNAIRE_ONE_TIME: QuestionnairePostData = {
   sharedQuestions: {
     questions: [],
   },
+  classes: [],
+  programmes: [],
 };
 
 const QUESTIONNAIRE_BEFORE_AFTER: QuestionnairePostData = {
@@ -76,6 +78,8 @@ const QUESTIONNAIRE_BEFORE_AFTER: QuestionnairePostData = {
       },
     ],
   },
+  classes: [],
+  programmes: [],
 };
 
 let server: ApiServer;
@@ -372,7 +376,7 @@ describe("POST /questionnaires/edit/:id", () => {
 
   it("should return 200 if is admin and data is correct", async () => {
     // only change title, status, openAt, closeAt
-    const editData: QuestionnaireFullData = {
+    const editData: QuestionnaireEditData = {
       ...originalData,
       title: "Edited Qnnaire",
       // status: QuestionnaireStatus.PUBLISHED,
@@ -383,6 +387,8 @@ describe("POST /questionnaires/edit/:id", () => {
           endAt: new Date("2020/12/13").toISOString(),
         },
       ],
+      classes: originalData.classes.map((clazz) => clazz.id),
+      programmes: originalData.programmes.map((prg) => prg.id),
     };
 
     const response = await request(server.server)
@@ -413,7 +419,7 @@ describe("POST /questionnaires/edit/:id", () => {
     const editData: QuestionnaireEditData = {
       ...originalData,
       title: "Edited Qnnaire",
-      // status: QuestionnaireStatus.PUBLISHED,
+      status: QuestionnaireStatus.PUBLISHED,
       questionWindows: [
         {
           windowId: originalData.questionWindows[0].windowId,
@@ -428,6 +434,8 @@ describe("POST /questionnaires/edit/:id", () => {
           ],
         },
       ],
+      classes: originalData.classes.map((clazz) => clazz.id),
+      programmes: originalData.programmes.map((prg) => prg.id),
     };
 
     const response = await request(server.server)
