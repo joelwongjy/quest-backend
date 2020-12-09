@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import {
+  QuestionnaireEditData,
   QuestionnaireFullData,
   QuestionnaireId,
   QuestionnaireListData,
@@ -174,7 +175,7 @@ export async function showWindow(
 }
 
 export async function edit(
-  request: Request<QuestionnaireId, any, QuestionnaireFullData, any>,
+  request: Request<QuestionnaireId, any, QuestionnaireEditData, any>,
   response: Response<QuestionnaireFullData | Message>
 ): Promise<void> {
   const { id } = request.params;

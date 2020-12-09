@@ -49,3 +49,7 @@ export interface QuestionData extends Omit<QuestionPostData, "options"> {
 export interface QuestionSetData {
   questions: QuestionData[];
 }
+
+export interface QuestionSetEditData {
+  questions: (QuestionData | QuestionPostData)[];
+}

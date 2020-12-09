@@ -9,12 +9,16 @@ import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWind
 import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
 import {
-  QuestionnaireFullData,
+  QuestionnaireEditData,
   QuestionnaireType,
-  QuestionnaireWindowData,
+  QuestionnaireWindowEditData,
   QuestionnaireWindowPostData,
 } from "../types/questionnaires";
-import { QuestionPostData, QuestionSetData } from "../types/questions";
+import {
+  QuestionData,
+  QuestionPostData,
+  QuestionSetEditData,
+} from "../types/questions";
 import { createQuestionOrders, createQuestionSet } from "./questions";
 
 async function _createQuestionnaireWindow(
@@ -193,7 +197,7 @@ export async function associateQuestionnaireWithClassesAndProgrammes(
 export async function updateAttributes(
   savedQnnaire: Questionnaire,
   editData: Omit<
-    QuestionnaireFullData,
+    QuestionnaireEditData,
     "programmes" | "classes" | "questionWindows" | "sharedQuestions"
   >
 ): Promise<Questionnaire> {
@@ -217,7 +221,7 @@ export async function updateAttributes(
  */
 export async function updateProgrammesClassesRelations(
   savedQnnaire: Questionnaire,
-  editData: Pick<QuestionnaireFullData, "programmes" | "classes">
+  editData: Pick<QuestionnaireEditData, "programmes" | "classes">
 ): Promise<Questionnaire> {
   // TODO: after merging
   return savedQnnaire;
@@ -225,8 +229,8 @@ export async function updateProgrammesClassesRelations(
 
 async function updateWindow(
   savedWindow: QuestionnaireWindow,
-  editData: QuestionnaireWindowData,
-  sharedQnsData: QuestionSetData | undefined
+  editData: QuestionnaireWindowEditData,
+  sharedQnsData: QuestionSetEditData | undefined
 ): Promise<QuestionnaireWindow> {
   if (savedWindow.id !== editData.windowId) {
     throw new Error(
@@ -255,7 +259,7 @@ async function updateWindow(
 
 async function updateQnSet(
   savedQnSet: QuestionSet,
-  editData: QuestionSetData
+  editData: QuestionSetEditData
 ): Promise<QuestionSet> {
   if (!savedQnSet.id) {
     throw new Error(`The provided Question Set has no id`);
@@ -269,7 +273,7 @@ async function updateQnSet(
   const ordersToKeep: QuestionOrder[] = [];
   const ordersToCreate: QuestionPostData[] = [];
   editData.questions.forEach((qn) => {
-    const { qnOrderId } = qn;
+    const { qnOrderId } = qn as QuestionData;
 
     if (qnOrderId) {
       if (!qnOrders.has(qnOrderId)) {
@@ -288,6 +292,10 @@ async function updateQnSet(
   const ordersToAdd = await createQuestionOrders(ordersToCreate);
   savedQnSet.questionOrders = ordersToKeep.concat(ordersToAdd);
 
+  if (savedQnSet.questionOrders.length === 0) {
+    throw new Error(`QnSet requires at least 1 question`);
+  }
+
   const updated = await getRepository(QuestionSet).save(savedQnSet);
   return updated;
 }
@@ -297,7 +305,7 @@ async function updateQnSet(
  */
 export async function updateWindowRelations(
   savedQnnaire: Questionnaire,
-  editData: Pick<QuestionnaireFullData, "questionWindows" | "sharedQuestions">
+  editData: Pick<QuestionnaireEditData, "questionWindows" | "sharedQuestions">
 ): Promise<Questionnaire> {
   const windows = await Promise.all(
     savedQnnaire.questionnaireWindows.map(async (win) => {
@@ -328,8 +336,25 @@ export async function updateWindowRelations(
 
 export async function updateQnnaire(
   savedQnnaire: Questionnaire,
-  editData: QuestionnaireFullData
+  editData: QuestionnaireEditData
 ): Promise<Questionnaire> {
+  if (!savedQnnaire.id) {
+    throw new Error(
+      `Questionnaire does not have an id. Has it been saved to database?`
+    );
+  }
+
+  const savedQnnaireMatchesEditData =
+    savedQnnaire.questionnaireWindows.filter((window) => {
+      const matchingWindows = editData.questionWindows.filter(
+        (w) => w.windowId === window.id
+      );
+      return matchingWindows.length === 1;
+    }).length === savedQnnaire.questionnaireWindows.length;
+  if (!savedQnnaireMatchesEditData) {
+    throw new Error(`Saved qnnaire does not match edit data`);
+  }
+
   let updated: Questionnaire;
   updated = await updateAttributes(savedQnnaire, editData);
   updated = await updateProgrammesClassesRelations(savedQnnaire, editData);
