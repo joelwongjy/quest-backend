@@ -7,6 +7,7 @@ import { QuestionOrder } from "../../entities/questionnaire/QuestionOrder";
 import { QuestionSet } from "../../entities/questionnaire/QuestionSet";
 import ApiServer from "../../server";
 import {
+  QuestionnaireEditData,
   QuestionnaireFullData,
   QuestionnaireOneWindowData,
   QuestionnairePostData,
@@ -349,5 +350,103 @@ describe("GET /questionnaires/:id/window/:windowId", () => {
       .set("Authorization", fixtures.adminAccessToken)
       .send();
     expect(response.status).toBe(400);
+  });
+});
+
+describe("POST /questionnaires/edit/:id", () => {
+  let originalData: QuestionnaireFullData;
+
+  beforeAll(async () => {
+    await synchronize(server);
+    fixtures = await loadFixtures(server);
+
+    originalData = await (
+      await fixtures.createSampleOneTimeQuestionnaire()
+    ).getAllWindows();
+  });
+
+  afterAll(async () => {
+    await synchronize(server);
+    fixtures = await loadFixtures(server);
+  });
+
+  it("should return 200 if is admin and data is correct", async () => {
+    // only change title, status, openAt, closeAt
+    const editData: QuestionnaireFullData = {
+      ...originalData,
+      title: "Edited Qnnaire",
+      // status: QuestionnaireStatus.PUBLISHED,
+      questionWindows: [
+        {
+          ...originalData.questionWindows[0],
+          startAt: new Date("2022/12/12").toISOString(),
+          endAt: new Date("2020/12/13").toISOString(),
+        },
+      ],
+    };
+
+    const response = await request(server.server)
+      .post(
+        `${fixtures.api}/questionnaires/edit/${originalData.questionnaireId}`
+      )
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(editData);
+    expect(response.status).toEqual(200);
+
+    const getQnnaire = await getRepository(Questionnaire).findOne({
+      where: { id: originalData.questionnaireId },
+      relations: ["questionnaireWindows"],
+    });
+    const mappedQnnaire = await getQnnaire!.getAllWindows();
+
+    expect(mappedQnnaire.questionWindows).toHaveLength(1);
+    expect(mappedQnnaire.title).toBe("Edited Qnnaire");
+    expect(mappedQnnaire.questionWindows[0].startAt).toBe(
+      new Date("2022/12/12").toString()
+    );
+    expect(mappedQnnaire.questionWindows[0].endAt).toBe(
+      new Date("2020/12/13").toString()
+    );
+  });
+
+  it("should return 200 if is admin and qns are added", async () => {
+    const editData: QuestionnaireEditData = {
+      ...originalData,
+      title: "Edited Qnnaire",
+      // status: QuestionnaireStatus.PUBLISHED,
+      questionWindows: [
+        {
+          windowId: originalData.questionWindows[0].windowId,
+          startAt: new Date("2022/12/12").toISOString(),
+          endAt: new Date("2020/12/13").toISOString(),
+          questions: [
+            {
+              questionText: "My edited question!",
+              questionType: QuestionType.SHORT_ANSWER,
+              order: 1,
+            },
+          ],
+        },
+      ],
+    };
+
+    const response = await request(server.server)
+      .post(
+        `${fixtures.api}/questionnaires/edit/${originalData.questionnaireId}`
+      )
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(editData);
+    expect(response.status).toEqual(200);
+
+    const getQnnaire = await getRepository(Questionnaire).findOne({
+      where: { id: originalData.questionnaireId },
+      relations: ["questionnaireWindows"],
+    });
+    const mappedQnnaire = await getQnnaire!.getAllWindows();
+    expect(mappedQnnaire.questionWindows).toHaveLength(1);
+
+    const mainWindowQns = mappedQnnaire.questionWindows[0].questions;
+    expect(mainWindowQns).toHaveLength(1);
+    expect(mainWindowQns[0].questionText).toBe("My edited question!");
   });
 });
