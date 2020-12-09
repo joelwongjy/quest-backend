@@ -1,4 +1,6 @@
+import { ClassData } from "./classes";
 import { DiscardableData } from "./entities";
+import { ProgrammeData } from "./programmes";
 import {
   QuestionPostData,
   QuestionSetData,
@@ -18,6 +20,7 @@ export enum QuestionnaireStatus {
 export interface QuestionnairePostData {
   title: string;
   type: QuestionnaireType;
+  status: QuestionnaireStatus;
   questionWindows: QuestionnaireWindowPostData[];
   sharedQuestions: QuestionSetPostData;
   classes?: number[];
@@ -52,7 +55,11 @@ export interface QuestionnaireWindowData extends QuestionSetData {
 }
 
 export interface QuestionnaireFullData
-  extends Omit<QuestionnairePostData, "questionWindows" | "sharedQuestions"> {
+  extends Omit<
+      QuestionnairePostData,
+      "questionWindows" | "sharedQuestions" | "classes" | "programmes"
+    >,
+    QuestionnaireProgramClassData {
   questionnaireId: number;
   questionWindows: QuestionnaireWindowData[];
   sharedQuestions: QuestionSetData | undefined;
@@ -62,4 +69,9 @@ export interface QuestionnaireOneWindowData
   extends Omit<QuestionnaireFullData, "questionWindows">,
     QuestionnaireWindowData {
   questionnaireId: number;
+}
+
+export interface QuestionnaireProgramClassData {
+  programmes: ProgrammeData[];
+  classes: ClassData[];
 }

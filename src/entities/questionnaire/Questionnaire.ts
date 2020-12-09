@@ -15,6 +15,7 @@ import {
   QuestionnaireFullData,
   QuestionnaireWindowData,
   QuestionnaireOneWindowData,
+  QuestionnaireProgramClassData,
 } from "../../types/questionnaires";
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
 import { ProgrammeQuestionnaire } from "./ProgrammeQuestionnaire";
@@ -162,12 +163,17 @@ export class Questionnaire extends Discardable {
         }
       : undefined;
 
+    const { programmes, classes } = await this.getProgrammesAndClasses();
+
     const result: QuestionnaireFullData = {
       questionnaireId: qnnaire.id,
+      status: qnnaire.questionnaireStatus,
       title: qnnaire.name,
       type: qnnaire.questionnaireType,
       questionWindows,
       sharedQuestions,
+      programmes,
+      classes,
     };
     return result;
   };
@@ -195,14 +201,49 @@ export class Questionnaire extends Discardable {
       );
     }
 
-    const { questionnaireId, title, type, sharedQuestions } = fullQnnaire;
+    return {
+      questionnaireId: fullQnnaire.questionnaireId,
+      title: fullQnnaire.title,
+      status: fullQnnaire.status,
+      type: fullQnnaire.type,
+      sharedQuestions: fullQnnaire.sharedQuestions,
+      programmes: fullQnnaire.programmes,
+      classes: fullQnnaire.classes,
+      ...matchingWindow[0],
+    };
+  };
+
+  /**
+   * Gets programmes and classes data.
+   */
+  getProgrammesAndClasses = async (): Promise<
+    QuestionnaireProgramClassData
+  > => {
+    const qnnaire = await getRepository(Questionnaire).findOne({
+      where: { id: this.id },
+      relations: [
+        "programmeQuestionnaires",
+        "classQuestionnaires",
+        "programmeQuestionnaires.programme",
+        "classQuestionnaires.class",
+        "classQuestionnaires.class.programme",
+      ],
+    });
+
+    if (!qnnaire) {
+      throw new Error(`Could not find questionnaire (id: ${this.id})`);
+    }
+
+    const programmes = qnnaire.programmeQuestionnaires.map(
+      (pqnnaire) => pqnnaire.programme
+    );
+    const classes = qnnaire.classQuestionnaires.map(
+      (cqnnaire) => cqnnaire.class
+    );
 
     return {
-      questionnaireId,
-      title,
-      type,
-      ...matchingWindow[0],
-      sharedQuestions,
+      programmes,
+      classes,
     };
   };
 }
