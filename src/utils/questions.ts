@@ -169,18 +169,21 @@ export class QuestionOrderCreator {
   }
 }
 
-export async function createQuestionSet(
-  questions: QuestionPostData[]
-): Promise<QuestionSet> {
-  const creator = new QuestionOrderCreator();
-  const questionOrders = await creator.createQuestionOrders(questions);
+export class QuestionSetCreator {
+  private orderCreator = new QuestionOrderCreator();
 
-  // aggregate them into a set
-  const questionSet = new QuestionSet();
-  await validateOrReject(questionSet);
+  async createQuestionSet(questions: QuestionPostData[]): Promise<QuestionSet> {
+    const questionOrders = await this.orderCreator.createQuestionOrders(
+      questions
+    );
 
-  questionSet.questionOrders = questionOrders;
-  const newQuestionSet = await getRepository(QuestionSet).save(questionSet);
+    // aggregate them into a set
+    const questionSet = new QuestionSet();
+    await validateOrReject(questionSet);
 
-  return newQuestionSet;
+    questionSet.questionOrders = questionOrders;
+    const newQuestionSet = await getRepository(QuestionSet).save(questionSet);
+
+    return newQuestionSet;
+  }
 }

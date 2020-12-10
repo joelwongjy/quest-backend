@@ -19,7 +19,7 @@ import {
   QuestionPostData,
   QuestionSetEditData,
 } from "../types/questions";
-import { createQuestionSet, QuestionOrderCreator } from "./questions";
+import { QuestionSetCreator, QuestionOrderCreator } from "./questions";
 
 async function _createQuestionnaireWindow(
   openAt: Date,
@@ -44,7 +44,8 @@ export async function createOneTimeQuestionnaireWindow(
   closeAt: Date,
   questions: QuestionPostData[]
 ): Promise<QuestionnaireWindow> {
-  const mainSet = await createQuestionSet(questions);
+  const creator = new QuestionSetCreator();
+  const mainSet = await creator.createQuestionSet(questions);
 
   const rv = await _createQuestionnaireWindow(openAt, closeAt, mainSet);
   return rv;
@@ -59,9 +60,10 @@ export async function createBeforeAfterQuestionnaireWindow(
 
   const { questions: postSet, startAt: postStart, endAt: postEnd } = after;
 
-  const beforeData = await createQuestionSet(preSet);
-  const afterData = await createQuestionSet(postSet);
-  const sharedData = await createQuestionSet(sharedSet);
+  const creator = new QuestionSetCreator();
+  const beforeData = await creator.createQuestionSet(preSet);
+  const afterData = await creator.createQuestionSet(postSet);
+  const sharedData = await creator.createQuestionSet(sharedSet);
 
   const beforeWindow = await _createQuestionnaireWindow(
     preStart,
