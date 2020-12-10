@@ -1,5 +1,4 @@
 import { validateOrReject } from "class-validator";
-import { assert } from "console";
 import { getRepository } from "typeorm";
 import { Question } from "../entities/questionnaire/Question";
 import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
@@ -14,144 +13,167 @@ import {
   SCALE_OPTIONS,
 } from "../entities/questionnaire/Option";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
+import { QUESTION_ORDER_CREATION_ERROR } from "../types/errors";
 
-async function _createQuestion(
-  questionText: string,
-  questionType: QuestionType,
-  order: number
-): Promise<QuestionOrder> {
-  const data = new Question(questionText, questionType);
-  await validateOrReject(data);
-  const question = await getRepository(Question).save(data);
-
-  const orderData = new QuestionOrder(order, question);
-  const newOrder = await getRepository(QuestionOrder).save(orderData);
-
-  // This object has the db id for qnOrder and qn
-  return newOrder;
+class QuestionOrderCreationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = QUESTION_ORDER_CREATION_ERROR;
+  }
 }
 
-export async function createShortAnswerQuestion(
-  questionText: string,
-  order: number
-): Promise<QuestionOrder> {
-  const rv = await _createQuestion(
-    questionText,
-    QuestionType.SHORT_ANSWER,
-    order
-  );
-  return rv;
-}
+export class QuestionOrderCreator {
+  private async _createQuestion(
+    questionText: string,
+    questionType: QuestionType,
+    order: number
+  ): Promise<QuestionOrder> {
+    const data = new Question(questionText, questionType);
+    await validateOrReject(data);
+    const question = await getRepository(Question).save(data);
 
-export async function createLongAnswerQuestion(
-  questionText: string,
-  order: number
-): Promise<QuestionOrder> {
-  const rv = await _createQuestion(
-    questionText,
-    QuestionType.LONG_ANSWER,
-    order
-  );
-  return rv;
-}
+    const orderData = new QuestionOrder(order, question);
+    const newOrder = await getRepository(QuestionOrder).save(orderData);
 
-async function createQuestionWithOptions(
-  questionText: string,
-  questionType: QuestionType,
-  optionsText: OptionPostData[],
-  order: number
-): Promise<QuestionOrder> {
-  const rv = await _createQuestion(questionText, questionType, order);
+    // This object has the db id for qnOrder and qn
+    return newOrder;
+  }
 
-  const { question } = rv;
-  assert(!!question.id);
+  private async _createQuestionWithOptions(
+    questionText: string,
+    questionType: QuestionType,
+    optionsText: OptionPostData[],
+    order: number
+  ): Promise<QuestionOrder> {
+    const rv = await this._createQuestion(questionText, questionType, order);
 
-  const options: Option[] = await Promise.all(
-    optionsText.map(async (option) => {
-      const data = new Option(option.optionText, question);
-      await validateOrReject(data);
-      return data;
-    })
-  );
-  await getRepository(Option).save(options);
+    const { question } = rv;
 
-  return rv;
-}
+    const options: Option[] = await Promise.all(
+      optionsText.map(async (option) => {
+        const data = new Option(option.optionText, question);
+        await validateOrReject(data);
+        return data;
+      })
+    );
 
-export async function createMCQ(
-  questionText: string,
-  optionsText: OptionPostData[],
-  order: number
-): Promise<QuestionOrder> {
-  return await createQuestionWithOptions(
-    questionText,
-    QuestionType.MULTIPLE_CHOICE,
-    optionsText,
-    order
-  );
-}
+    const savedOptions = await getRepository(Option).save(options);
+    rv.question.options = savedOptions;
 
-export async function createScaleQuestion(
-  questionText: string,
-  optionsText: OptionPostData[],
-  order: number
-): Promise<QuestionOrder> {
-  return await createQuestionWithOptions(
-    questionText,
-    QuestionType.SCALE,
-    optionsText,
-    order
-  );
-}
+    return rv;
+  }
 
-export async function createMoodQuestion(
-  questionText: string,
-  optionsText: OptionPostData[],
-  order: number
-): Promise<QuestionOrder> {
-  return await createQuestionWithOptions(
-    questionText,
-    QuestionType.MOOD,
-    optionsText,
-    order
-  );
-}
+  private async createShortAnswerQuestion(
+    questionText: string,
+    order: number
+  ): Promise<QuestionOrder> {
+    const rv = await this._createQuestion(
+      questionText,
+      QuestionType.SHORT_ANSWER,
+      order
+    );
+    return rv;
+  }
 
-export async function createQuestionOrders(
-  questions: QuestionPostData[]
-): Promise<QuestionOrder[]> {
-  const questionOrders = await Promise.all(
-    questions.map(async (qn) => {
-      const { questionText, questionType, order } = qn;
-      switch (questionType) {
-        case QuestionType.LONG_ANSWER:
-          return await createLongAnswerQuestion(questionText, order);
-        case QuestionType.SHORT_ANSWER:
-          return await createShortAnswerQuestion(questionText, order);
-        case QuestionType.MULTIPLE_CHOICE:
-          if (!qn.options) {
-            throw new Error(
-              `MCQ Question (text: ${questionText}, order ${order}) has no options `
-            );
-          }
-          return await createMCQ(questionText, qn.options, order);
-        case QuestionType.MOOD:
-          return await createMoodQuestion(questionText, MOOD_OPTIONS, order);
-        case QuestionType.SCALE:
-          return await createScaleQuestion(questionText, SCALE_OPTIONS, order);
-        default:
-          throw new Error(`QuestionType ${questionType} is not supported`);
-      }
-    })
-  );
+  private async createLongAnswerQuestion(
+    questionText: string,
+    order: number
+  ): Promise<QuestionOrder> {
+    const rv = await this._createQuestion(
+      questionText,
+      QuestionType.LONG_ANSWER,
+      order
+    );
+    return rv;
+  }
 
-  return questionOrders;
+  private async createMCQ(
+    questionText: string,
+    optionsText: OptionPostData[],
+    order: number
+  ): Promise<QuestionOrder> {
+    return await this._createQuestionWithOptions(
+      questionText,
+      QuestionType.MULTIPLE_CHOICE,
+      optionsText,
+      order
+    );
+  }
+
+  private async createScaleQuestion(
+    questionText: string,
+    optionsText: OptionPostData[],
+    order: number
+  ): Promise<QuestionOrder> {
+    return await this._createQuestionWithOptions(
+      questionText,
+      QuestionType.SCALE,
+      optionsText,
+      order
+    );
+  }
+
+  private async createMoodQuestion(
+    questionText: string,
+    optionsText: OptionPostData[],
+    order: number
+  ): Promise<QuestionOrder> {
+    return await this._createQuestionWithOptions(
+      questionText,
+      QuestionType.MOOD,
+      optionsText,
+      order
+    );
+  }
+
+  public async createQuestionOrder(
+    qn: QuestionPostData
+  ): Promise<QuestionOrder> {
+    const { questionText, questionType, order } = qn;
+    switch (questionType) {
+      case QuestionType.LONG_ANSWER:
+        return await this.createLongAnswerQuestion(questionText, order);
+      case QuestionType.SHORT_ANSWER:
+        return await this.createShortAnswerQuestion(questionText, order);
+      case QuestionType.MULTIPLE_CHOICE:
+        if (!qn.options) {
+          throw new Error(
+            `MCQ Question (text: ${questionText}, order ${order}) has no options `
+          );
+        }
+        return await this.createMCQ(questionText, qn.options, order);
+      case QuestionType.MOOD:
+        return await this.createMoodQuestion(questionText, MOOD_OPTIONS, order);
+      case QuestionType.SCALE:
+        return await this.createScaleQuestion(
+          questionText,
+          SCALE_OPTIONS,
+          order
+        );
+      default:
+        throw new Error(`QuestionType ${questionType} is not supported`);
+    }
+  }
+
+  public async createQuestionOrders(
+    questions: QuestionPostData[]
+  ): Promise<QuestionOrder[]> {
+    try {
+      const questionOrders = await Promise.all(
+        questions.map(async (qn) => this.createQuestionOrder(qn))
+      );
+      return questionOrders;
+    } catch (e) {
+      throw new QuestionOrderCreationError("Error while creating question");
+    }
+  }
 }
 
 export async function createQuestionSet(
   questions: QuestionPostData[]
 ): Promise<QuestionSet> {
-  const questionOrders = await createQuestionOrders(questions);
+  const creator = new QuestionOrderCreator();
+  const questionOrders = await creator.createQuestionOrders(questions);
 
   // aggregate them into a set
   const questionSet = new QuestionSet();

@@ -19,7 +19,7 @@ import {
   QuestionPostData,
   QuestionSetEditData,
 } from "../types/questions";
-import { createQuestionOrders, createQuestionSet } from "./questions";
+import { createQuestionSet, QuestionOrderCreator } from "./questions";
 
 async function _createQuestionnaireWindow(
   openAt: Date,
@@ -315,7 +315,8 @@ async function updateQnSet(
     }
   });
 
-  const ordersToAdd = await createQuestionOrders(ordersToCreate);
+  const creator = new QuestionOrderCreator();
+  const ordersToAdd = await creator.createQuestionOrders(ordersToCreate);
   savedQnSet.questionOrders = ordersToKeep.concat(ordersToAdd);
 
   if (savedQnSet.questionOrders.length === 0) {
