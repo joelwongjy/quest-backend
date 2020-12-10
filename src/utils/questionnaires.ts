@@ -20,7 +20,11 @@ import {
   QuestionSetData,
   QuestionSetEditData,
 } from "../types/questions";
-import { QuestionSetCreator, QuestionSetEditor } from "./questions";
+import {
+  QuestionSetCreator,
+  QuestionSetEditor,
+  QuestionSetViewer,
+} from "./questions";
 
 class QuestionnaireWindowViewerError extends Error {
   constructor(message: string) {
@@ -358,13 +362,27 @@ export async function updateQnnaire(
   return updated;
 }
 
+/**
+ * Reads and formats the contained QuestionnaireWindow.
+ */
 export class QuestionnaireWindowViewer {
+  private qnnaireWindow: QuestionnaireWindow;
   private mainSet: QuestionSet;
   private sharedSet: QuestionSet | null;
+  private mainSetViewer: QuestionSetViewer;
+  private sharedSetViewer: QuestionSetViewer | null;
 
   constructor(qnnaireWindow: QuestionnaireWindow) {
+    this.validateHasIdOrReject(qnnaireWindow);
+    this.qnnaireWindow = qnnaireWindow;
+
     this.mainSet = qnnaireWindow.mainSet;
+    this.mainSetViewer = new QuestionSetViewer(this.mainSet);
+
     this.sharedSet = qnnaireWindow.sharedSet;
+    this.sharedSetViewer = this.sharedSet
+      ? new QuestionSetViewer(this.sharedSet)
+      : null;
   }
 
   private validateHasId(qnnaireWindow: QuestionnaireWindow): boolean {
@@ -394,7 +412,7 @@ export class QuestionnaireWindowViewer {
   }
 
   public async getMainSet(): Promise<QuestionSetData> {
-    const questions = await this.mainSet.getQuestionOrders();
+    const questions = await this.mainSetViewer.getQuestionSet();
     return {
       questions,
     };
@@ -402,7 +420,7 @@ export class QuestionnaireWindowViewer {
 
   public async getSharedSet(): Promise<QuestionSetData> {
     this.hasSharedSetOrReject();
-    const questions = await this.sharedSet!.getQuestionOrders();
+    const questions = await this.sharedSetViewer!.getQuestionSet();
     return {
       questions,
     };
