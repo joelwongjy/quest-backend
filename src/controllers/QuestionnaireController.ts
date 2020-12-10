@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import {
+  QuestionnaireEditData,
   QuestionnaireFullData,
   QuestionnaireId,
   QuestionnaireListData,
@@ -11,6 +12,7 @@ import { QuestionnairePostData } from "../types/questionnaires";
 import {
   associateQuestionnaireWithClassesAndProgrammes,
   createQuestionnaireWithQuestions,
+  updateQnnaire,
 } from "../utils/questionnaires";
 import { getRepository } from "typeorm";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
@@ -169,5 +171,32 @@ export async function showWindow(
   } catch (e) {
     response.status(400).json({ message: e.message });
     return;
+  }
+}
+
+export async function edit(
+  request: Request<QuestionnaireId, any, QuestionnaireEditData, any>,
+  response: Response<QuestionnaireFullData | Message>
+): Promise<void> {
+  const { id } = request.params;
+  const editData = request.body;
+
+  try {
+    const qnnaire = await getRepository(Questionnaire).findOneOrFail({
+      where: { id },
+      relations: [
+        "questionnaireWindows",
+        "questionnaireWindows.mainSet",
+        "questionnaireWindows.sharedSet",
+        "questionnaireWindows.mainSet.questionOrders",
+        "questionnaireWindows.sharedSet.questionOrders",
+      ],
+    });
+
+    const updated = await updateQnnaire(qnnaire, editData);
+    const result = await updated.getAllWindows();
+    response.status(200).json(result);
+  } catch (e) {
+    response.status(400).json({ message: e.message });
   }
 }

@@ -41,11 +41,18 @@ export interface OptionData extends OptionPostData {
   optionId: number;
 }
 
-export interface QuestionData extends Omit<QuestionPostData, "options"> {
+export interface QuestionData {
   qnOrderId: number;
+  order: number;
+  questionType: QuestionType;
+  questionText: string;
   options: OptionData[];
 }
 
 export interface QuestionSetData {
   questions: QuestionData[];
+}
+
+export interface QuestionSetEditData {
+  questions: (QuestionData | QuestionPostData)[];
 }

@@ -3,8 +3,7 @@ import { getRepository } from "typeorm";
 import ApiServer from "../../../server";
 import { Fixtures, loadFixtures, synchronize } from "../../../utils/tests";
 import { QuestionPostData, QuestionType } from "../../../types/questions";
-import { createQuestionSet } from "../../../utils/questions";
-import { Question } from "../../../entities/questionnaire/Question";
+import { QuestionSetCreator } from "../../../utils/questions";
 
 let server: ApiServer;
 let fixtures: Fixtures;
@@ -131,7 +130,8 @@ describe("Create questionSets using util methods", () => {
   });
 
   it("create short answer questions", async () => {
-    const questionSet = await createQuestionSet(shortAnswerPostList);
+    const creator = new QuestionSetCreator();
+    const questionSet = await creator.createQuestionSet(shortAnswerPostList);
     expect(
       didCreationMethodLoadRelationIds(questionSet, shortAnswerPostList.length)
     ).toBe(true);
@@ -153,7 +153,8 @@ describe("Create questionSets using util methods", () => {
   });
 
   it("create long answer questions", async () => {
-    const questionSet = await createQuestionSet(longAnswerPostList);
+    const creator = new QuestionSetCreator();
+    const questionSet = await creator.createQuestionSet(longAnswerPostList);
     expect(
       didCreationMethodLoadRelationIds(questionSet, longAnswerPostList.length)
     ).toBe(true);
@@ -167,7 +168,8 @@ describe("Create questionSets using util methods", () => {
   });
 
   it("create MCQs", async () => {
-    const questionSet = await createQuestionSet(mcqQnsPostList);
+    const creator = new QuestionSetCreator();
+    const questionSet = await creator.createQuestionSet(mcqQnsPostList);
     expect(
       didCreationMethodLoadRelationIds(questionSet, mcqQnsPostList.length)
     ).toBe(true);
@@ -181,7 +183,8 @@ describe("Create questionSets using util methods", () => {
   });
 
   it("create mood questions", async () => {
-    const questionSet = await createQuestionSet(moodQnsPostList);
+    const creator = new QuestionSetCreator();
+    const questionSet = await creator.createQuestionSet(moodQnsPostList);
     expect(
       didCreationMethodLoadRelationIds(questionSet, moodQnsPostList.length)
     ).toBe(true);
@@ -195,7 +198,8 @@ describe("Create questionSets using util methods", () => {
   });
 
   it("create scale questions", async () => {
-    const questionSet = await createQuestionSet(scaleQnsPostList);
+    const creator = new QuestionSetCreator();
+    const questionSet = await creator.createQuestionSet(scaleQnsPostList);
     expect(
       didCreationMethodLoadRelationIds(questionSet, scaleQnsPostList.length)
     ).toBe(true);

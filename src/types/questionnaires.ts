@@ -4,6 +4,7 @@ import { ProgrammeData } from "./programmes";
 import {
   QuestionPostData,
   QuestionSetData,
+  QuestionSetEditData,
   QuestionSetPostData,
 } from "./questions";
 
@@ -23,8 +24,8 @@ export interface QuestionnairePostData {
   status: QuestionnaireStatus;
   questionWindows: QuestionnaireWindowPostData[];
   sharedQuestions: QuestionSetPostData;
-  classes?: number[];
-  programmes?: number[];
+  classes: number[];
+  programmes: number[];
 }
 
 export interface QuestionnaireWindowPostData {
@@ -54,6 +55,12 @@ export interface QuestionnaireWindowData extends QuestionSetData {
   endAt: string;
 }
 
+export interface QuestionnaireWindowEditData extends QuestionSetEditData {
+  windowId: number;
+  startAt: string;
+  endAt: string;
+}
+
 export interface QuestionnaireFullData
   extends Omit<
       QuestionnairePostData,
@@ -74,4 +81,11 @@ export interface QuestionnaireOneWindowData
 export interface QuestionnaireProgramClassData {
   programmes: ProgrammeData[];
   classes: ClassData[];
+}
+
+export interface QuestionnaireEditData
+  extends Omit<QuestionnairePostData, "questionWindows" | "sharedQuestions"> {
+  questionnaireId: number;
+  questionWindows: QuestionnaireWindowEditData[];
+  sharedQuestions: QuestionSetEditData | undefined;
 }
