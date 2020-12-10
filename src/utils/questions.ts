@@ -19,6 +19,7 @@ import {
   QUESTION_ORDER_CREATION_ERROR,
   QUESTION_ORDER_EDITOR_ERROR,
 } from "../types/errors";
+import { is } from "date-fns/locale";
 
 class QuestionOrderCreationError extends Error {
   constructor(message: string) {
@@ -261,6 +262,23 @@ export class QuestionSetEditor {
     return isValidated;
   }
 
+  private validateQnOrdersLength(newQnOrders: QuestionOrder[]): boolean {
+    return newQnOrders.length >= this.existingQnOrders.length;
+  }
+
+  private validateQnOrdersLengthOrReject(
+    newQnOrders: QuestionOrder[]
+  ): boolean {
+    const isValid = this.validateQnOrdersLength(newQnOrders);
+    if (!isValid) {
+      throw new QuestionSetEditorError(
+        `New Qn Orders will cause dangling question orders` +
+          `(Existing length: ${this.existingQnOrders.length}, New length: ${newQnOrders.length})`
+      );
+    }
+    return isValid;
+  }
+
   public async editQnSet(): Promise<QuestionSet> {
     const ordersToCreate: QuestionPostData[] = [];
     const ordersToKeep: QuestionOrder[] = [];
@@ -322,8 +340,10 @@ export class QuestionSetEditor {
 
     const concatResult: QuestionOrder[] = newOrders
       .concat(updatedOrders)
-      .concat(deletedOrders);
+      .concat(deletedOrders)
+      .concat(ordersToKeep);
     this.qnSet.questionOrders = concatResult;
+    this.validateQnOrdersLengthOrReject(concatResult);
 
     const updated = await getRepository(QuestionSet).save(this.qnSet);
     return updated;
