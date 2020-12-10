@@ -15,7 +15,7 @@ beforeAll(async () => {
   await synchronize(server);
 });
 
-beforeEach(async () => {
+afterEach(async () => {
   await synchronize(server);
 });
 
