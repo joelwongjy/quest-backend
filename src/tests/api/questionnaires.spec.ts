@@ -14,7 +14,7 @@ import {
   QuestionnaireStatus,
   QuestionnaireType,
 } from "../../types/questionnaires";
-import { QuestionType } from "../../types/questions";
+import { QuestionData, QuestionType } from "../../types/questions";
 import { QuestionnaireWindowViewer } from "../../utils/questionnaires";
 import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
 
@@ -361,7 +361,7 @@ describe("GET /questionnaires/:id/window/:windowId", () => {
 describe("POST /questionnaires/edit/:id", () => {
   let originalData: QuestionnaireFullData;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await synchronize(server);
     fixtures = await loadFixtures(server);
 
@@ -464,5 +464,53 @@ describe("POST /questionnaires/edit/:id", () => {
     const mainWindowQns = await windowViewer.getMainSet();
     expect(mainWindowQns.questions).toHaveLength(1);
     expect(mainWindowQns.questions[0].questionText).toBe("My edited question!");
+  });
+
+  it("should return 200 if admin and qnOrders are changed", async () => {
+    const originalQnOrder: QuestionData =
+      originalData.questionWindows[0].questions[0];
+    const newOrdering = originalQnOrder.order + 5;
+
+    const editData: QuestionnaireEditData = {
+      ...originalData,
+      title: "Edited Qnnaire",
+      status: QuestionnaireStatus.PUBLISHED,
+      questionWindows: [
+        {
+          windowId: originalData.questionWindows[0].windowId,
+          startAt: new Date("2022/12/12").toISOString(),
+          endAt: new Date("2020/12/13").toISOString(),
+          questions: [
+            {
+              ...originalQnOrder,
+              order: newOrdering,
+            },
+          ],
+        },
+      ],
+      classes: originalData.classes.map((clazz) => clazz.id),
+      programmes: originalData.programmes.map((prg) => prg.id),
+    };
+
+    const response = await request(server.server)
+      .post(
+        `${fixtures.api}/questionnaires/edit/${originalData.questionnaireId}`
+      )
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(editData);
+    expect(response.status).toEqual(200);
+
+    const getQnnaire = await getRepository(Questionnaire).findOne({
+      where: { id: originalData.questionnaireId },
+      relations: ["questionnaireWindows", "questionnaireWindows.mainSet"],
+    });
+
+    const windowViewer = new QuestionnaireWindowViewer(
+      getQnnaire!.questionnaireWindows[0]
+    );
+    const questions = (await windowViewer.getMainSet()).questions;
+
+    expect(questions).toHaveLength(1);
+    expect(questions[0].order).toBe(newOrdering);
   });
 });
