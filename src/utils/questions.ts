@@ -17,9 +17,9 @@ import {
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
 import {
   QUESTION_ORDER_CREATION_ERROR,
-  QUESTION_ORDER_EDITOR_ERROR,
+  QUESTION_ORDER_VIEWER_ERROR,
+  QUESTION_SET_EDITOR_ERROR,
 } from "../types/errors";
-import { is } from "date-fns/locale";
 
 class QuestionOrderCreationError extends Error {
   constructor(message: string) {
@@ -31,10 +31,20 @@ class QuestionOrderCreationError extends Error {
 class QuestionSetEditorError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = QUESTION_ORDER_EDITOR_ERROR;
+    this.name = QUESTION_SET_EDITOR_ERROR;
   }
 }
 
+class QuestionOrderViewerError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = QUESTION_ORDER_VIEWER_ERROR;
+  }
+}
+
+/**
+ * Creates QuestionOrders.
+ */
 export class QuestionOrderCreator {
   private async _createQuestion(
     questionText: string,
@@ -179,6 +189,47 @@ export class QuestionOrderCreator {
     } catch (e) {
       throw new QuestionOrderCreationError("Error while creating question");
     }
+  }
+}
+
+/**
+ * Reads and formats the contained QuestionOrder.
+ *
+ * Beware of calling this in a `.map()` callback, as it may cause the N+1 problem.
+ * To safeguard against this, you have to call `activate()` before running the read operation.
+ */
+export class QuestionOrderViewer {
+  private isActive: boolean = false;
+  private qnOrder: QuestionOrder;
+
+  constructor(qnOrder: QuestionOrder) {
+    this.validateHasIdOrReject(qnOrder);
+    this.qnOrder = qnOrder;
+  }
+
+  public activate(): this {
+    this.isActive = true;
+    return this;
+  }
+
+  private validateHasId(qnOrder: QuestionOrder): boolean {
+    return Boolean(qnOrder.id);
+  }
+
+  private validateHasIdOrReject(qnOrder: QuestionOrder): boolean {
+    const isValid = this.validateHasId(qnOrder);
+    if (!isValid) {
+      throw new QuestionOrderViewerError(`Provided QuestionOrder has no id`);
+    }
+    return isValid;
+  }
+
+  public getQuestionOrder() {
+    if (!this.isActive) {
+      throw new QuestionOrderViewerError(`Provided QuestionOrder has no id`);
+    }
+
+    return this.qnOrder.getQuestionOrder();
   }
 }
 
