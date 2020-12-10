@@ -24,6 +24,6 @@ export class QuestionOrder extends Discardable {
   @ManyToOne((type) => Question)
   question: Question;
 
-  @ManyToOne((type) => QuestionSet)
+  @ManyToOne((type) => QuestionSet, (qnSet) => qnSet.questionOrders)
   questionSet!: QuestionSet;
 }

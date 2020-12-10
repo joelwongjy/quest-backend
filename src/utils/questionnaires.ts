@@ -6,8 +6,8 @@ import { ClassQuestionnaire } from "../entities/questionnaire/ClassQuestionnaire
 import { ProgrammeQuestionnaire } from "../entities/questionnaire/ProgrammeQuestionnaire";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
-import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
+import { QUESTIONNAIRE_WINDOW_VIEWER_ERROR } from "../types/errors";
 import {
   QuestionnaireEditData,
   QuestionnaireType,
@@ -17,13 +17,17 @@ import {
 import {
   QuestionData,
   QuestionPostData,
+  QuestionSetData,
   QuestionSetEditData,
 } from "../types/questions";
-import {
-  QuestionSetCreator,
-  QuestionOrderCreator,
-  QuestionSetEditor,
-} from "./questions";
+import { QuestionSetCreator, QuestionSetEditor } from "./questions";
+
+class QuestionnaireWindowViewerError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = QUESTIONNAIRE_WINDOW_VIEWER_ERROR;
+  }
+}
 
 async function _createQuestionnaireWindow(
   openAt: Date,
@@ -352,4 +356,55 @@ export async function updateQnnaire(
   updated = await updateWindowRelations(savedQnnaire, editData);
 
   return updated;
+}
+
+export class QuestionnaireWindowViewer {
+  private mainSet: QuestionSet;
+  private sharedSet: QuestionSet | null;
+
+  constructor(qnnaireWindow: QuestionnaireWindow) {
+    this.mainSet = qnnaireWindow.mainSet;
+    this.sharedSet = qnnaireWindow.sharedSet;
+  }
+
+  private validateHasId(qnnaireWindow: QuestionnaireWindow): boolean {
+    return Boolean(qnnaireWindow.id);
+  }
+
+  private validateHasIdOrReject(qnnaireWindow: QuestionnaireWindow): boolean {
+    const isValid = this.validateHasId(qnnaireWindow);
+    if (!isValid) {
+      throw new QuestionnaireWindowViewerError(`QnnaireWindow has no id`);
+    }
+    return isValid;
+  }
+
+  public hasSharedSet(): boolean {
+    return Boolean(this.sharedSet);
+  }
+
+  public hasSharedSetOrReject(): boolean {
+    const isValid = this.hasSharedSet();
+    if (!isValid) {
+      throw new QuestionnaireWindowViewerError(
+        `QnnaireWindow has not shared set`
+      );
+    }
+    return isValid;
+  }
+
+  public async getMainSet(): Promise<QuestionSetData> {
+    const questions = await this.mainSet.getQuestionOrders();
+    return {
+      questions,
+    };
+  }
+
+  public async getSharedSet(): Promise<QuestionSetData> {
+    this.hasSharedSetOrReject();
+    const questions = await this.sharedSet!.getQuestionOrders();
+    return {
+      questions,
+    };
+  }
 }

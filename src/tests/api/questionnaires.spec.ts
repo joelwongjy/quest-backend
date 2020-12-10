@@ -15,6 +15,7 @@ import {
   QuestionnaireType,
 } from "../../types/questionnaires";
 import { QuestionType } from "../../types/questions";
+import { QuestionnaireWindowViewer } from "../../utils/questionnaires";
 import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
 
 const QUESTIONNAIRE_ONE_TIME: QuestionnairePostData = {
@@ -379,7 +380,7 @@ describe("POST /questionnaires/edit/:id", () => {
     const editData: QuestionnaireEditData = {
       ...originalData,
       title: "Edited Qnnaire",
-      // status: QuestionnaireStatus.PUBLISHED,
+      status: QuestionnaireStatus.PUBLISHED,
       questionWindows: [
         {
           ...originalData.questionWindows[0],
@@ -448,13 +449,20 @@ describe("POST /questionnaires/edit/:id", () => {
 
     const getQnnaire = await getRepository(Questionnaire).findOne({
       where: { id: originalData.questionnaireId },
-      relations: ["questionnaireWindows"],
+      relations: [
+        "questionnaireWindows",
+        "questionnaireWindows.mainSet",
+        "questionnaireWindows.sharedSet",
+      ],
     });
     const mappedQnnaire = await getQnnaire!.getAllWindows();
     expect(mappedQnnaire.questionWindows).toHaveLength(1);
 
-    const mainWindowQns = mappedQnnaire.questionWindows[0].questions;
-    expect(mainWindowQns).toHaveLength(1);
-    expect(mainWindowQns[0].questionText).toBe("My edited question!");
+    const windowViewer = new QuestionnaireWindowViewer(
+      getQnnaire?.questionnaireWindows[0]!
+    );
+    const mainWindowQns = await windowViewer.getMainSet();
+    expect(mainWindowQns.questions).toHaveLength(1);
+    expect(mainWindowQns.questions[0].questionText).toBe("My edited question!");
   });
 });
