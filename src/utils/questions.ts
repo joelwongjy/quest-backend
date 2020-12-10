@@ -193,7 +193,8 @@ export class QuestionOrderCreator {
 }
 
 /**
- * Reads and formats the contained QuestionOrder.
+ * Reads and formats the contained QuestionOrder. \
+ * This is a wrapper class for the entity `QuestionOrder`'s `getQuestionOrder()`.
  *
  * Beware of calling this in a `.map()` callback, as it may cause the N+1 problem.
  * To safeguard against this, you have to call `activate()` before running the read operation.
@@ -233,6 +234,10 @@ export class QuestionOrderViewer {
   }
 }
 
+/**
+ * Creates a QuestionSet.
+ * Leverages on `QuestionOrderCreator`.
+ */
 export class QuestionSetCreator {
   private orderCreator = new QuestionOrderCreator();
 
@@ -252,8 +257,13 @@ export class QuestionSetCreator {
   }
 }
 
-// boolean is true if the qnOrder should be softDeleted
+/** Helper type for`QuestionSetEditor`.
+ * Boolean is `true` if QuestionOrder should be deleted. */
 type ExistingQnOrderStatusTuple = [QuestionOrder, boolean];
+
+/**
+ * Edits a QuestionSet.
+ */
 export class QuestionSetEditor {
   private qnSet: QuestionSet;
   private existingQnOrders: QuestionOrder[];
@@ -269,6 +279,7 @@ export class QuestionSetEditor {
     this.existingQnOrderMap = new Map();
     this.existingQnOrders.forEach((order) => {
       if (!order.id) {
+        // during validate, it will check this
         return;
       }
 
@@ -313,6 +324,7 @@ export class QuestionSetEditor {
     return isValidated;
   }
 
+  /** Checks that the contained QuestionSet will not lose any QuestionOrder. */
   private validateQnOrdersLength(newQnOrders: QuestionOrder[]): boolean {
     return newQnOrders.length >= this.existingQnOrders.length;
   }
