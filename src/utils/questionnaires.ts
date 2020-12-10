@@ -19,7 +19,11 @@ import {
   QuestionPostData,
   QuestionSetEditData,
 } from "../types/questions";
-import { QuestionSetCreator, QuestionOrderCreator } from "./questions";
+import {
+  QuestionSetCreator,
+  QuestionOrderCreator,
+  QuestionSetEditor,
+} from "./questions";
 
 async function _createQuestionnaireWindow(
   openAt: Date,
@@ -270,62 +274,20 @@ async function updateWindow(
   savedWindow.openAt = new Date(editData.startAt);
   savedWindow.closeAt = new Date(editData.endAt);
 
-  const updatedMainQnSet = await updateQnSet(savedWindow.mainSet, editData);
+  const mainEditor = new QuestionSetEditor(savedWindow.mainSet, editData);
+  const updatedMainQnSet = await mainEditor.editQnSet();
   savedWindow.mainSet = updatedMainQnSet;
 
   if (savedWindow.sharedSet && sharedQnsData) {
-    const updatedSharedQnSet = await updateQnSet(
+    const sharedEditor = new QuestionSetEditor(
       savedWindow.sharedSet,
       sharedQnsData
     );
+    const updatedSharedQnSet = await sharedEditor.editQnSet();
     savedWindow.sharedSet = updatedSharedQnSet;
   }
 
   const updated = await getRepository(QuestionnaireWindow).save(savedWindow);
-  return updated;
-}
-
-async function updateQnSet(
-  savedQnSet: QuestionSet,
-  editData: QuestionSetEditData
-): Promise<QuestionSet> {
-  if (!savedQnSet.id) {
-    throw new Error(`The provided Question Set has no id`);
-  }
-
-  const qnOrders: Map<number, QuestionOrder> = new Map();
-  savedQnSet.questionOrders.forEach((order) => {
-    qnOrders.set(order.id, order);
-  });
-
-  const ordersToKeep: QuestionOrder[] = [];
-  const ordersToCreate: QuestionPostData[] = [];
-  editData.questions.forEach((qn) => {
-    const { qnOrderId } = qn as QuestionData;
-
-    if (qnOrderId) {
-      if (!qnOrders.has(qnOrderId)) {
-        throw new Error(
-          `Window does not contain the given question order ${qnOrderId}`
-        );
-      }
-
-      ordersToKeep.push(qnOrders.get(qnOrderId)!);
-      return;
-    } else {
-      ordersToCreate.push(qn as QuestionPostData);
-    }
-  });
-
-  const creator = new QuestionOrderCreator();
-  const ordersToAdd = await creator.createQuestionOrders(ordersToCreate);
-  savedQnSet.questionOrders = ordersToKeep.concat(ordersToAdd);
-
-  if (savedQnSet.questionOrders.length === 0) {
-    throw new Error(`QnSet requires at least 1 question`);
-  }
-
-  const updated = await getRepository(QuestionSet).save(savedQnSet);
   return updated;
 }
 
