@@ -19,6 +19,7 @@ import {
   QUESTION_ORDER_CREATION_ERROR,
   QUESTION_ORDER_VIEWER_ERROR,
   QUESTION_SET_EDITOR_ERROR,
+  QUESTION_SET_VIEWER_ERROR,
 } from "../types/errors";
 
 class QuestionOrderCreationError extends Error {
@@ -39,6 +40,13 @@ class QuestionOrderViewerError extends Error {
   constructor(message: string) {
     super(message);
     this.name = QUESTION_ORDER_VIEWER_ERROR;
+  }
+}
+
+class QuestionSetViewerError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = QUESTION_SET_VIEWER_ERROR;
   }
 }
 
@@ -225,12 +233,12 @@ export class QuestionOrderViewer {
     return isValid;
   }
 
-  public getQuestionOrder() {
+  public async getQuestionOrder(): Promise<QuestionData> {
     if (!this.isActive) {
       throw new QuestionOrderViewerError(`Provided QuestionOrder has no id`);
     }
 
-    return this.qnOrder.getQuestionOrder();
+    return await this.qnOrder.getQuestionOrder();
   }
 }
 
@@ -410,5 +418,34 @@ export class QuestionSetEditor {
 
     const updated = await getRepository(QuestionSet).save(this.qnSet);
     return updated;
+  }
+}
+
+/**
+ * Reads and formats the contained QuestionSet. \
+ * This is a wrapper class for the entity `QuestionSet`'s `getQuestionSet()`.
+ */
+export class QuestionSetViewer {
+  private qnSet: QuestionSet;
+
+  constructor(qnSet: QuestionSet) {
+    this.validateHasIdOrReject(qnSet);
+    this.qnSet = qnSet;
+  }
+
+  private validateHasId(qnSet: QuestionSet): boolean {
+    return Boolean(qnSet.id);
+  }
+
+  private validateHasIdOrReject(qnSet: QuestionSet): boolean {
+    const isValid = this.validateHasId(qnSet);
+    if (!isValid) {
+      throw new QuestionSetViewerError("Provided QuestionSet has no id");
+    }
+    return isValid;
+  }
+
+  public async getQuestionSet(): Promise<QuestionData[]> {
+    return await this.qnSet.getQuestionOrders();
   }
 }
