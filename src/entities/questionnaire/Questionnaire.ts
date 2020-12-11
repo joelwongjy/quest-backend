@@ -72,7 +72,6 @@ export class Questionnaire extends Discardable {
   )
   classQuestionnaires!: ClassQuestionnaire[];
 
-  // Hook to ensure entity does not have null option and null answer
   @BeforeInsert()
   @BeforeUpdate()
   async validate() {
@@ -216,9 +215,7 @@ export class Questionnaire extends Discardable {
   /**
    * Gets programmes and classes data.
    */
-  getProgrammesAndClasses = async (): Promise<
-    QuestionnaireProgramClassData
-  > => {
+  getProgrammesAndClasses = async (): Promise<QuestionnaireProgramClassData> => {
     const qnnaire = await getRepository(Questionnaire).findOne({
       where: { id: this.id },
       relations: [
