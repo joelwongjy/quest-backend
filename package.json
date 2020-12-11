@@ -58,7 +58,8 @@
     "test": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles --forceExit",
     "test:ci": "jest --verbose --forceExit --runInBand",
     "coverage": "yarn test --coverage",
-    "build": "tsc && cp package.json ./build/ && cd build && yarn install",
-    "production": "cd build && cross-env NODE_ENV=production node ./src/index.js"
+    "production": "cd build && cross-env NODE_ENV=production node ./src/index.js",
+    "build": "tsc --build",
+    "clean": "tsc --build --clean"
   }
 }
