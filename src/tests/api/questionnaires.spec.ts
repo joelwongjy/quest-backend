@@ -519,22 +519,6 @@ describe("POST /questionnaires/edit/:id", () => {
   });
 });
 
-const QUESTIONNAIRE_ANSWERS: AnswerPostData[] = [
-  {
-    questionOrderId: 1,
-    optionId: 1,
-  },
-  {
-    questionOrderId: 1,
-    textResponse: "Hello World",
-  },
-];
-const QUESTIONNAIRE_ATTEMPT_SUBMISSION: AttemptPostData = {
-  userId: 1,
-  qnnaireWindowId: 1,
-  answers: QUESTIONNAIRE_ANSWERS,
-};
-
 describe("POST /questionnaires/submissions/create", () => {
   let originalData: QuestionnaireFullData;
   let answerData: AnswerPostData[];
