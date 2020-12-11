@@ -5,6 +5,7 @@ import {
   QuestionnaireId,
   QuestionnaireListData,
   QuestionnaireOneWindowData,
+  QuestionnaireType,
   QuestionnaireWindowId,
 } from "../types/questionnaires";
 import { selectQuestionnaireData } from "../selectors/questionnaires";
@@ -12,7 +13,9 @@ import { QuestionnairePostData } from "../types/questionnaires";
 import {
   associateQuestionnaireWithClassesAndProgrammes,
   createQuestionnaireWithQuestions,
-  updateQnnaire,
+  OneTimeQuestionnaireEditor,
+  PrePostQuestionnaireEditor,
+  QuestionnaireEditor,
 } from "../utils/questionnaires";
 import { getRepository } from "typeorm";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
@@ -193,7 +196,20 @@ export async function edit(
       ],
     });
 
-    const updated = await updateQnnaire(qnnaire, editData);
+    let editor: QuestionnaireEditor;
+    switch (qnnaire.questionnaireType) {
+      case QuestionnaireType.ONE_TIME:
+        editor = new OneTimeQuestionnaireEditor(qnnaire, editData);
+        break;
+      case QuestionnaireType.PRE_POST:
+        editor = new PrePostQuestionnaireEditor(qnnaire, editData);
+        break;
+      default:
+        response.status(400).json({ message: "Unknown QuestionnaireType" });
+        return;
+    }
+
+    const updated = await editor.editQnnaire();
     const result = await updated.getAllWindows();
     response.status(200).json(result);
   } catch (e) {

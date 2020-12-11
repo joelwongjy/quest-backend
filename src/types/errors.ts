@@ -11,3 +11,10 @@ export const QUESTIONNAIRE_WINDOW_VIEWER_ERROR =
   "QuestionnaireWindowViewerError";
 export const QUESTIONNAIRE_WINDOW_EDITOR_ERROR =
   "QuestionnareWindowEditorError";
+export const ONE_TIME_QUESTIONNAIRE_EDITOR_ERROR =
+  "OneTimeQuestionnaireEditorError";
+export const PRE_POST_QUESTIONNAIRE_EDITOR_ERROR =
+  "PrePostQuestionnaireEditorError";
+export const QUESTIONNAIRE_VALIDATOR_ERROR = "QuestionnaireValidatorError";
+export const QUESTIONNAIRE_PROGRAMS_AND_CLASSES_EDITOR_ERROR =
+  "QuestionnaireProgramAndClassesEditorError";
