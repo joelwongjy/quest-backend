@@ -13,7 +13,7 @@ services:
       - POSTGRES_PASSWORD=teamQuest123!@#
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
-      - POSTGRES_NAME=db
+      - POSTGRES_NAME=prod_db
       - POSTGRES_DISABLE_SSL=true
       - JWT_SECRET=teamQuestIsTheBest
     depends_on:
@@ -24,8 +24,8 @@ services:
   db:
     image: postgres:12.3-alpine
     ports:
-      - 35432:5432
+      - 54345:5432
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: teamQuest123!@#
-      POSTGRES_DB: db
+      POSTGRES_DB: prod_db
