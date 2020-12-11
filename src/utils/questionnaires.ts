@@ -314,32 +314,34 @@ type ProgrammeId = number;
 type ShouldSoftDelete = boolean;
 type WithId = { id: number };
 type CurrentlySavedTuple<U> = [U, ShouldSoftDelete];
-
+type ProgrammeClassesQuestionnaires = {
+  programmes: ProgrammeQuestionnaire[];
+  classes: ClassQuestionnaire[];
+};
 /**
  * Edits the ProgrammeQuestionnaires and ClassesQuestionnaires.
  */
 export class QuestionnaireProgrammesAndClassesEditor {
   private validator: QuestionnaireValidator = new QuestionnaireValidator();
+  private _qnnaire: Questionnaire; // do not use save on this directly
 
-  private qnnaire: Questionnaire;
   private editData: Pick<QuestionnairePostData, "classes" | "programmes">;
-
-  private qnnaireProgrammes: ProgrammeQuestionnaire[];
-  private qnnaireClasses: ClassQuestionnaire[];
+  private programmeQuestionnaires: ProgrammeQuestionnaire[];
+  private classQuestionnaires: ClassQuestionnaire[];
 
   constructor(
     qnnaire: Questionnaire,
     editData: Pick<QuestionnairePostData, "classes" | "programmes">
   ) {
-    this.validator.validateQnnaire(qnnaire);
-    this.qnnaire = qnnaire;
+    this.validator.validateQnnaireOrReject(qnnaire);
+    this._qnnaire = qnnaire;
     this.editData = editData;
 
-    this.qnnaireProgrammes = qnnaire.programmeQuestionnaires;
-    this.qnnaireClasses = qnnaire.classQuestionnaires;
+    this.programmeQuestionnaires = this._qnnaire.programmeQuestionnaires;
+    this.classQuestionnaires = this._qnnaire.classQuestionnaires;
   }
 
-  public async editProgrammesAndClasses(): Promise<Questionnaire> {
+  public async editProgrammesAndClasses(): Promise<ProgrammeClassesQuestionnaires> {
     const {
       programmes,
       classes,
@@ -348,10 +350,10 @@ export class QuestionnaireProgrammesAndClassesEditor {
     const organisedProgrammes: Sets<
       Programme,
       ProgrammeQuestionnaire
-    > = this.organiseSets(programmes, this.qnnaireProgrammes);
+    > = this.organiseSets(programmes, this.programmeQuestionnaires);
     const organisedClasses: Sets<Class, ClassQuestionnaire> = this.organiseSets(
       classes,
-      this.qnnaireClasses
+      this.classQuestionnaires
     );
 
     const newProgrammeQnnaires = await this.updateProgrammeQuestionnaire(
@@ -361,11 +363,10 @@ export class QuestionnaireProgrammesAndClassesEditor {
       organisedClasses
     );
 
-    this.qnnaire.programmeQuestionnaires = newProgrammeQnnaires;
-    this.qnnaire.classQuestionnaires = newClassesQnnaires;
-
-    const updated = await getRepository(Questionnaire).save(this.qnnaire);
-    return updated;
+    return {
+      programmes: newProgrammeQnnaires,
+      classes: newClassesQnnaires,
+    };
   }
 
   private async getRequestedProgrammesAndClasses(): Promise<ProgrammeClasses> {
@@ -374,18 +375,25 @@ export class QuestionnaireProgrammesAndClassesEditor {
     const classesOR = classesData.map((id) => Object.assign({}, { id }));
     const programmesOR = programmesData.map((id) => Object.assign({}, { id }));
 
-    const classes = await getRepository(Class).find({
-      select: ["id"],
-      where: classesOR,
-    });
-    const programmes = await getRepository(Programme).find({
-      select: ["id"],
-      where: programmesOR,
-    });
+    // seems like with an [], typeorm will return everything
+    const classes =
+      classesOR.length === 0
+        ? []
+        : await getRepository(Class).find({
+            select: ["id"],
+            where: classesOR,
+          });
+    const programmes =
+      programmesOR.length === 0
+        ? []
+        : await getRepository(Programme).find({
+            select: ["id"],
+            where: programmesOR,
+          });
 
     if (classesData.length !== classes.length) {
       throw new QuestionnaireProgrammesAndClassesEditorError(
-        `One or more classIds given is invalid` +
+        `One or more classIds given is invalid ` +
           `(Received ${classesData.length}. Found: ${classes.length}`
       );
     }
@@ -458,7 +466,7 @@ export class QuestionnaireProgrammesAndClassesEditor {
     const { toAdd, toKeep, toSoftDelete } = sets;
 
     const toAddMapped = toAdd.map(
-      (programme) => new ProgrammeQuestionnaire(programme, this.qnnaire)
+      (programme) => new ProgrammeQuestionnaire(programme, this._qnnaire)
     );
     const addedList = await getRepository(ProgrammeQuestionnaire).save(
       toAddMapped
@@ -474,7 +482,7 @@ export class QuestionnaireProgrammesAndClassesEditor {
 
     this.verifyNothingDanglingOrReject(
       updatedProgrammeQnnaires,
-      this.qnnaire.programmeQuestionnaires
+      this.programmeQuestionnaires
     );
     return updatedProgrammeQnnaires;
   }
@@ -485,7 +493,7 @@ export class QuestionnaireProgrammesAndClassesEditor {
     const { toAdd, toKeep, toSoftDelete } = sets;
 
     const toAddMapped = toAdd.map(
-      (clazz) => new ClassQuestionnaire(clazz, this.qnnaire)
+      (clazz) => new ClassQuestionnaire(clazz, this._qnnaire)
     );
     const addedList = await getRepository(ClassQuestionnaire).save(toAddMapped);
 
@@ -499,7 +507,7 @@ export class QuestionnaireProgrammesAndClassesEditor {
 
     this.verifyNothingDanglingOrReject(
       updatedClassesQnnaires,
-      this.qnnaire.classQuestionnaires
+      this.classQuestionnaires
     );
     return updatedClassesQnnaires;
   }
@@ -519,7 +527,7 @@ export abstract class QuestionnaireEditor {
 
   private editData: QuestionnaireEditData;
 
-  private programmesClassesQnnaireEditor!: QuestionnaireProgrammesAndClassesEditor;
+  private programmesClassesQnnaireEditor: QuestionnaireProgrammesAndClassesEditor;
 
   /** Constructor for `QuestionnaireEditor`. Note it does not perform validations on `editData` */
   constructor(qnnaire: Questionnaire, editData: QuestionnaireEditData) {
@@ -527,6 +535,11 @@ export abstract class QuestionnaireEditor {
     this.qnnaire = qnnaire;
     this.qnnaireType = qnnaire.questionnaireType;
     this.editData = editData;
+
+    this.programmesClassesQnnaireEditor = new QuestionnaireProgrammesAndClassesEditor(
+      this.qnnaire,
+      this.editData
+    );
   }
 
   getValidator(): QuestionnaireValidator {
@@ -541,15 +554,15 @@ export abstract class QuestionnaireEditor {
     this.qnnaire.name = this.editData.title;
     this.qnnaire.questionnaireType = this.editData.type;
     this.qnnaire.questionnaireStatus = this.editData.status;
-    const updatedAttributes = await getRepository(Questionnaire).save(
-      this.qnnaire
-    );
 
-    const editor = new QuestionnaireProgrammesAndClassesEditor(
-      updatedAttributes,
-      this.editData
-    );
-    const updated = editor.editProgrammesAndClasses();
+    const {
+      programmes,
+      classes,
+    } = await this.programmesClassesQnnaireEditor.editProgrammesAndClasses();
+    this.qnnaire.programmeQuestionnaires = programmes;
+    this.qnnaire.classQuestionnaires = classes;
+
+    const updated = await getRepository(Questionnaire).save(this.qnnaire);
     return updated;
   }
 }

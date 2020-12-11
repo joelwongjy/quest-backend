@@ -193,6 +193,10 @@ export async function edit(
         "questionnaireWindows.sharedSet",
         "questionnaireWindows.mainSet.questionOrders",
         "questionnaireWindows.sharedSet.questionOrders",
+        "programmeQuestionnaires",
+        "classQuestionnaires",
+        "programmeQuestionnaires.programme",
+        "classQuestionnaires.class",
       ],
     });
 
@@ -213,6 +217,7 @@ export async function edit(
     const result = await updated.getAllWindows();
     response.status(200).json(result);
   } catch (e) {
+    console.log(e);
     response.status(400).json({ message: e.message });
   }
 }
