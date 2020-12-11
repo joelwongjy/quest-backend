@@ -11,15 +11,15 @@ services:
       - NODE_ENV=development
       - POSTGRES_USERNAME=user
       - POSTGRES_PASSWORD=pass
-      - POSTGRES_HOST=localhost
-      - POSTGRES_PORT=35432
+      - POSTGRES_HOST=postgres://db
+      - POSTGRES_PORT=5432
       - POSTGRES_NAME=db
       - POSTGRES_DISABLE_SSL=true
       - JWT_SECRET=teamQuestIsTheBest
     depends_on:
-      - db_dev
+      - db
 
-  db_dev:
+  db:
     image: postgres:12.3-alpine
     ports:
       - 35432:5432
