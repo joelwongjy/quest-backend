@@ -1,5 +1,6 @@
 import { validateOrReject } from "class-validator";
 import { getRepository } from "typeorm";
+import { edit } from "../controllers/QuestionnaireController";
 import { Class } from "../entities/programme/Class";
 import { Programme } from "../entities/programme/Programme";
 import { ClassQuestionnaire } from "../entities/questionnaire/ClassQuestionnaire";
@@ -7,7 +8,10 @@ import { ProgrammeQuestionnaire } from "../entities/questionnaire/ProgrammeQuest
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
-import { QUESTIONNAIRE_WINDOW_VIEWER_ERROR } from "../types/errors";
+import {
+  QUESTIONNAIRE_WINDOW_EDITOR_ERROR,
+  QUESTIONNAIRE_WINDOW_VIEWER_ERROR,
+} from "../types/errors";
 import {
   QuestionnaireEditData,
   QuestionnaireType,
@@ -25,6 +29,13 @@ import {
   QuestionSetEditor,
   QuestionSetViewer,
 } from "./questions";
+
+class QuestionnaireWindowEditorError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = QUESTIONNAIRE_WINDOW_EDITOR_ERROR;
+  }
+}
 
 class QuestionnaireWindowViewerError extends Error {
   constructor(message: string) {
@@ -272,26 +283,15 @@ async function updateWindow(
   editData: QuestionnaireWindowEditData,
   sharedQnsData: QuestionSetEditData | undefined
 ): Promise<QuestionnaireWindow> {
-  if (savedWindow.id !== editData.windowId) {
-    throw new Error(
-      `Editing refers to window with id ${editData.windowId}` +
-        `but given saved window with id ${savedWindow.id}`
-    );
-  }
-
-  savedWindow.openAt = new Date(editData.startAt);
-  savedWindow.closeAt = new Date(editData.endAt);
-
-  const mainEditor = new QuestionSetEditor(savedWindow.mainSet, editData);
-  const updatedMainQnSet = await mainEditor.editQnSet();
-  savedWindow.mainSet = updatedMainQnSet;
+  const mainEditor = new QuestionnaireWindowEditor(
+    savedWindow,
+    editData,
+    sharedQnsData
+  );
+  const updatedWindowWithMainQnSet = await mainEditor.editQnnaireWindowAttributesAndMainQnSet();
 
   if (savedWindow.sharedSet && sharedQnsData) {
-    const sharedEditor = new QuestionSetEditor(
-      savedWindow.sharedSet,
-      sharedQnsData
-    );
-    const updatedSharedQnSet = await sharedEditor.editQnSet();
+    const updatedSharedQnSet = await mainEditor.editSharedQnSet();
     savedWindow.sharedSet = updatedSharedQnSet;
   }
 
@@ -360,6 +360,122 @@ export async function updateQnnaire(
   updated = await updateWindowRelations(savedQnnaire, editData);
 
   return updated;
+}
+
+/**
+ * Edits a QuestionnaireWindoww.
+ */
+export class QuestionnaireWindowEditor {
+  private qnnaireWindow: QuestionnaireWindow;
+
+  private mainSet: QuestionSet;
+  private editWindowAndMainQnSetData: QuestionnaireWindowEditData;
+  private mainSetEditor: QuestionSetEditor;
+
+  private sharedSet: QuestionSet | null;
+  private editSharedQnSetData: QuestionSetEditData | null;
+  private sharedSetEditor: QuestionSetEditor | null;
+
+  constructor(
+    qnnaireWindow: QuestionnaireWindow,
+    editWindowAndMainQnSetData: QuestionnaireWindowEditData,
+    editSharedQnSetData: QuestionSetEditData | undefined
+  ) {
+    this.validateEditorOrReject(
+      qnnaireWindow,
+      editWindowAndMainQnSetData,
+      editSharedQnSetData
+    );
+    this.qnnaireWindow = qnnaireWindow;
+
+    this.mainSet = qnnaireWindow.mainSet;
+    this.editWindowAndMainQnSetData = editWindowAndMainQnSetData;
+    this.mainSetEditor = new QuestionSetEditor(
+      this.mainSet,
+      this.editWindowAndMainQnSetData
+    );
+
+    this.sharedSet = qnnaireWindow.sharedSet ?? null;
+    this.editSharedQnSetData = editSharedQnSetData ?? null;
+    this.sharedSetEditor = this.sharedSet
+      ? new QuestionSetEditor(this.sharedSet, this.editSharedQnSetData!)
+      : null;
+  }
+
+  private validateEditor(
+    qnnaireWindow: QuestionnaireWindow,
+    editWindowAndMainQnSetData: QuestionnaireWindowEditData,
+    editSharedQnSetData: QuestionSetEditData | undefined
+  ): boolean {
+    const windowHasId = Boolean(qnnaireWindow.id);
+
+    const editDataMatchesWindow =
+      editWindowAndMainQnSetData.windowId === qnnaireWindow.id;
+
+    const hasCorrespondingEditSharedQnSetData = qnnaireWindow.sharedSet
+      ? Boolean(editSharedQnSetData)
+      : true;
+
+    return (
+      windowHasId &&
+      editDataMatchesWindow &&
+      hasCorrespondingEditSharedQnSetData
+    );
+  }
+
+  private validateEditorOrReject(
+    qnnaireWindow: QuestionnaireWindow,
+    editWindowAndMainQnSet: QuestionnaireWindowEditData,
+    editSharedQnSet: QuestionSetEditData | undefined
+  ): boolean {
+    const isValid = this.validateEditor(
+      qnnaireWindow,
+      editWindowAndMainQnSet,
+      editSharedQnSet
+    );
+    if (!isValid) {
+      throw new QuestionnaireWindowEditorError(
+        "Provided QuestionnaireWindow has no id"
+      );
+    }
+    return isValid;
+  }
+
+  public hasSharedSet(): boolean {
+    return Boolean(this.sharedSet);
+  }
+
+  public hasSharedSetOrReject(): boolean {
+    const isValid = this.hasSharedSet();
+    if (!isValid) {
+      throw new QuestionnaireWindowViewerError(
+        `QnnaireWindow has not shared set`
+      );
+    }
+    return isValid;
+  }
+
+  public async editQnnaireWindowAttributesAndMainQnSet(): Promise<QuestionnaireWindow> {
+    const updatedMainQnSet = await this.mainSetEditor.editQnSet();
+    this.qnnaireWindow.openAt = new Date(
+      this.editWindowAndMainQnSetData.startAt
+    );
+    this.qnnaireWindow.closeAt = new Date(
+      this.editWindowAndMainQnSetData.endAt
+    );
+    this.qnnaireWindow.mainSet = updatedMainQnSet;
+
+    const updatedQnnaireWindow = await getRepository(QuestionnaireWindow).save(
+      this.qnnaireWindow
+    );
+    return updatedQnnaireWindow;
+  }
+
+  public async editSharedQnSet(): Promise<QuestionSet> {
+    this.hasSharedSetOrReject();
+    const updated = await this.sharedSetEditor!.editQnSet();
+    return updated;
+  }
 }
 
 /**
