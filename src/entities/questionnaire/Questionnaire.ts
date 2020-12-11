@@ -16,6 +16,7 @@ import {
   QuestionnaireWindowData,
   QuestionnaireOneWindowData,
   QuestionnaireProgramClassData,
+  QuestionnaireListDataType,
 } from "../../types/questionnaires";
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
 import { ProgrammeQuestionnaire } from "./ProgrammeQuestionnaire";
@@ -89,13 +90,25 @@ export class Questionnaire extends Discardable {
         })
       ).questionnaireWindows;
 
-    return windows.map((w: QuestionnaireWindow) => ({
-      ...this.getBase(),
-      name: this.name,
-      status: this.questionnaireStatus,
-      startAt: w.openAt,
-      endAt: w.closeAt,
-    }));
+    const isOneTime = windows.length === 1;
+    const earlierOpenAt = windows
+      .map((w: QuestionnaireWindow) => w.openAt)
+      .sort((a, b) => a.getTime() - b.getTime())[0];
+
+    return windows.map((w: QuestionnaireWindow) => {
+      return {
+        ...this.getBase(),
+        name: this.name,
+        status: this.questionnaireStatus,
+        startAt: w.openAt,
+        endAt: w.closeAt,
+        type: isOneTime
+          ? QuestionnaireListDataType.ONE_TIME
+          : w.openAt === earlierOpenAt
+          ? QuestionnaireListDataType.PRE
+          : QuestionnaireListDataType.POST,
+      };
+    });
   };
 
   /**
@@ -216,9 +229,7 @@ export class Questionnaire extends Discardable {
   /**
    * Gets programmes and classes data.
    */
-  getProgrammesAndClasses = async (): Promise<
-    QuestionnaireProgramClassData
-  > => {
+  getProgrammesAndClasses = async (): Promise<QuestionnaireProgramClassData> => {
     const qnnaire = await getRepository(Questionnaire).findOne({
       where: { id: this.id },
       relations: [
