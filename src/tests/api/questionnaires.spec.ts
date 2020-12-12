@@ -21,6 +21,7 @@ import {
 import { QuestionData, QuestionType } from "../../types/questions";
 import { QuestionnaireWindowViewer } from "../../utils/questionnaires";
 import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
+import { Attempt } from "../../entities/questionnaire/Attempt";
 
 const QUESTIONNAIRE_ONE_TIME: QuestionnairePostData = {
   title: "My One Time Questionnaire",
@@ -580,6 +581,19 @@ describe("POST /questionnaires/submissions/create", () => {
       .set("Authorization", fixtures.adminAccessToken)
       .send(attemptData);
     expect(response.status).toEqual(200);
+
+    const attemptId = response.body.id;
+    expect(attemptId).toBeTruthy();
+
+    const createdAttempt = await getRepository(Attempt).find({
+      where: { id: attemptId },
+      relations: ["answers", "user", "questionnaireWindow"],
+    });
+
+    expect(createdAttempt).toHaveLength(1);
+    expect(createdAttempt[0].user).toBeTruthy();
+    expect(createdAttempt[0].questionnaireWindow).toBeTruthy();
+    expect(createdAttempt[0].answers.length).toBeGreaterThan(0);
   });
 
   it("should return 401 if not logged in", async () => {

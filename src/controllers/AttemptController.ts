@@ -24,6 +24,7 @@ export async function create(
   });
 
   let createdAttempt = new Attempt(user, qnnaireWindow);
+  createdAttempt = await getRepository(Attempt).save(createdAttempt);
 
   // create answers
   const answersProvided: Answer[] = await createAnswers(answers);
