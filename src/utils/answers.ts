@@ -7,7 +7,7 @@ import { getRepository } from "typeorm";
 export async function createAnswers(
   answers: AnswerPostData[]
 ): Promise<Answer[]> {
-  const result: Answer[] = [];
+  let result: Answer[] = [];
 
   await Promise.all(
     answers.map(async (answer) => {
@@ -34,12 +34,11 @@ export async function createAnswers(
           answer.textResponse
         );
       }
-
-      const savedAnswer = await getRepository(Answer).save(createdAnswer);
-
-      result.push(savedAnswer);
+      result.push(createdAnswer);
     })
   );
+
+  result = await getRepository(Answer).save(result);
 
   return result;
 }

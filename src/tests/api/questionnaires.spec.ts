@@ -538,7 +538,6 @@ describe("POST /questionnaires/submissions/create", () => {
     // (e.g. user id, window id, order id, responses)
     let testQuestionnaireWindow: QuestionnaireWindowData =
       originalData.questionWindows[0];
-    let userId = 1;
     let qnnaireWindowId = testQuestionnaireWindow.windowId;
     let questions = testQuestionnaireWindow.questions;
     answerData = questions.map((element) => {
@@ -551,8 +550,8 @@ describe("POST /questionnaires/submissions/create", () => {
       };
       return answer;
     });
+
     attemptData = {
-      userId: userId,
       qnnaireWindowId: qnnaireWindowId,
       answers: answerData,
     };
