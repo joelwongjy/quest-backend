@@ -12,6 +12,7 @@ import {
   PRE_POST_QUESTIONNAIRE_EDITOR_ERROR,
   QUESTIONNAIRE_PROGRAMS_AND_CLASSES_EDITOR_ERROR,
   QUESTIONNAIRE_VALIDATOR_ERROR,
+  QUESTIONNAIRE_WINDOW_CREATOR_ERROR,
   QUESTIONNAIRE_WINDOW_EDITOR_ERROR,
   QUESTIONNAIRE_WINDOW_VIEWER_ERROR,
 } from "../types/errors";
@@ -26,6 +27,7 @@ import {
   QuestionPostData,
   QuestionSetData,
   QuestionSetEditData,
+  QuestionSetPostData,
 } from "../types/questions";
 import {
   QuestionSetCreator,
@@ -58,6 +60,13 @@ class PrePostQuestionnaireEditorError extends Error {
   constructor(message: string) {
     super(message);
     this.name = PRE_POST_QUESTIONNAIRE_EDITOR_ERROR;
+  }
+}
+
+class QuestionnaireWindowCreatorError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = QUESTIONNAIRE_WINDOW_CREATOR_ERROR;
   }
 }
 
@@ -738,6 +747,76 @@ export class PrePostQuestionnaireEditor extends QuestionnaireEditor {
 
     const updated = await getRepository(Questionnaire).save(attributesUpdated);
     return updated;
+  }
+}
+
+/**
+ * Creates a QuestionnaireWindow.
+ */
+export class QuestionnaireWindowCreator {
+  private questionSetCreator = new QuestionSetCreator();
+  private windowData: Omit<QuestionnaireWindowPostData, "questions">;
+
+  private mainQnsData: QuestionSetPostData;
+  private sharedQnsData: QuestionSetPostData | null;
+
+  constructor(
+    windowData: Omit<QuestionnaireWindowPostData, "questions">,
+    mainQnsData: QuestionSetPostData,
+    sharedQnsData: QuestionSetPostData | undefined
+  ) {
+    this.validateCreatorOrReject(mainQnsData);
+    this.windowData = windowData;
+
+    this.mainQnsData = mainQnsData;
+    this.sharedQnsData = sharedQnsData ?? null;
+  }
+
+  private validateCreatorOrReject(mainQnsData: QuestionSetPostData): void {
+    if (!mainQnsData.questions || mainQnsData.questions.length === 0) {
+      throw new QuestionnaireWindowCreatorError(
+        `Cannot create as there are no questions provided in the MainQuestionSet`
+      );
+    }
+  }
+
+  async createWindowAndMainQnSet(): Promise<QuestionnaireWindow> {
+    const newMainQnSet = await this.questionSetCreator.createQuestionSet(
+      this.mainQnsData.questions
+    );
+    const newWindow = new QuestionnaireWindow(
+      this.windowData.startAt,
+      this.windowData.endAt
+    );
+    newWindow.mainSet = newMainQnSet;
+
+    await validateOrReject(newWindow);
+    const saved = await getRepository(QuestionnaireWindow).save(newWindow);
+    return saved;
+  }
+
+  async createSharedQnSet(): Promise<QuestionSet> {
+    this.hasSharedQnsDataOrReject();
+
+    const newSharedQnSet = await this.questionSetCreator.createQuestionSet(
+      this.sharedQnsData!.questions
+    );
+
+    return newSharedQnSet;
+  }
+
+  private hasSharedQnsDataOrReject(): void {
+    if (!this.sharedQnsData || !this.sharedQnsData.questions) {
+      throw new QuestionnaireWindowCreatorError(
+        `Cannot create as sharedQns is not given`
+      );
+    }
+
+    if (this.sharedQnsData!.questions.length === 0) {
+      throw new QuestionnaireWindowCreatorError(
+        `Cannot create as sharedQns has no questions`
+      );
+    }
   }
 }
 

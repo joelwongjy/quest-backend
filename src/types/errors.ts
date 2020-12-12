@@ -18,3 +18,5 @@ export const PRE_POST_QUESTIONNAIRE_EDITOR_ERROR =
 export const QUESTIONNAIRE_VALIDATOR_ERROR = "QuestionnaireValidatorError";
 export const QUESTIONNAIRE_PROGRAMS_AND_CLASSES_EDITOR_ERROR =
   "QuestionnaireProgramAndClassesEditorError";
+export const QUESTIONNAIRE_WINDOW_CREATOR_ERROR =
+  "QuestionnaireWindowCreatorError";
