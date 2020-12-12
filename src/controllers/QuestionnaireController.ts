@@ -11,10 +11,11 @@ import {
 import { selectQuestionnaireData } from "../selectors/questionnaires";
 import { QuestionnairePostData } from "../types/questionnaires";
 import {
-  associateQuestionnaireWithClassesAndProgrammes,
-  createQuestionnaireWithQuestions,
+  OneTimeQuestionnaireCreator,
   OneTimeQuestionnaireEditor,
+  PrePostQuestionnaireCreator,
   PrePostQuestionnaireEditor,
+  QuestionnaireCreator,
   QuestionnaireEditor,
 } from "../utils/questionnaires";
 import { getRepository } from "typeorm";
@@ -22,7 +23,7 @@ import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
 import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
-import { Message } from "../types/errors";
+import { Message, SuccessId } from "../types/errors";
 
 export async function index(
   _request: Request,
@@ -34,32 +35,38 @@ export async function index(
 
 export async function create(
   request: Request<{}, any, QuestionnairePostData, any>,
-  response: Response
+  response: Response<SuccessId>
 ): Promise<void> {
-  const {
-    title,
-    type,
-    questionWindows,
-    sharedQuestions,
-    classes = [],
-    programmes = [],
-  } = request.body;
+  let creator: QuestionnaireCreator;
+  let result: Questionnaire;
 
-  let newQuestionnaire = await createQuestionnaireWithQuestions(
-    title,
-    type,
-    questionWindows ?? [],
-    sharedQuestions?.questions ?? []
-  );
+  try {
+    const { type } = request.body;
+    switch (type) {
+      case QuestionnaireType.ONE_TIME:
+        creator = new OneTimeQuestionnaireCreator(request.body);
+        result = await creator!.createQnnaire();
+        break;
+      case QuestionnaireType.PRE_POST:
+        creator = new PrePostQuestionnaireCreator(request.body);
+        result = await creator!.createQnnaire();
+        break;
+      default:
+        break;
+    }
 
-  newQuestionnaire = await associateQuestionnaireWithClassesAndProgrammes(
-    classes,
-    programmes,
-    newQuestionnaire
-  );
-
-  response.status(200).json({ success: true, id: newQuestionnaire.id });
-  return;
+    if (result!) {
+      response.status(200).json({ success: true, id: result.id });
+      return;
+    } else {
+      response.status(400).json({ success: false });
+      return;
+    }
+  } catch (e) {
+    console.log(e);
+    response.status(400).json({ success: false });
+    return;
+  }
 }
 
 export async function softDelete(

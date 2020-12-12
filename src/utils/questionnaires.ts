@@ -8,8 +8,11 @@ import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
 import {
+  ONE_TIME_QUESTIONNAIRE_CREATOR_ERROR,
   ONE_TIME_QUESTIONNAIRE_EDITOR_ERROR,
+  PRE_POST_QUESTIONNAIRE_CREATOR_ERROR,
   PRE_POST_QUESTIONNAIRE_EDITOR_ERROR,
+  QUESTIONNAIRE_PROGRAMS_AND_CLASSES_CREATOR_ERROR,
   QUESTIONNAIRE_PROGRAMS_AND_CLASSES_EDITOR_ERROR,
   QUESTIONNAIRE_VALIDATOR_ERROR,
   QUESTIONNAIRE_WINDOW_CREATOR_ERROR,
@@ -34,6 +37,27 @@ import {
   QuestionSetEditor,
   QuestionSetViewer,
 } from "./questions";
+
+class PrePostQuestionnaireCreatorError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = PRE_POST_QUESTIONNAIRE_CREATOR_ERROR;
+  }
+}
+
+class OneTimeQuestionnaireCreatorError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = ONE_TIME_QUESTIONNAIRE_CREATOR_ERROR;
+  }
+}
+
+class QuestionnaireProgrammesAndClassesCreatorError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = QUESTIONNAIRE_PROGRAMS_AND_CLASSES_CREATOR_ERROR;
+  }
+}
 
 class QuestionnaireProgrammesAndClassesEditorError extends Error {
   constructor(message: string) {
@@ -314,6 +338,92 @@ type ProgrammeClasses = {
   programmes: Programme[];
   classes: Class[];
 };
+
+export abstract class QuestionnaireProgrammesAndClassesBase {
+  async getRequestedProgrammesAndClasses(
+    programmesData: number[],
+    classesData: number[]
+  ): Promise<ProgrammeClasses> {
+    const programmesOR = programmesData.map((id) => Object.assign({}, { id }));
+    const classesOR = classesData.map((id) => Object.assign({}, { id }));
+
+    // seems like with an [], typeorm will return everything
+    const programmes =
+      programmesOR.length === 0
+        ? []
+        : await getRepository(Programme).find({
+            select: ["id"],
+            where: programmesOR,
+          });
+    const classes =
+      classesOR.length === 0
+        ? []
+        : await getRepository(Class).find({
+            select: ["id"],
+            where: classesOR,
+          });
+
+    if (programmesData.length !== programmes.length) {
+      throw new QuestionnaireProgrammesAndClassesEditorError(
+        `One or more programmeIds given is invalid` +
+          `(Received ${programmesData.length}. Found: ${programmes.length}`
+      );
+    }
+    if (classesData.length !== classes.length) {
+      throw new QuestionnaireProgrammesAndClassesEditorError(
+        `One or more classIds given is invalid ` +
+          `(Received ${classesData.length}. Found: ${classes.length}`
+      );
+    }
+    return { programmes, classes };
+  }
+}
+
+export class QuestionnaireProgrammesAndClassesCreator extends QuestionnaireProgrammesAndClassesBase {
+  private _qnnaire: Questionnaire;
+  private programmes: number[];
+  private classes: number[];
+
+  constructor(programmes: number[], classes: number[], qnnaire: Questionnaire) {
+    if (!qnnaire.id) {
+      throw new QuestionnaireProgrammesAndClassesCreatorError(
+        "Provided Questionnaire has no id"
+      );
+    }
+
+    super();
+    this._qnnaire = qnnaire;
+    this.programmes = programmes;
+    this.classes = classes;
+  }
+
+  public async createRelations(): Promise<ProgrammeClassesQuestionnaires> {
+    const {
+      programmes,
+      classes,
+    } = await super.getRequestedProgrammesAndClasses(
+      this.programmes,
+      this.classes
+    );
+
+    const programmesRelations = programmes.map(
+      (programme) => new ProgrammeQuestionnaire(programme, this._qnnaire)
+    );
+    const classRelations = classes.map(
+      (clazz) => new ClassQuestionnaire(clazz, this._qnnaire)
+    );
+
+    const newProgrammesRelations = await getRepository(
+      ProgrammeQuestionnaire
+    ).save(programmesRelations);
+    const newClassesQnnaires = await getRepository(ClassQuestionnaire).save(
+      classRelations
+    );
+
+    return { programmes: newProgrammesRelations, classes: newClassesQnnaires };
+  }
+}
+
 type Sets<Input, Existing> = {
   toAdd: Input[];
   toKeep: Existing[];
@@ -330,7 +440,7 @@ type ProgrammeClassesQuestionnaires = {
 /**
  * Edits the ProgrammeQuestionnaires and ClassesQuestionnaires.
  */
-export class QuestionnaireProgrammesAndClassesEditor {
+export class QuestionnaireProgrammesAndClassesEditor extends QuestionnaireProgrammesAndClassesBase {
   private validator: QuestionnaireValidator = new QuestionnaireValidator();
   private _qnnaire: Questionnaire; // do not use save on this directly
 
@@ -342,6 +452,7 @@ export class QuestionnaireProgrammesAndClassesEditor {
     qnnaire: Questionnaire,
     editData: Pick<QuestionnairePostData, "classes" | "programmes">
   ) {
+    super();
     this.validator.validateQnnaireOrReject(qnnaire);
     this._qnnaire = qnnaire;
     this.editData = editData;
@@ -354,7 +465,10 @@ export class QuestionnaireProgrammesAndClassesEditor {
     const {
       programmes,
       classes,
-    } = await this.getRequestedProgrammesAndClasses();
+    } = await super.getRequestedProgrammesAndClasses(
+      this.editData.programmes,
+      this.editData.classes
+    );
 
     const organisedProgrammes: Sets<
       Programme,
@@ -376,45 +490,6 @@ export class QuestionnaireProgrammesAndClassesEditor {
       programmes: newProgrammeQnnaires,
       classes: newClassesQnnaires,
     };
-  }
-
-  private async getRequestedProgrammesAndClasses(): Promise<ProgrammeClasses> {
-    const { classes: classesData, programmes: programmesData } = this.editData;
-
-    const classesOR = classesData.map((id) => Object.assign({}, { id }));
-    const programmesOR = programmesData.map((id) => Object.assign({}, { id }));
-
-    // seems like with an [], typeorm will return everything
-    const classes =
-      classesOR.length === 0
-        ? []
-        : await getRepository(Class).find({
-            select: ["id"],
-            where: classesOR,
-          });
-    const programmes =
-      programmesOR.length === 0
-        ? []
-        : await getRepository(Programme).find({
-            select: ["id"],
-            where: programmesOR,
-          });
-
-    if (classesData.length !== classes.length) {
-      throw new QuestionnaireProgrammesAndClassesEditorError(
-        `One or more classIds given is invalid ` +
-          `(Received ${classesData.length}. Found: ${classes.length}`
-      );
-    }
-
-    if (programmesData.length !== programmes.length) {
-      throw new QuestionnaireProgrammesAndClassesEditorError(
-        `One or more programmeIds given is invalid` +
-          `(Received ${programmesData.length}. Found: ${programmes.length}`
-      );
-    }
-
-    return { programmes, classes };
   }
 
   private organiseSets<Input extends WithId, Existing extends WithId>(
@@ -519,6 +594,160 @@ export class QuestionnaireProgrammesAndClassesEditor {
       this.classQuestionnaires
     );
     return updatedClassesQnnaires;
+  }
+}
+
+export abstract class QuestionnaireCreator {
+  protected validator: QuestionnaireValidator = new QuestionnaireValidator();
+  protected createData: QuestionnairePostData;
+
+  constructor(createData: QuestionnairePostData) {
+    this.createData = createData;
+  }
+
+  public async createQnnaire() {
+    const {
+      title,
+      type,
+      status,
+      programmes: programmesData,
+      classes: classesData,
+    } = this.createData;
+
+    const newQnnaire = new Questionnaire(title, type, status);
+    const saved = await getRepository(Questionnaire).save(newQnnaire);
+
+    const {
+      programmes,
+      classes,
+    } = await this.createProgrammesAndClassesRelations(
+      programmesData,
+      classesData,
+      saved
+    );
+
+    saved.programmeQuestionnaires = programmes;
+    saved.classQuestionnaires = classes;
+    const savedWithRelations = await getRepository(Questionnaire).save(
+      newQnnaire
+    );
+
+    return savedWithRelations;
+  }
+
+  private async createProgrammesAndClassesRelations(
+    programmesData: number[],
+    classesData: number[],
+    qnnaire: Questionnaire
+  ): Promise<ProgrammeClassesQuestionnaires> {
+    const relationsCreator = new QuestionnaireProgrammesAndClassesCreator(
+      programmesData,
+      classesData,
+      qnnaire
+    );
+
+    const result = await relationsCreator.createRelations();
+    return result;
+  }
+}
+
+export class OneTimeQuestionnaireCreator extends QuestionnaireCreator {
+  private mainWindowCreator: QuestionnaireWindowCreator;
+  private mainWindowData: QuestionnaireWindowPostData;
+
+  constructor(createData: QuestionnairePostData) {
+    super(createData);
+
+    const hasOnlyOneWindow = createData.questionWindows.length === 1;
+    if (!hasOnlyOneWindow) {
+      throw new OneTimeQuestionnaireCreatorError(
+        `Could not create a One-Time Questionnaire as there are ${createData.questionWindows.length} windows given`
+      );
+    }
+    this.mainWindowData = createData.questionWindows[0];
+    this.mainWindowCreator = new QuestionnaireWindowCreator(
+      this.mainWindowData,
+      this.mainWindowData,
+      undefined
+    );
+  }
+
+  public async createQuestionnaire(): Promise<Questionnaire> {
+    const newQnnaire = await super.createQnnaire();
+    const newMainWindow = await this.mainWindowCreator.createWindowAndMainQnSet();
+
+    newQnnaire.questionnaireWindows = [newMainWindow];
+    const saved = await getRepository(Questionnaire).save(newQnnaire);
+
+    if (!super.validator.isOneTimeQnnaire(saved)) {
+      throw new OneTimeQuestionnaireCreatorError(
+        `Created Questionnaire failed validation checks.`
+      );
+    }
+    return saved;
+  }
+}
+
+export class PrePostQuestionnaireCreator extends QuestionnaireCreator {
+  private window1Data: QuestionnaireWindowPostData;
+  private window1Creator: QuestionnaireWindowCreator;
+
+  private window2Data: QuestionnaireWindowPostData;
+  private window2Creator: QuestionnaireWindowCreator;
+
+  private sharedQnsData: QuestionSetPostData;
+
+  constructor(createData: QuestionnairePostData) {
+    super(createData);
+
+    const hasCorrectWindowLength = createData.questionWindows.length === 2;
+    const hasSharedSet = Boolean(createData.sharedQuestions.questions);
+    if (!hasCorrectWindowLength || !hasSharedSet) {
+      throw new PrePostQuestionnaireCreatorError(
+        `Could not create a Before/After Questionnaire as the data provided is invalid.`
+      );
+    }
+    this.window1Data = createData.questionWindows[0];
+    this.window2Data = createData.questionWindows[1];
+    this.sharedQnsData = createData.sharedQuestions;
+
+    this.window1Creator = new QuestionnaireWindowCreator(
+      this.window1Data,
+      this.window1Data,
+      undefined
+    );
+    this.window2Creator = new QuestionnaireWindowCreator(
+      this.window2Data,
+      this.window2Data,
+      this.sharedQnsData
+    );
+  }
+
+  public async createQuestionnaire(
+    createData: QuestionnairePostData
+  ): Promise<Questionnaire> {
+    const newQnnaire = await super.createQnnaire();
+
+    const newWindow1 = await this.window1Creator.createWindowAndMainQnSet();
+    const newWindow2 = await this.window2Creator.createWindowAndMainQnSet();
+
+    const sharedSet = await this.window2Creator.createSharedQnSet();
+    newWindow1.sharedSet = sharedSet;
+    newWindow2.sharedSet = sharedSet;
+    const newWindowsWithSharedSets = await getRepository(
+      QuestionnaireWindow
+    ).save([newWindow1, newWindow2]);
+
+    newQnnaire.questionnaireWindows = newWindowsWithSharedSets;
+    const saved = await getRepository(Questionnaire).save(newQnnaire);
+
+    if (super.validator.isPrePostQnnaire(saved)) {
+      throw new PrePostQuestionnaireCreatorError(
+        `Created Before/After Questionnaire failed validation checks.`
+      );
+    }
+
+    return saved;
   }
 }
 
