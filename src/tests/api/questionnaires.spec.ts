@@ -535,7 +535,6 @@ describe("POST /questionnaires/submissions/create", () => {
     ).getAllWindows();
 
     // generate question responses based on questionnaire
-    // (e.g. user id, window id, order id, responses)
     let testQuestionnaireWindow: QuestionnaireWindowData =
       originalData.questionWindows[0];
     let qnnaireWindowId = testQuestionnaireWindow.windowId;
@@ -586,7 +585,13 @@ describe("POST /questionnaires/submissions/create", () => {
 
     const createdAttempt = await getRepository(Attempt).find({
       where: { id: attemptId },
-      relations: ["answers", "user", "questionnaireWindow"],
+      relations: [
+        "user",
+        "questionnaireWindow",
+        "answers",
+        "answers.questionOrder",
+        "answers.questionOrder.question",
+      ],
     });
 
     expect(createdAttempt).toHaveLength(1);
