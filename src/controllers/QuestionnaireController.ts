@@ -45,11 +45,11 @@ export async function create(
     switch (type) {
       case QuestionnaireType.ONE_TIME:
         creator = new OneTimeQuestionnaireCreator(request.body);
-        result = await creator!.createQnnaire();
+        result = await creator!.createQuestionnaire();
         break;
       case QuestionnaireType.PRE_POST:
         creator = new PrePostQuestionnaireCreator(request.body);
-        result = await creator!.createQnnaire();
+        result = await creator!.createQuestionnaire();
         break;
       default:
         break;

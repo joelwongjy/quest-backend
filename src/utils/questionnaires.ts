@@ -108,176 +108,6 @@ class QuestionnaireWindowViewerError extends Error {
   }
 }
 
-async function _createQuestionnaireWindow(
-  openAt: Date,
-  closeAt: Date,
-  mainSet: QuestionSet,
-  sharedSet?: QuestionSet
-): Promise<QuestionnaireWindow> {
-  const data = new QuestionnaireWindow(openAt, closeAt);
-  data.mainSet = mainSet;
-
-  if (sharedSet) {
-    data.sharedSet = sharedSet;
-  }
-
-  await validateOrReject(data);
-  const newWindow = getRepository(QuestionnaireWindow).save(data);
-  return newWindow;
-}
-
-export async function createOneTimeQuestionnaireWindow(
-  openAt: Date,
-  closeAt: Date,
-  questions: QuestionPostData[]
-): Promise<QuestionnaireWindow> {
-  const creator = new QuestionSetCreator();
-  const mainSet = await creator.createQuestionSet(questions);
-
-  const rv = await _createQuestionnaireWindow(openAt, closeAt, mainSet);
-  return rv;
-}
-
-export async function createBeforeAfterQuestionnaireWindow(
-  before: QuestionnaireWindowPostData,
-  after: QuestionnaireWindowPostData,
-  sharedSet: QuestionPostData[]
-): Promise<[QuestionnaireWindow, QuestionnaireWindow]> {
-  const { questions: preSet, startAt: preStart, endAt: preEnd } = before;
-
-  const { questions: postSet, startAt: postStart, endAt: postEnd } = after;
-
-  const creator = new QuestionSetCreator();
-  const beforeData = await creator.createQuestionSet(preSet);
-  const afterData = await creator.createQuestionSet(postSet);
-  const sharedData = await creator.createQuestionSet(sharedSet);
-
-  const beforeWindow = await _createQuestionnaireWindow(
-    preStart,
-    preEnd,
-    beforeData,
-    sharedData
-  );
-  const afterWindow = await _createQuestionnaireWindow(
-    postStart,
-    postEnd,
-    afterData,
-    sharedData
-  );
-
-  return [beforeWindow, afterWindow];
-}
-
-/**
- * Creates a questionnaire and the related questions.
- *
- * @param name Questionnaire name.
- * @param type Type of questionnaire.
- * @param questionnaireWindows Window list each containing question list, openAt, closeAt.
- * @param sharedQuestions Question list - this set is shared in the case of before/after.
- * @returns Newly created questionnaire. It will hold the created (with id) qnWindows, qnOrders, qns and options in it.
- */
-export async function createQuestionnaireWithQuestions(
-  name: string,
-  type: QuestionnaireType,
-  questionnaireWindows: QuestionnaireWindowPostData[],
-  sharedQuestions?: QuestionPostData[]
-): Promise<Questionnaire> {
-  if (
-    questionnaireWindows.length === 2 &&
-    type === QuestionnaireType.PRE_POST &&
-    sharedQuestions
-  ) {
-    // before-after
-    const before = questionnaireWindows[0];
-    const after = questionnaireWindows[1];
-    const windows = await createBeforeAfterQuestionnaireWindow(
-      before,
-      after,
-      sharedQuestions
-    );
-
-    const data = new Questionnaire(name, type);
-    data.questionnaireWindows = windows;
-
-    // skip .validate() since the class calls it before insert
-    const rv = await getRepository(Questionnaire).save(data);
-    return rv;
-  }
-
-  if (
-    questionnaireWindows.length === 1 &&
-    type === QuestionnaireType.ONE_TIME
-  ) {
-    // one-time
-    const { startAt, endAt, questions } = questionnaireWindows[0];
-    const window = await createOneTimeQuestionnaireWindow(
-      startAt,
-      endAt,
-      questions
-    );
-
-    const data = new Questionnaire(name, type);
-    data.questionnaireWindows = [window];
-    // skip .validate() since the class calls it before insert
-    const rv = await getRepository(Questionnaire).save(data);
-    return rv;
-  }
-
-  throw new Error(
-    `Invalid arguments - received ${questionnaireWindows.length} windows with ${type} as desired type`
-  );
-}
-
-/**
- * Associates a list of classes and programmes to a given questionnaire.
- *
- * @param classes List of class ids.
- * @param programmes List of programme ids.
- * @param questionnaire Questionnaire to associate with. It needs an id field.
- */
-export async function associateQuestionnaireWithClassesAndProgrammes(
-  classes: number[],
-  programmes: number[],
-  questionnaire: Questionnaire
-) {
-  if (classes.length > 0) {
-    const classIds = classes.map((id) => {
-      return { id };
-    });
-    const classList = await getRepository(Class).find({ where: classIds });
-    const classRelations = classList.map(
-      (c) => new ClassQuestionnaire(c, questionnaire)
-    );
-
-    const saveClassRelations = await getRepository(ClassQuestionnaire).save(
-      classRelations
-    );
-    questionnaire.classQuestionnaires = saveClassRelations;
-  }
-
-  if (programmes.length > 0) {
-    const programmeIds = programmes.map((id) => {
-      return { id };
-    });
-    const programmesList = await getRepository(Programme).find({
-      where: programmeIds,
-    });
-    const programmeRelations = programmesList.map(
-      (p) => new ProgrammeQuestionnaire(p, questionnaire)
-    );
-
-    const saveProgrammeRelations = await getRepository(
-      ProgrammeQuestionnaire
-    ).save(programmeRelations);
-
-    questionnaire.programmeQuestionnaires = saveProgrammeRelations;
-  }
-
-  const saved = await getRepository(Questionnaire).save(questionnaire);
-  return saved;
-}
-
 /**
  * Provides methods to validate a Questionnaire.
  * In particular, checks if `isOneTimeQnnaire()` and `isPrePostQnnaire()`
@@ -605,7 +435,7 @@ export abstract class QuestionnaireCreator {
     this.createData = createData;
   }
 
-  public async createQnnaire() {
+  public async createQuestionnaire() {
     const {
       title,
       type,
@@ -649,6 +479,10 @@ export abstract class QuestionnaireCreator {
     const result = await relationsCreator.createRelations();
     return result;
   }
+
+  public getValidator(): QuestionnaireValidator {
+    return this.validator;
+  }
 }
 
 export class OneTimeQuestionnaireCreator extends QuestionnaireCreator {
@@ -673,13 +507,13 @@ export class OneTimeQuestionnaireCreator extends QuestionnaireCreator {
   }
 
   public async createQuestionnaire(): Promise<Questionnaire> {
-    const newQnnaire = await super.createQnnaire();
+    const newQnnaire = await super.createQuestionnaire();
     const newMainWindow = await this.mainWindowCreator.createWindowAndMainQnSet();
 
     newQnnaire.questionnaireWindows = [newMainWindow];
     const saved = await getRepository(Questionnaire).save(newQnnaire);
 
-    if (!super.validator.isOneTimeQnnaire(saved)) {
+    if (!super.getValidator().isOneTimeQnnaire(saved)) {
       throw new OneTimeQuestionnaireCreatorError(
         `Created Questionnaire failed validation checks.`
       );
@@ -723,10 +557,8 @@ export class PrePostQuestionnaireCreator extends QuestionnaireCreator {
     );
   }
 
-  public async createQuestionnaire(
-    createData: QuestionnairePostData
-  ): Promise<Questionnaire> {
-    const newQnnaire = await super.createQnnaire();
+  public async createQuestionnaire(): Promise<Questionnaire> {
+    const newQnnaire = await super.createQuestionnaire();
 
     const newWindow1 = await this.window1Creator.createWindowAndMainQnSet();
     const newWindow2 = await this.window2Creator.createWindowAndMainQnSet();
@@ -741,7 +573,7 @@ export class PrePostQuestionnaireCreator extends QuestionnaireCreator {
     newQnnaire.questionnaireWindows = newWindowsWithSharedSets;
     const saved = await getRepository(Questionnaire).save(newQnnaire);
 
-    if (super.validator.isPrePostQnnaire(saved)) {
+    if (!super.getValidator().isPrePostQnnaire(saved)) {
       throw new PrePostQuestionnaireCreatorError(
         `Created Before/After Questionnaire failed validation checks.`
       );
