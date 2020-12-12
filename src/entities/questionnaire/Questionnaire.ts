@@ -73,7 +73,6 @@ export class Questionnaire extends Discardable {
   )
   classQuestionnaires!: ClassQuestionnaire[];
 
-  // Hook to ensure entity does not have null option and null answer
   @BeforeInsert()
   @BeforeUpdate()
   async validate() {

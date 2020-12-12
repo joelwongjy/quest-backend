@@ -1,4 +1,7 @@
 import _ from "lodash";
+import { Answer } from "../../entities/questionnaire/Answer";
+import { AnswerPostData } from "../../types/answers";
+import { AttemptPostData } from "../../types/attempts";
 import request from "supertest";
 import { getRepository } from "typeorm";
 import { Questionnaire } from "../../entities/questionnaire/Questionnaire";
@@ -13,10 +16,12 @@ import {
   QuestionnairePostData,
   QuestionnaireStatus,
   QuestionnaireType,
+  QuestionnaireWindowData,
 } from "../../types/questionnaires";
 import { QuestionData, QuestionType } from "../../types/questions";
 import { QuestionnaireWindowViewer } from "../../utils/questionnaires";
 import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
+import { Attempt } from "../../entities/questionnaire/Attempt";
 
 const QUESTIONNAIRE_ONE_TIME: QuestionnairePostData = {
   title: "My One Time Questionnaire",
@@ -512,5 +517,88 @@ describe("POST /questionnaires/edit/:id", () => {
 
     expect(questions).toHaveLength(1);
     expect(questions[0].order).toBe(newOrdering);
+  });
+});
+
+describe("POST /questionnaires/submissions/create", () => {
+  let originalData: QuestionnaireFullData;
+  let answerData: AnswerPostData[];
+  let attemptData: AttemptPostData;
+
+  beforeEach(async () => {
+    await synchronize(server);
+    fixtures = await loadFixtures(server);
+
+    // create sample questionnaire data
+    originalData = await (
+      await fixtures.createSampleOneTimeQuestionnaire()
+    ).getAllWindows();
+
+    // generate question responses based on questionnaire
+    // (e.g. user id, window id, order id, responses)
+    let testQuestionnaireWindow: QuestionnaireWindowData =
+      originalData.questionWindows[0];
+    let qnnaireWindowId = testQuestionnaireWindow.windowId;
+    let questions = testQuestionnaireWindow.questions;
+    answerData = questions.map((element) => {
+      let answer: AnswerPostData = {
+        questionOrderId: element.qnOrderId,
+        optionId:
+          element.options.length > 0 ? element.options[0].optionId : undefined,
+        textResponse:
+          "This is a sample answer to some non-multiple choice question!",
+      };
+      return answer;
+    });
+
+    attemptData = {
+      qnnaireWindowId: qnnaireWindowId,
+      answers: answerData,
+    };
+  });
+
+  afterAll(async () => {
+    await synchronize(server);
+    fixtures = await loadFixtures(server);
+  });
+
+  it("should create answers successfully", async () => {
+    let allAnswers = await getRepository(Answer).findAndCount();
+    const numAnswersBefore: number = allAnswers[1];
+    const response = await request(server.server)
+      .post(`${fixtures.api}/questionnaires/submissions/create`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(attemptData);
+    allAnswers = await getRepository(Answer).findAndCount();
+    const numAnswersAfter: number = allAnswers[1];
+    expect(numAnswersAfter).toBeGreaterThan(numAnswersBefore);
+  });
+
+  it("should create an attempt successfully", async () => {
+    const response = await request(server.server)
+      .post(`${fixtures.api}/questionnaires/submissions/create`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(attemptData);
+    expect(response.status).toEqual(200);
+
+    const attemptId = response.body.id;
+    expect(attemptId).toBeTruthy();
+
+    const createdAttempt = await getRepository(Attempt).find({
+      where: { id: attemptId },
+      relations: ["answers", "user", "questionnaireWindow"],
+    });
+
+    expect(createdAttempt).toHaveLength(1);
+    expect(createdAttempt[0].user).toBeTruthy();
+    expect(createdAttempt[0].questionnaireWindow).toBeTruthy();
+    expect(createdAttempt[0].answers.length).toBeGreaterThan(0);
+  });
+
+  it("should return 401 if not logged in", async () => {
+    const response = await request(server.server)
+      .post(`${fixtures.api}/questionnaires/submissions/create`)
+      .send(attemptData);
+    expect(response.status).toBe(401);
   });
 });
