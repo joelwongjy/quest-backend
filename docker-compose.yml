@@ -1,27 +1,7 @@
 version: "3.1"
 
 services:
-  server:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    ports:
-      - 3001:3001
-    environment:
-      - NODE_ENV=development
-      - POSTGRES_USERNAME=user
-      - POSTGRES_PASSWORD=pass
-      - POSTGRES_HOST=db_dev
-      - POSTGRES_PORT=5432
-      - POSTGRES_NAME=db
-      - POSTGRES_DISABLE_SSL=true
-      - JWT_SECRET=teamQuestIsTheBest
-    depends_on:
-      - db_dev
-    links:
-      - db_dev
-
-  db_dev:
+  development:
     image: postgres:12.3-alpine
     ports:
       - 35432:5432
@@ -30,7 +10,7 @@ services:
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: db
 
-  db_test:
+  test:
     image: postgres:12.3-alpine
     ports:
       - 54320:5432
