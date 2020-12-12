@@ -17,7 +17,7 @@ import {
   PrePostQuestionnaireEditor,
   QuestionnaireCreator,
   QuestionnaireEditor,
-} from "../utils/questionnaires";
+} from "../services/questionnaire";
 import { getRepository } from "typeorm";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";

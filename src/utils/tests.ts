@@ -17,7 +17,7 @@ import {
 import {
   OneTimeQuestionnaireCreator,
   PrePostQuestionnaireCreator,
-} from "./questionnaires";
+} from "../services/questionnaire";
 
 faker.seed(127);
 

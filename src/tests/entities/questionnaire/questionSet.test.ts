@@ -3,7 +3,7 @@ import { getRepository } from "typeorm";
 import ApiServer from "../../../server";
 import { Fixtures, loadFixtures, synchronize } from "../../../utils/tests";
 import { QuestionPostData, QuestionType } from "../../../types/questions";
-import { QuestionSetCreator } from "../../../utils/questions";
+import { QuestionSetCreator } from "../../../services/questionnaire";
 
 let server: ApiServer;
 let fixtures: Fixtures;

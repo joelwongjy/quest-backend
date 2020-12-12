@@ -19,7 +19,7 @@ import {
   QuestionnaireWindowData,
 } from "../../types/questionnaires";
 import { QuestionData, QuestionType } from "../../types/questions";
-import { QuestionnaireWindowViewer } from "../../utils/questionnaires";
+import { QuestionnaireWindowViewer } from "../../services/questionnaire";
 import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
 import { Attempt } from "../../entities/questionnaire/Attempt";
 

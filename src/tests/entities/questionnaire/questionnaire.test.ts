@@ -11,7 +11,7 @@ import { validate } from "class-validator";
 import {
   OneTimeQuestionnaireCreator,
   PrePostQuestionnaireCreator,
-} from "../../../utils/questionnaires";
+} from "../../../services/questionnaire";
 import { QuestionPostData, QuestionType } from "../../../types/questions";
 
 let server: ApiServer;
