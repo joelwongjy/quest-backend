@@ -217,7 +217,9 @@ export class QuestionOrderViewer {
 
   public async getQuestionOrder(): Promise<QuestionData> {
     if (!this.isActive) {
-      throw new QuestionOrderViewerError(`Provided QuestionOrder has no id`);
+      throw new QuestionOrderViewerError(
+        `Are you sure you need this viewer, or is QuestionSetViewer the one you need?`
+      );
     }
 
     return await this.qnOrder.getQuestionOrder();

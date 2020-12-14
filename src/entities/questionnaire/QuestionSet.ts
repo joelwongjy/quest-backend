@@ -19,7 +19,6 @@ export class QuestionSet extends Discardable {
       relations: ["questionOrders", "questionOrders.question"],
     });
 
-    // TODO: improve this, there's a n^2 code here
     const result: QuestionData[] = query.questionOrders
       .filter((order) => !order.discardedAt)
       .map((order) => {
