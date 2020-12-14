@@ -5,21 +5,25 @@ import {
   QuestionnaireId,
   QuestionnaireListData,
   QuestionnaireOneWindowData,
+  QuestionnaireType,
   QuestionnaireWindowId,
 } from "../types/questionnaires";
 import { selectQuestionnaireData } from "../selectors/questionnaires";
 import { QuestionnairePostData } from "../types/questionnaires";
 import {
-  associateQuestionnaireWithClassesAndProgrammes,
-  createQuestionnaireWithQuestions,
-  updateQnnaire,
-} from "../utils/questionnaires";
+  OneTimeQuestionnaireCreator,
+  OneTimeQuestionnaireEditor,
+  PrePostQuestionnaireCreator,
+  PrePostQuestionnaireEditor,
+  QuestionnaireCreator,
+  QuestionnaireEditor,
+} from "../services/questionnaire";
 import { getRepository } from "typeorm";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
 import { QuestionSet } from "../entities/questionnaire/QuestionSet";
 import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
-import { Message } from "../types/errors";
+import { Message, SuccessId } from "../types/errors";
 
 export async function index(
   _request: Request,
@@ -31,32 +35,38 @@ export async function index(
 
 export async function create(
   request: Request<{}, any, QuestionnairePostData, any>,
-  response: Response
+  response: Response<SuccessId>
 ): Promise<void> {
-  const {
-    title,
-    type,
-    questionWindows,
-    sharedQuestions,
-    classes = [],
-    programmes = [],
-  } = request.body;
+  let creator: QuestionnaireCreator;
+  let result: Questionnaire;
 
-  let newQuestionnaire = await createQuestionnaireWithQuestions(
-    title,
-    type,
-    questionWindows ?? [],
-    sharedQuestions?.questions ?? []
-  );
+  try {
+    const { type } = request.body;
+    switch (type) {
+      case QuestionnaireType.ONE_TIME:
+        creator = new OneTimeQuestionnaireCreator(request.body);
+        result = await creator!.createQuestionnaire();
+        break;
+      case QuestionnaireType.PRE_POST:
+        creator = new PrePostQuestionnaireCreator(request.body);
+        result = await creator!.createQuestionnaire();
+        break;
+      default:
+        break;
+    }
 
-  newQuestionnaire = await associateQuestionnaireWithClassesAndProgrammes(
-    classes,
-    programmes,
-    newQuestionnaire
-  );
-
-  response.status(200).json({ success: true, id: newQuestionnaire.id });
-  return;
+    if (result!) {
+      response.status(200).json({ success: true, id: result.id });
+      return;
+    } else {
+      response.status(400).json({ success: false });
+      return;
+    }
+  } catch (e) {
+    console.log(e);
+    response.status(400).json({ success: false });
+    return;
+  }
 }
 
 export async function softDelete(
@@ -190,13 +200,31 @@ export async function edit(
         "questionnaireWindows.sharedSet",
         "questionnaireWindows.mainSet.questionOrders",
         "questionnaireWindows.sharedSet.questionOrders",
+        "programmeQuestionnaires",
+        "classQuestionnaires",
+        "programmeQuestionnaires.programme",
+        "classQuestionnaires.class",
       ],
     });
 
-    const updated = await updateQnnaire(qnnaire, editData);
+    let editor: QuestionnaireEditor;
+    switch (qnnaire.questionnaireType) {
+      case QuestionnaireType.ONE_TIME:
+        editor = new OneTimeQuestionnaireEditor(qnnaire, editData);
+        break;
+      case QuestionnaireType.PRE_POST:
+        editor = new PrePostQuestionnaireEditor(qnnaire, editData);
+        break;
+      default:
+        response.status(400).json({ message: "Unknown QuestionnaireType" });
+        return;
+    }
+
+    const updated = await editor.editQnnaire();
     const result = await updated.getAllWindows();
     response.status(200).json(result);
   } catch (e) {
+    console.log(e);
     response.status(400).json({ message: e.message });
   }
 }

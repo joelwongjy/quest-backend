@@ -10,10 +10,14 @@ import { DefaultUserRole } from "../types/users";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionType } from "../types/questions";
 import {
+  QuestionnaireStatus,
   QuestionnaireType,
   QuestionnaireWindowPostData,
 } from "../types/questionnaires";
-import { createQuestionnaireWithQuestions } from "./questionnaires";
+import {
+  OneTimeQuestionnaireCreator,
+  PrePostQuestionnaireCreator,
+} from "../services/questionnaire";
 
 faker.seed(127);
 
@@ -155,11 +159,18 @@ export class Fixtures {
   }
 
   public async createSampleOneTimeQuestionnaire() {
-    const result: Questionnaire = await createQuestionnaireWithQuestions(
-      "Sample One-Time Questionnaire",
-      QuestionnaireType.ONE_TIME,
-      [this.sampleWindow1]
-    );
+    const creator = new OneTimeQuestionnaireCreator({
+      title: "Sample One-Time Questionnaire",
+      type: QuestionnaireType.ONE_TIME,
+      status: QuestionnaireStatus.DRAFT,
+      questionWindows: [this.sampleWindow1],
+      sharedQuestions: {
+        questions: [],
+      },
+      classes: [],
+      programmes: [],
+    });
+    const result: Questionnaire = await creator.createQuestionnaire();
 
     return result;
   }
@@ -168,12 +179,16 @@ export class Fixtures {
     const beforeWindow: QuestionnaireWindowPostData = this.sampleWindow1;
     const afterWindow: QuestionnaireWindowPostData = this.sampleWindow2;
 
-    const result: Questionnaire = await createQuestionnaireWithQuestions(
-      "Sample Before-After Questionnaire",
-      QuestionnaireType.PRE_POST,
-      [beforeWindow, afterWindow],
-      this.sampleWindow3.questions
-    );
+    const creator = new PrePostQuestionnaireCreator({
+      title: "Sample Before-After Questionnaire",
+      type: QuestionnaireType.PRE_POST,
+      status: QuestionnaireStatus.DRAFT,
+      questionWindows: [beforeWindow, afterWindow],
+      sharedQuestions: this.sampleWindow3,
+      classes: [],
+      programmes: [],
+    });
+    const result: Questionnaire = await creator.createQuestionnaire();
 
     return result;
   }

@@ -1,5 +1,6 @@
 import { Questionnaire } from "../../../entities/questionnaire/Questionnaire";
 import {
+  QuestionnaireStatus,
   QuestionnaireType,
   QuestionnaireWindowPostData,
 } from "../../../types/questionnaires";
@@ -7,7 +8,10 @@ import { getRepository } from "typeorm";
 import ApiServer from "../../../server";
 import { synchronize } from "../../../utils/tests";
 import { validate } from "class-validator";
-import { createQuestionnaireWithQuestions } from "../../../utils/questionnaires";
+import {
+  OneTimeQuestionnaireCreator,
+  PrePostQuestionnaireCreator,
+} from "../../../services/questionnaire";
 import { QuestionPostData, QuestionType } from "../../../types/questions";
 
 let server: ApiServer;
@@ -92,19 +96,23 @@ describe("Create questionnaire using util methods", () => {
   });
 
   it("create one-time", async () => {
-    const input: QuestionnaireWindowPostData[] = [
-      {
-        startAt: OPEN_AT,
-        endAt: CLOSE_AT,
-        questions: QUESTIONS,
+    const input: QuestionnaireWindowPostData = {
+      startAt: OPEN_AT,
+      endAt: CLOSE_AT,
+      questions: QUESTIONS,
+    };
+    const creator = new OneTimeQuestionnaireCreator({
+      title: "First Questionnaire!",
+      type: QuestionnaireType.ONE_TIME,
+      status: QuestionnaireStatus.DRAFT,
+      questionWindows: [input],
+      sharedQuestions: {
+        questions: [],
       },
-    ];
-    const newQuestionnaire = await createQuestionnaireWithQuestions(
-      "First Questionnaire!",
-      QuestionnaireType.ONE_TIME,
-      input,
-      []
-    );
+      classes: [],
+      programmes: [],
+    });
+    const newQuestionnaire = await creator.createQuestionnaire();
 
     expect(newQuestionnaire.id).toBeTruthy();
 
@@ -152,12 +160,19 @@ describe("Create questionnaire using util methods", () => {
         questions: AFTER,
       },
     ];
-    const newQuestionnaire = await createQuestionnaireWithQuestions(
-      "First Questionnaire!",
-      QuestionnaireType.PRE_POST,
-      input, // 1 only in before, 1 only in after
-      QUESTIONS // 2 common questions
-    );
+    const creator = new PrePostQuestionnaireCreator({
+      title: "First Questionnaire!",
+      type: QuestionnaireType.PRE_POST,
+      status: QuestionnaireStatus.DRAFT,
+      questionWindows: input,
+      sharedQuestions: {
+        questions: QUESTIONS,
+      },
+      classes: [],
+      programmes: [],
+    });
+
+    const newQuestionnaire = await creator.createQuestionnaire();
 
     expect(newQuestionnaire.id).toBeTruthy();
 
