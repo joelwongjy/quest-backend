@@ -414,10 +414,10 @@ describe("POST /questionnaires/edit/:id", () => {
     expect(mappedQnnaire.questionWindows).toHaveLength(1);
     expect(mappedQnnaire.title).toBe("Edited Qnnaire");
     expect(mappedQnnaire.questionWindows[0].startAt).toBe(
-      new Date("2022/12/12").toString()
+      new Date("2022/12/12").toISOString()
     );
     expect(mappedQnnaire.questionWindows[0].endAt).toBe(
-      new Date("2020/12/13").toString()
+      new Date("2020/12/13").toISOString()
     );
   });
 

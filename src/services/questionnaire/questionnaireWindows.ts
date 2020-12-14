@@ -312,7 +312,6 @@ export class QuestionnaireWindowViewer {
   public async getWindowAndMainSet(): Promise<QuestionnaireWindowData> {
     const mainSet = await this.getMainSet();
     return {
-      ...this.qnnaireWindow.getBase(),
       windowId: this.qnnaireWindow.id,
       startAt: this.qnnaireWindow.openAt.toISOString(),
       endAt: this.qnnaireWindow.closeAt.toISOString(),

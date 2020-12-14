@@ -593,7 +593,7 @@ export class OneTimeQuestionnaireViewer extends QuestionnaireViewer {
 
     const windowData = await this.windowViewer.getWindowAndMainSet();
     return {
-      questionnaireId: super.qnnaireId,
+      questionnaireId: this.qnnaireId,
       title: qnnaire.name,
       type: qnnaire.questionnaireType,
       status: qnnaire.questionnaireStatus,
@@ -637,7 +637,7 @@ export class PrePostQuestionnaireViewer extends QuestionnaireViewer {
     const sharedQns = await this.window1Viewer.getSharedSet();
 
     return {
-      questionnaireId: super.qnnaireId,
+      questionnaireId: this.qnnaireId,
       title: qnnaire.name,
       type: qnnaire.questionnaireType,
       status: qnnaire.questionnaireStatus,

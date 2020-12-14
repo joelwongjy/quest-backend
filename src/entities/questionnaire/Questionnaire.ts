@@ -24,6 +24,11 @@ import { ClassQuestionnaire } from "./ClassQuestionnaire";
 import { QuestionData, QuestionSetData } from "../../types/questions";
 import { QuestionOrder } from "./QuestionOrder";
 import { QuestionnaireProgrammesAndClassesViewer } from "../../services/questionnaire/programmesClassRelations";
+import {
+  OneTimeQuestionnaireViewer,
+  PrePostQuestionnaireViewer,
+  QuestionnaireViewer,
+} from "../../services/questionnaire/questionnaire";
 
 @Entity()
 export class Questionnaire extends Discardable {
@@ -117,77 +122,28 @@ export class Questionnaire extends Discardable {
    * @throws if there is no valid questionnaire id, or qnnaire's sharedSets are not created properly
    */
   getAllWindows = async (): Promise<QuestionnaireFullData> => {
-    const qnnaire = await getRepository(Questionnaire).findOne({
-      where: { id: this.id },
-      relations: [
-        "questionnaireWindows",
-        "questionnaireWindows.mainSet",
-        "questionnaireWindows.sharedSet",
-        "questionnaireWindows.mainSet.questionOrders",
-        "questionnaireWindows.sharedSet.questionOrders",
-        "questionnaireWindows.mainSet.questionOrders.question",
-        "questionnaireWindows.sharedSet.questionOrders.question",
-      ],
-    });
+    let viewer: QuestionnaireViewer;
+    const type =
+      this.questionnaireType ||
+      (await getRepository(Questionnaire).findOneOrFail(this.id))
+        .questionnaireType;
 
-    if (!qnnaire) {
-      throw new Error(`Could not find questionnaire (id: ${this.id})`);
+    switch (type) {
+      case QuestionnaireType.ONE_TIME:
+        viewer = new OneTimeQuestionnaireViewer(this.id);
+        break;
+      case QuestionnaireType.PRE_POST:
+        viewer = new PrePostQuestionnaireViewer(this.id);
+        break;
+      default:
+        throw new Error(`Unknown QuestionnaireType.`);
     }
 
-    // check if sharedSets is valid
-    const commonSharedSets = qnnaire.questionnaireWindows
-      .map((w) => w.sharedSet?.id)
-      .filter(Boolean) as number[];
-    const isValidPrePostQnnaire =
-      commonSharedSets.length === 2 &&
-      commonSharedSets[0] === commonSharedSets[1];
-    const isValidOneTimeQnnaire = commonSharedSets.length === 0;
-    if (!isValidPrePostQnnaire && !isValidOneTimeQnnaire) {
-      throw new Error(`Invalid questionnaire found in db (id: ${this.id})`);
+    if (!viewer) {
+      throw new Error(`Unable to load QuestionnaireViewer for ${this.id}`);
     }
 
-    // convert each window's mainSet's relations to desired object structure
-    const questionWindows: QuestionnaireWindowData[] = qnnaire.questionnaireWindows.map(
-      (window) => {
-        const { id: windowId, openAt: startAt, closeAt: endAt } = window;
-
-        const questions: QuestionData[] = window.mainSet.questionOrders.map(
-          _convertQnOrderRelations
-        );
-
-        return {
-          windowId,
-          startAt: startAt.toString(),
-          endAt: endAt.toString(),
-          questions,
-        };
-      }
-    );
-
-    // sharedSet
-    let questions: QuestionData[] | undefined = undefined;
-    if (isValidPrePostQnnaire) {
-      const sharedSet = qnnaire.questionnaireWindows[0].sharedSet;
-      questions = sharedSet!.questionOrders.map(_convertQnOrderRelations);
-    }
-    const sharedQuestions: QuestionSetData | undefined = questions
-      ? {
-          questions,
-        }
-      : undefined;
-
-    const { programmes, classes } = await this.getProgrammesAndClasses();
-
-    const result: QuestionnaireFullData = {
-      questionnaireId: qnnaire.id,
-      status: qnnaire.questionnaireStatus,
-      title: qnnaire.name,
-      type: qnnaire.questionnaireType,
-      questionWindows,
-      sharedQuestions,
-      programmes,
-      classes,
-    };
+    const result = await viewer.getQuestionnaire();
     return result;
   };
 
