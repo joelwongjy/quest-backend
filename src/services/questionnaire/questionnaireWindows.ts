@@ -10,6 +10,7 @@ import {
 import {
   QuestionnaireWindowPostData,
   QuestionnaireWindowEditData,
+  QuestionnaireWindowData,
 } from "../../types/questionnaires";
 import {
   QuestionSetPostData,
@@ -305,6 +306,17 @@ export class QuestionnaireWindowViewer {
     const questions = await this.sharedSetViewer!.getQuestionSet();
     return {
       questions,
+    };
+  }
+
+  public async getWindowAndMainSet(): Promise<QuestionnaireWindowData> {
+    const mainSet = await this.getMainSet();
+    return {
+      ...this.qnnaireWindow.getBase(),
+      windowId: this.qnnaireWindow.id,
+      startAt: this.qnnaireWindow.openAt.toISOString(),
+      endAt: this.qnnaireWindow.closeAt.toISOString(),
+      ...mainSet,
     };
   }
 }
