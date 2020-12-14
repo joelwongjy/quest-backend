@@ -23,6 +23,7 @@ import { ProgrammeQuestionnaire } from "./ProgrammeQuestionnaire";
 import { ClassQuestionnaire } from "./ClassQuestionnaire";
 import { QuestionData, QuestionSetData } from "../../types/questions";
 import { QuestionOrder } from "./QuestionOrder";
+import { QuestionnaireProgrammesAndClassesViewer } from "../../services/questionnaire/programmesClassRelations";
 
 @Entity()
 export class Questionnaire extends Discardable {
@@ -227,34 +228,11 @@ export class Questionnaire extends Discardable {
 
   /**
    * Gets programmes and classes data.
+   * May deprecate this method in a future update.
    */
   getProgrammesAndClasses = async (): Promise<QuestionnaireProgramClassData> => {
-    const qnnaire = await getRepository(Questionnaire).findOne({
-      where: { id: this.id },
-      relations: [
-        "programmeQuestionnaires",
-        "classQuestionnaires",
-        "programmeQuestionnaires.programme",
-        "classQuestionnaires.class",
-        "classQuestionnaires.class.programme",
-      ],
-    });
-
-    if (!qnnaire) {
-      throw new Error(`Could not find questionnaire (id: ${this.id})`);
-    }
-
-    const programmes = qnnaire.programmeQuestionnaires.map(
-      (pqnnaire) => pqnnaire.programme
-    );
-    const classes = qnnaire.classQuestionnaires.map(
-      (cqnnaire) => cqnnaire.class
-    );
-
-    return {
-      programmes,
-      classes,
-    };
+    const viewer = new QuestionnaireProgrammesAndClassesViewer(this.id);
+    return await viewer.getProgrammesAndClasses();
   };
 }
 
