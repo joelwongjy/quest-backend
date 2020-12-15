@@ -1,5 +1,4 @@
-import { Option } from "../entities/questionnaire/Option";
-import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
+import { OptionData, QuestionData } from "./questions";
 
 export interface AnswerPostData {
   questionOrderId: number;
@@ -8,7 +7,8 @@ export interface AnswerPostData {
 }
 
 export interface AnswerData {
-  questionOrder: QuestionOrder;
-  option?: Option | null;
+  answerId: number;
+  questionOrder: QuestionData;
+  option?: OptionData | null;
   textResponse?: string | null;
 }

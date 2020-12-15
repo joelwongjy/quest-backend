@@ -12,7 +12,7 @@ import { Message } from "../types/errors";
 import { UserData } from "../types/users";
 import { QuestionnaireWindowData } from "../types/questionnaires";
 import { AnswerData } from "../types/answers";
-import { QuestionData } from "../types/questions";
+import { OptionData, QuestionData } from "../types/questions";
 
 export async function create(
   request: Request,
@@ -96,7 +96,41 @@ export async function show(
       questions,
     };
 
-    const answers: AnswerData[] = attempt.answers;
+    const answers: AnswerData[] = [];
+
+    for (const answer of attempt.answers) {
+      let temp: AnswerData;
+      let question: QuestionData;
+
+      // convert Question to QuestionData
+      question = {
+        qnOrderId: answer.questionOrder.id,
+        order: answer.questionOrder.order,
+        questionType: answer.questionOrder.question.questionType,
+        questionText: answer.questionOrder.question.questionText,
+        options: answer.questionOrder.question.options.map((option) => {
+          return {
+            ...option,
+            optionId: Number(option.id),
+          };
+        }),
+      };
+
+      // ensure Answer has Option else set to null
+      temp = {
+        answerId: answer.id,
+        questionOrder: question,
+        option: answer.option
+          ? {
+              ...answer.option,
+              optionId: Number(answer.option.id),
+            }
+          : null,
+        textResponse: answer.answer,
+      };
+
+      answers.push(temp);
+    }
 
     const result: AttemptFullData = {
       user: user,
