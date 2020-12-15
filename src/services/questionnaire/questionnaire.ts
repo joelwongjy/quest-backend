@@ -7,6 +7,8 @@ import {
   ONE_TIME_QUESTIONNAIRE_EDITOR_ERROR,
   PRE_POST_QUESTIONNAIRE_EDITOR_ERROR,
   QUESTIONNAIRE_VALIDATOR_ERROR,
+  ONE_TIME_QUESTIONNAIRE_VIEWER_ERROR,
+  PRE_POST_QUESTIONNAIRE_VIEWER_ERROR,
 } from "../../types/errors";
 import {
   QuestionnaireType,
@@ -14,6 +16,8 @@ import {
   QuestionnaireWindowPostData,
   QuestionnaireEditData,
   QuestionnaireWindowEditData,
+  QuestionnaireFullData,
+  QuestionnaireProgramClassData,
 } from "../../types/questionnaires";
 import {
   QuestionSetPostData,
@@ -23,10 +27,12 @@ import {
   ProgrammeClassesQuestionnaires,
   QuestionnaireProgrammesAndClassesCreator,
   QuestionnaireProgrammesAndClassesEditor,
+  QuestionnaireProgrammesAndClassesViewer,
 } from "./programmesClassRelations";
 import {
   QuestionnaireWindowCreator,
   QuestionnaireWindowEditor,
+  QuestionnaireWindowViewer,
 } from "./questionnaireWindows";
 
 /** Helper type - for readability */
@@ -57,6 +63,20 @@ class PrePostQuestionnaireEditorError extends Error {
   constructor(message: string) {
     super(message);
     this.name = PRE_POST_QUESTIONNAIRE_EDITOR_ERROR;
+  }
+}
+
+class OneTimeQuestionnaireViewerError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = ONE_TIME_QUESTIONNAIRE_VIEWER_ERROR;
+  }
+}
+
+class PrePostQuestionnaireViewerError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = PRE_POST_QUESTIONNAIRE_VIEWER_ERROR;
   }
 }
 
@@ -106,8 +126,8 @@ export class QuestionnaireValidator {
 
     if (qnnaireWindowsLength === 2) {
       const hasLoadedBothSharedSets =
-        Boolean(qnnaire.questionnaireWindows[0]?.sharedSet?.id) &&
-        Boolean(qnnaire.questionnaireWindows[1]?.sharedSet?.id);
+        Boolean(qnnaire.questionnaireWindows[0].sharedSet?.id) &&
+        Boolean(qnnaire.questionnaireWindows[1].sharedSet?.id);
 
       const hasMatchingSharedSetId =
         qnnaire.questionnaireWindows[0].sharedSet!.id ===
@@ -502,5 +522,129 @@ export class PrePostQuestionnaireEditor extends QuestionnaireEditor {
 
     const updated = await getRepository(Questionnaire).save(attributesUpdated);
     return updated;
+  }
+}
+
+export abstract class QuestionnaireViewer {
+  private validator = new QuestionnaireValidator();
+
+  protected qnnaireId: number;
+  private programmesClassesQnnaireViewer: QuestionnaireProgrammesAndClassesViewer;
+
+  constructor(qnnaireId: number) {
+    this.qnnaireId = qnnaireId;
+    this.programmesClassesQnnaireViewer = new QuestionnaireProgrammesAndClassesViewer(
+      this.qnnaireId
+    );
+  }
+
+  protected async getProgrammesClasses(): Promise<QuestionnaireProgramClassData> {
+    return await this.programmesClassesQnnaireViewer.getProgrammesAndClasses();
+  }
+
+  protected async loadQuestionnaire(): Promise<Questionnaire> {
+    const qnnaire = await getRepository(Questionnaire).findOneOrFail({
+      where: { id: this.qnnaireId },
+      relations: [
+        "questionnaireWindows",
+        "questionnaireWindows.mainSet",
+        "questionnaireWindows.sharedSet",
+        "questionnaireWindows.mainSet.questionOrders",
+        "questionnaireWindows.sharedSet.questionOrders",
+        "questionnaireWindows.mainSet.questionOrders.question",
+        "questionnaireWindows.sharedSet.questionOrders.question",
+      ],
+    });
+    return qnnaire;
+  }
+
+  protected isOneTimeQuestionnaire(qnnaire: Questionnaire): boolean {
+    return this.validator.isOneTimeQnnaire(qnnaire);
+  }
+
+  protected isPrePostQuestionnaire(qnnaire: Questionnaire): boolean {
+    return this.validator.isPrePostQnnaire(qnnaire);
+  }
+
+  public abstract getQuestionnaire(): Promise<QuestionnaireFullData>;
+}
+
+export class OneTimeQuestionnaireViewer extends QuestionnaireViewer {
+  // loaded later
+  private window!: QuestionnaireWindow;
+  private windowViewer!: QuestionnaireWindowViewer;
+
+  constructor(qnnaireId: number) {
+    super(qnnaireId);
+  }
+
+  public async getQuestionnaire(): Promise<QuestionnaireFullData> {
+    const { programmes, classes } = await super.getProgrammesClasses();
+    const qnnaire = await super.loadQuestionnaire();
+
+    if (!super.isOneTimeQuestionnaire(qnnaire)) {
+      throw new OneTimeQuestionnaireViewerError(
+        `Questionnaire ${super.qnnaireId} has failed validation checks`
+      );
+    }
+
+    this.window = qnnaire.questionnaireWindows[0];
+    this.windowViewer = new QuestionnaireWindowViewer(this.window);
+
+    const windowData = await this.windowViewer.getWindowAndMainSet();
+    return {
+      questionnaireId: this.qnnaireId,
+      title: qnnaire.name,
+      type: qnnaire.questionnaireType,
+      status: qnnaire.questionnaireStatus,
+      questionWindows: [windowData],
+      sharedQuestions: undefined,
+      programmes,
+      classes,
+    };
+  }
+}
+
+export class PrePostQuestionnaireViewer extends QuestionnaireViewer {
+  // loaded later
+  private window1!: QuestionnaireWindow;
+  private window2!: QuestionnaireWindow;
+  private window1Viewer!: QuestionnaireWindowViewer;
+  private window2Viewer!: QuestionnaireWindowViewer;
+
+  constructor(qnnaireId: number) {
+    super(qnnaireId);
+  }
+
+  public async getQuestionnaire(): Promise<QuestionnaireFullData> {
+    const { programmes, classes } = await super.getProgrammesClasses();
+    const qnnaire = await super.loadQuestionnaire();
+
+    if (!super.isPrePostQuestionnaire(qnnaire)) {
+      throw new PrePostQuestionnaireViewerError(
+        `Questionnaire ${super.qnnaireId} has failed validation checks`
+      );
+    }
+
+    this.window1 = qnnaire.questionnaireWindows[0];
+    this.window2 = qnnaire.questionnaireWindows[1];
+
+    this.window1Viewer = new QuestionnaireWindowViewer(this.window1);
+    this.window2Viewer = new QuestionnaireWindowViewer(this.window2);
+
+    const window1Data = await this.window1Viewer.getWindowAndMainSet();
+    const window2Data = await this.window2Viewer.getWindowAndMainSet();
+    const sharedQns = await this.window1Viewer.getSharedSet();
+
+    return {
+      questionnaireId: this.qnnaireId,
+      title: qnnaire.name,
+      type: qnnaire.questionnaireType,
+      status: qnnaire.questionnaireStatus,
+      questionWindows: [window1Data, window2Data],
+      sharedQuestions: sharedQns,
+      programmes,
+      classes,
+    };
   }
 }

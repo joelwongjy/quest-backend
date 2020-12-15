@@ -8,7 +8,10 @@ import {
   QUESTIONNAIRE_PROGRAMS_AND_CLASSES_CREATOR_ERROR,
   QUESTIONNAIRE_PROGRAMS_AND_CLASSES_EDITOR_ERROR,
 } from "../../types/errors";
-import { QuestionnairePostData } from "../../types/questionnaires";
+import {
+  QuestionnairePostData,
+  QuestionnaireProgramClassData,
+} from "../../types/questionnaires";
 import { QuestionnaireValidator } from "./questionnaire";
 
 /** Shared type between `QuestionnaireProgrammesAndClassesRelations` and `Questionnaire` */
@@ -288,5 +291,35 @@ export class QuestionnaireProgrammesAndClassesEditor extends QuestionnaireProgra
       this.classQuestionnaires
     );
     return updatedClassesQnnaires;
+  }
+}
+
+export class QuestionnaireProgrammesAndClassesViewer {
+  private qnnaireId: number;
+
+  constructor(qnnaireId: number) {
+    this.qnnaireId = qnnaireId;
+  }
+
+  public async getProgrammesAndClasses(): Promise<QuestionnaireProgramClassData> {
+    const qnnaire = await getRepository(Questionnaire).findOneOrFail({
+      where: { id: this.qnnaireId },
+      relations: [
+        "programmeQuestionnaires",
+        "classQuestionnaires",
+        "programmeQuestionnaires.programme",
+        "classQuestionnaires.class",
+        "classQuestionnaires.class.programme",
+      ],
+    });
+
+    const programmes = qnnaire.programmeQuestionnaires
+      .filter((pqnnaire) => !pqnnaire.discardedAt)
+      .map((pqnnaire) => pqnnaire.programme);
+    const classes = qnnaire.classQuestionnaires
+      .filter((cqnnaire) => !cqnnaire.discardedAt)
+      .map((cqnnaire) => cqnnaire.class);
+
+    return { programmes, classes };
   }
 }

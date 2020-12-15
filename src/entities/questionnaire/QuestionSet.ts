@@ -19,12 +19,11 @@ export class QuestionSet extends Discardable {
       relations: ["questionOrders", "questionOrders.question"],
     });
 
-    // TODO: improve this, there's a n^2 code here
     const result: QuestionData[] = query.questionOrders
       .filter((order) => !order.discardedAt)
       .map((order) => {
         return {
-          ...order.getBase(),
+          // ...order.getBase(), having issues with the types: date vs string
           qnOrderId: order.id,
           order: order.order,
           questionType: order.question.questionType,

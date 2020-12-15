@@ -31,3 +31,7 @@ export const PRE_POST_QUESTIONNAIRE_CREATOR_ERROR =
   "PrePostQuestionnaireCreatorError";
 export const ONE_TIME_QUESTIONNAIRE_CREATOR_ERROR =
   "OneTimeQuestionnaireCreatorError";
+export const ONE_TIME_QUESTIONNAIRE_VIEWER_ERROR =
+  "OneTimeQuestionnaireViewerError";
+export const PRE_POST_QUESTIONNAIRE_VIEWER_ERROR =
+  "PrePostQuestionnaireViewerError";
