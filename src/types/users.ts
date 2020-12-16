@@ -1,4 +1,4 @@
-import { ClassUserData } from "./classUsers";
+import { ClassUserData, ClassUserRole } from "./classUsers";
 import { DiscardableData, isDiscardableData } from "./entities";
 import { ProgrammeData } from "./programmes";
 
@@ -35,6 +35,7 @@ export interface UserData extends UserListData, ContactData {
   // gender: string;
   classes: ClassUserData[];
   programmes: ProgrammeData[];
+  role: ClassUserRole;
 }
 
 export function isUserListData(data: any): data is UserListData {

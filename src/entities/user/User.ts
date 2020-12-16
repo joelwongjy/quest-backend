@@ -95,6 +95,7 @@ export class User extends Discardable {
           }))
         ),
         programmes: allProgrammes.map((p) => p.getData()),
+        role: ClassUserRole.ADMIN,
       };
     }
 
@@ -107,6 +108,8 @@ export class User extends Discardable {
           relations: ["classUsers"],
         })
       ).classUsers;
+    const isTeacher =
+      classUsers.filter((cu) => cu.role === ClassUserRole.TEACHER).length > 0;
     const programmes = _.uniqBy(
       await Promise.all(
         classUsers.map(async (c) => (await c.getData()).programme)
@@ -118,6 +121,7 @@ export class User extends Discardable {
       ...this.getListData(),
       classes: await Promise.all(classUsers.map((cu) => cu.getData())),
       programmes,
+      role: isTeacher ? ClassUserRole.TEACHER : ClassUserRole.STUDENT,
     };
   };
 }
