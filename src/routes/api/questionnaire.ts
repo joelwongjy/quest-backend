@@ -21,5 +21,6 @@ router.get("/:id", QuestionnaireController.show);
 router.post("/edit/:id", QuestionnaireController.edit);
 
 router.post("/submissions/create", AttemptController.create);
+router.get("/submissions/:id", AttemptController.show);
 
 export default router;

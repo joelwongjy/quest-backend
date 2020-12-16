@@ -7,6 +7,12 @@ import { Answer } from "../entities/questionnaire/Answer";
 import { associateAttemptWithAnswers } from "../utils/attempts";
 import { createAnswers } from "../utils/answers";
 import { AccessTokenSignedPayload } from "../types/tokens";
+import { AttemptFullData } from "../types/attempts";
+import { Message } from "../types/errors";
+import { UserData } from "../types/users";
+import { QuestionnaireWindowData } from "../types/questionnaires";
+import { AnswerData } from "../types/answers";
+import { OptionData, QuestionData } from "../types/questions";
 
 export async function create(
   request: Request,
@@ -48,4 +54,94 @@ export async function create(
   response.status(200).json({ success: true, id: createdAttempt.id });
 
   return;
+}
+
+export async function show(
+  request: Request,
+  response: Response<AttemptFullData | Message>
+): Promise<void> {
+  const { id } = request.params;
+
+  try {
+    let attempt = await getRepository(Attempt).findOne({
+      where: { id },
+      relations: [
+        "user",
+        "questionnaireWindow",
+        "answers",
+        "answers.questionOrder",
+        "answers.questionOrder.question",
+        "questionnaireWindow.mainSet",
+        "questionnaireWindow.mainSet.questionOrder",
+      ],
+    });
+
+    if (!attempt) {
+      response.sendStatus(404);
+      return;
+    }
+
+    const user: UserData = await attempt.user.getData();
+
+    const {
+      id: windowId,
+      openAt: startAt,
+      closeAt: endAt,
+    } = attempt.questionnaireWindow;
+    const questions: QuestionData[] = await attempt.questionnaireWindow.mainSet.getQuestionOrders();
+    const questionnaireWindow: QuestionnaireWindowData = {
+      windowId,
+      startAt: startAt.toString(),
+      endAt: endAt.toString(),
+      questions,
+    };
+
+    const answers: AnswerData[] = [];
+
+    for (const answer of attempt.answers) {
+      let temp: AnswerData;
+      let question: QuestionData;
+
+      // convert Question to QuestionData
+      question = {
+        qnOrderId: answer.questionOrder.id,
+        order: answer.questionOrder.order,
+        questionType: answer.questionOrder.question.questionType,
+        questionText: answer.questionOrder.question.questionText,
+        options: answer.questionOrder.question.options.map((option) => {
+          return {
+            ...option,
+            optionId: Number(option.id),
+          };
+        }),
+      };
+
+      // ensure Answer has Option else set to null
+      temp = {
+        answerId: answer.id,
+        questionOrder: question,
+        option: answer.option
+          ? {
+              ...answer.option,
+              optionId: Number(answer.option.id),
+            }
+          : null,
+        textResponse: answer.answer,
+      };
+
+      answers.push(temp);
+    }
+
+    const result: AttemptFullData = {
+      user: user,
+      questionnaireWindow: questionnaireWindow,
+      answers: answers,
+    };
+
+    response.status(200).json(result);
+    return;
+  } catch (e) {
+    response.status(400).json({ message: e.message });
+    return;
+  }
 }
