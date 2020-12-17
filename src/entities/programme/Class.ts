@@ -1,4 +1,5 @@
 import { IsNotEmpty } from "class-validator";
+import { ClassUserRole } from "../../types/classUsers";
 import { Column, Entity, getRepository, ManyToOne, OneToMany } from "typeorm";
 import { ClassData, ClassListData } from "../../types/classes";
 import { Discardable } from "../Discardable";
@@ -32,7 +33,36 @@ export class Class extends Discardable {
   )
   classQuestionnaires!: ClassQuestionnaire[];
 
+  private getStudentsAndTeachers = async (): Promise<{
+    students: ClassUser[];
+    teachers: ClassUser[];
+  }> => {
+    const classUsers =
+      this.classUsers ||
+      (
+        await getRepository(Class).findOneOrFail({
+          where: { id: this.id },
+          relations: ["classUsers", "classUsers.user"],
+        })
+      ).classUsers;
+    return {
+      students: classUsers.filter((cu) => cu.role === ClassUserRole.STUDENT),
+      teachers: classUsers.filter((cu) => cu.role === ClassUserRole.TEACHER),
+    };
+  };
+
   getListData = async (): Promise<ClassListData> => {
+    const members = await this.getStudentsAndTeachers();
+
+    return {
+      ...this.getBase(),
+      name: this.name,
+      studentCount: members.students.length,
+      teacherCount: members.teachers.length,
+    };
+  };
+
+  getData = async (): Promise<ClassData> => {
     const programme =
       this.programme ||
       (
@@ -41,16 +71,13 @@ export class Class extends Discardable {
           relations: ["programme"],
         })
       ).programme;
-    return {
-      ...this.getBase(),
-      name: this.name,
-      programme: programme.getListData(),
-    };
-  };
-
-  getData = async (): Promise<ClassData> => {
+    const members = await this.getStudentsAndTeachers();
     return {
       ...(await this.getListData()),
+      programmeId: programme.id,
+      programmeName: programme.name,
+      students: members.students.map((s) => s.user.getListData()),
+      teachers: members.teachers.map((s) => s.user.getListData()),
     };
   };
 }

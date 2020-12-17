@@ -79,49 +79,10 @@ export class User extends Discardable {
     ...this.getBase(),
     username: this.username,
     name: this.name,
+    appRole: this.defaultRole,
   });
 
-  getData = async (): Promise<UserData> => {
-    // If the user is an admin, return all classes and programmes
-    if (this.defaultRole === DefaultUserRole.ADMIN) {
-      const allClasses = await getRepository(Class).find();
-      const allProgrammes = await getRepository(Programme).find();
-      return {
-        ...this.getListData(),
-        classes: await Promise.all(
-          allClasses.map(async (c) => ({
-            ...(await c.getData()),
-            role: ClassUserRole.ADMIN,
-          }))
-        ),
-        programmes: allProgrammes.map((p) => p.getData()),
-        role: ClassUserRole.ADMIN,
-      };
-    }
-
-    // Else return only those accessible to them
-    const classUsers =
-      this.classUsers ||
-      (
-        await getRepository(User).findOneOrFail({
-          where: { id: this.id },
-          relations: ["classUsers"],
-        })
-      ).classUsers;
-    const isTeacher =
-      classUsers.filter((cu) => cu.role === ClassUserRole.TEACHER).length > 0;
-    const programmes = _.uniqBy(
-      await Promise.all(
-        classUsers.map(async (c) => (await c.getData()).programme)
-      ),
-      "id"
-    );
-
-    return {
-      ...this.getListData(),
-      classes: await Promise.all(classUsers.map((cu) => cu.getData())),
-      programmes,
-      role: isTeacher ? ClassUserRole.TEACHER : ClassUserRole.STUDENT,
-    };
+  getData = (): UserData => {
+    return this.getListData();
   };
 }

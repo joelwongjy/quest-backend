@@ -1,5 +1,5 @@
 import { IsNotEmpty } from "class-validator";
-import { Column, Entity, OneToMany } from "typeorm";
+import { Column, Entity, getRepository, OneToMany } from "typeorm";
 import { ProgrammeData, ProgrammeListData } from "../../types/programmes";
 import { Discardable } from "../Discardable";
 import { ProgrammeQuestionnaire } from "../questionnaire/ProgrammeQuestionnaire";
@@ -27,12 +27,46 @@ export class Programme extends Discardable {
   )
   programmeQuestionnaires!: ProgrammeQuestionnaire[];
 
-  getListData = (): ProgrammeListData => ({
-    ...this.getBase(),
-    name: this.name,
-  });
+  getListData = async (): Promise<ProgrammeListData> => {
+    const classCount =
+      this.classes?.length ||
+      (await getRepository(Class).count({
+        where: { programmeId: this.id },
+      }));
+    return {
+      ...this.getBase(),
+      name: this.name,
+      classCount,
+    };
+  };
 
-  getData = (): ProgrammeData => ({
-    ...this.getListData(),
-  });
+  getData = async (): Promise<ProgrammeData> => {
+    const classes =
+      this.classes ||
+      (await getRepository(Class).find({ where: { programmeId: this.id } }));
+    const classesListData = await Promise.all(
+      classes.map((c) => c.getListData())
+    );
+    const uniqueStudents: number[] = [];
+    const uniqueTeachers: number[] = [];
+    const classesData = await Promise.all(classes.map((c) => c.getData()));
+    classesData.forEach((c) => {
+      c.students.forEach((s) => {
+        if (uniqueStudents.findIndex((x) => x === s.id) === -1) {
+          uniqueStudents.push(s.id);
+        }
+      });
+      c.teachers.forEach((t) => {
+        if (uniqueTeachers.findIndex((x) => x === t.id) === -1) {
+          uniqueTeachers.push(t.id);
+        }
+      });
+    });
+    return {
+      ...(await this.getListData()),
+      classes: classesListData,
+      studentCount: uniqueStudents.length,
+      teacherCount: uniqueTeachers.length,
+    };
+  };
 }
