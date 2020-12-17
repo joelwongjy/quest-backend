@@ -24,7 +24,7 @@ export class Class extends Discardable {
   @ManyToOne((type) => Programme, (programme) => programme.classes)
   programme: Programme;
 
-  @OneToMany((type) => ClassPerson, (classUser) => classUser.class)
+  @OneToMany((type) => ClassPerson, (classPerson) => classPerson.class)
   classPersons!: ClassPerson[];
 
   @OneToMany(

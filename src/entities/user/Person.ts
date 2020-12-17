@@ -81,7 +81,7 @@ export class Person extends Discardable {
   @Validate(IsPersonlessUser)
   user: User | null;
 
-  @OneToMany((type) => ClassPerson, (classUser) => classUser.person)
+  @OneToMany((type) => ClassPerson, (classPerson) => classPerson.person)
   classPersons!: ClassPerson[];
 
   @OneToMany(

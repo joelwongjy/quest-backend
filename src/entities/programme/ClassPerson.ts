@@ -7,7 +7,7 @@ import { Person } from "../user/Person";
 
 @Entity()
 export class ClassPerson extends Discardable {
-  entityName = "ClassUser";
+  entityName = "ClassPerson";
 
   constructor(class_: Class, person: Person, role: ClassPersonRole) {
     super();

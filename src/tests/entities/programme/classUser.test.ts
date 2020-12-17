@@ -20,7 +20,7 @@ afterAll(async () => {
   await server.close();
 });
 
-describe("Create and Query ClassUser", () => {
+describe("Create and Query ClassPerson", () => {
   let programme: Programme;
   let class_: Class;
   let person1: Person;
@@ -42,26 +42,26 @@ describe("Create and Query ClassUser", () => {
     await synchronize(server);
   });
 
-  it("create classUsers", async () => {
-    const user1Class = new ClassPerson(
+  it("create classPersons", async () => {
+    const person1Class = new ClassPerson(
       class_,
       person1,
       ClassPersonRole.TEACHER
     );
-    const user2Class = new ClassPerson(
+    const Person2Class = new ClassPerson(
       class_,
       person2,
       ClassPersonRole.STUDENT
     );
 
-    const savedUser1Class = await getRepository(ClassPerson).save(user1Class);
-    const savedUser2Class = await getRepository(ClassPerson).save(user2Class);
+    const savedUser1Class = await getRepository(ClassPerson).save(person1Class);
+    const savedUser2Class = await getRepository(ClassPerson).save(Person2Class);
 
     expect(savedUser1Class.id).toBeTruthy();
     expect(savedUser2Class.id).toBeTruthy();
   });
 
-  it("query using classUser table", async () => {
+  it("query using classPerson table", async () => {
     const classPersonQuery: ClassPerson[] = await getRepository(
       ClassPerson
     ).find({

@@ -16,7 +16,7 @@ export function allowedRole(
 }
 
 export const allowedRequester = async (
-  classUserId: number,
+  classPersonId: number,
   classId: number | string,
   requiredRole: ClassPersonRole
 ): Promise<false | { class_: Class; requester: ClassPerson }> => {
@@ -27,7 +27,8 @@ export const allowedRequester = async (
     return false;
   }
   const requester = class_.classPersons!.find(
-    (classPerson) => classPerson.id === classUserId && !classPerson.discardedAt
+    (classPerson) =>
+      classPerson.id === classPersonId && !classPerson.discardedAt
   );
   if (!requester || !allowedRole(requester.role, requiredRole)) {
     return false;

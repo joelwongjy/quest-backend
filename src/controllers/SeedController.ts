@@ -14,14 +14,14 @@ const DEFAULT_PASSWORD = "password";
 
 type UserSeed = [string, ClassPersonRole];
 
-type ClassUserSeed = {
+type ClassPersonSeed = {
   name: string;
   users: UserSeed[];
 };
 
 type ProgrammeSeed = {
   name: string;
-  classes: ClassUserSeed[];
+  classes: ClassPersonSeed[];
 };
 
 const PROGRAMME_SEED: ProgrammeSeed[] = [
@@ -206,8 +206,8 @@ async function seedClassWithUsers(
         new Person(name, Gender.MALE)
       );
 
-      const classUser = new ClassPerson(class_, user, userTuple[1]);
-      await classPersonRepo.save(classUser);
+      const classPerson = new ClassPerson(class_, user, userTuple[1]);
+      await classPersonRepo.save(classPerson);
     })
   );
 }

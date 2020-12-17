@@ -146,7 +146,7 @@ export class Fixtures {
     this.studentPassword = studentPassword;
   }
 
-  public async createClassUser(role: ClassPersonRole, class_?: Class) {
+  public async createClassPerson(role: ClassPersonRole, class_?: Class) {
     const name = faker.name.findName();
     const person = new Person(name, Gender.MALE);
     const user = new User(
@@ -155,14 +155,14 @@ export class Fixtures {
       faker.internet.password(8)
     );
     person.user = user;
-    const classUser = new ClassPerson(class_ || this.class_, person, role);
+    const classPerson = new ClassPerson(class_ || this.class_, person, role);
 
     await getRepository(User).save(user);
     await getRepository(Person).save(person);
-    await getRepository(ClassPerson).save(classUser);
+    await getRepository(ClassPerson).save(classPerson);
     const accessToken =
       "Bearer " + user.createAuthenticationToken().accessToken;
-    return { classUser, accessToken };
+    return { classPerson, accessToken };
   }
 
   public async createSampleOneTimeQuestionnaire() {
