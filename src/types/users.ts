@@ -7,7 +7,7 @@ export enum DefaultUserRole {
 
 export interface UserPostData {
   username: string;
-  name?: string;
+  name: string; // is there a need for name?
   password: string | null;
   defaultUserRole?: DefaultUserRole;
 }

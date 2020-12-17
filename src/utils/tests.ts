@@ -150,7 +150,7 @@ export class Fixtures {
     const name = faker.name.findName();
     const person = new Person(name, Gender.MALE);
     const user = new User(
-      name,
+      person,
       faker.internet.userName(),
       faker.internet.password(8)
     );
@@ -210,11 +210,13 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
   const users: User[] = [];
 
   const admin = new User(
+    new Person("Admin", Gender.MALE),
     "admin",
     "Admin",
     adminPassword,
     DefaultUserRole.ADMIN
   );
+  persons.push(admin.person);
   users.push(admin);
 
   const teacher = new ClassPerson(
@@ -222,7 +224,12 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
     new Person("Teacher", Gender.FEMALE),
     ClassPersonRole.TEACHER
   );
-  const teacherUser = new User("teacher", "Teacher", teacherPassword);
+  const teacherUser = new User(
+    teacher.person,
+    "teacher",
+    "Teacher",
+    teacherPassword
+  );
   teacher.person.user = teacherUser;
   classPersons.push(teacher);
   persons.push(teacher.person);
@@ -233,7 +240,12 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
     new Person("Student", Gender.MALE),
     ClassPersonRole.STUDENT
   );
-  const studentUser = new User("student", "Student", studentPassword);
+  const studentUser = new User(
+    student.person,
+    "student",
+    "Student",
+    studentPassword
+  );
   student.person.user = studentUser;
   classPersons.push(student);
   persons.push(student.person);

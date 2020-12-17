@@ -91,13 +91,15 @@ export async function seed(
   response: Response
 ): Promise<void> {
   try {
+    const superuserPerson = new Person("superuser", Gender.FEMALE);
     const superuser = new User(
+      superuserPerson,
       "superuser",
       "superuser",
       DEFAULT_PASSWORD,
       DefaultUserRole.ADMIN
     );
-    await seedUserIfAbsent(superuser, new Person("superuser", Gender.FEMALE));
+    await seedUserIfAbsent(superuser, superuserPerson);
     await seedProgrammesClasses(PROGRAMME_SEED);
 
     response.status(200).json({
@@ -173,9 +175,15 @@ async function seedProgrammesClasses(seed: ProgrammeSeed[]): Promise<void> {
 
   // add a common student to all classes
   const commonStudentName = COMMON_STUDENT[0];
+  const commonStudentPerson = new Person(commonStudentName, Gender.FEMALE);
   const commonStudent = await seedUserIfAbsent(
-    new User(commonStudentName, commonStudentName, DEFAULT_PASSWORD),
-    new Person(commonStudentName, Gender.FEMALE)
+    new User(
+      commonStudentPerson,
+      commonStudentName,
+      commonStudentName,
+      DEFAULT_PASSWORD
+    ),
+    commonStudentPerson
   );
   await Promise.all(
     seededClasses.map(async (classes) => {
@@ -201,9 +209,10 @@ async function seedClassWithUsers(
   await Promise.all(
     users.map(async (userTuple) => {
       const name = userTuple[0];
+      const person = new Person(name, Gender.MALE);
       const user = await seedUserIfAbsent(
-        new User(name, name, DEFAULT_PASSWORD),
-        new Person(name, Gender.MALE)
+        new User(person, name, name, DEFAULT_PASSWORD),
+        person
       );
 
       const classPerson = new ClassPerson(class_, user, userTuple[1]);

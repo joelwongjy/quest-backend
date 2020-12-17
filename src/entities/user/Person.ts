@@ -76,9 +76,7 @@ export class Person extends Discardable {
   @Column({ type: "date", nullable: true })
   birthday: Date | null;
 
-  @OneToOne((type) => User, { nullable: true })
-  @JoinColumn()
-  @Validate(IsPersonlessUser)
+  @OneToOne((type) => User, (user) => user.person, { nullable: true })
   user: User | null;
 
   @OneToMany((type) => ClassPerson, (classPerson) => classPerson.person)

@@ -3,21 +3,32 @@ import { validate, validateOrReject } from "class-validator";
 import { Request, Response } from "express";
 import { pick } from "lodash";
 import { getRepository, IsNull } from "typeorm";
+import { Person } from "../entities/user/Person";
 import { User } from "../entities/user/User";
 import { AccessTokenSignedPayload } from "../types/tokens";
+import { UserPostData } from "../types/users";
 
 export async function create(
-  request: Request,
+  request: Request<{ id: number }, any, UserPostData, any>,
   response: Response
 ): Promise<void> {
-  const { username, password, name, defaultUserRole } = pick(
-    request.body,
-    "username",
-    "password",
-    "name",
-    "defaultUserRole"
+  const { id } = request.params;
+  const { username, password, name, defaultUserRole } = request.body;
+
+  const person = await getRepository(Person).findOne(id);
+
+  if (!person) {
+    response.sendStatus(404);
+    return;
+  }
+
+  const user = new User(
+    person,
+    username,
+    name,
+    password ?? undefined,
+    defaultUserRole
   );
-  const user = new User(username, name, password, defaultUserRole);
   const errors = await validate(user);
   if (errors.length > 0) {
     let error = "Something went wrong. Please try again!";

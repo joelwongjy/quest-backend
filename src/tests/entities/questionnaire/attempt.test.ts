@@ -9,6 +9,8 @@ import { Question } from "../../../entities/questionnaire/Question";
 import { QuestionType } from "../../../types/questions";
 import { QuestionOrder } from "../../../entities/questionnaire/QuestionOrder";
 import { QuestionSet } from "../../../entities/questionnaire/QuestionSet";
+import { Person } from "../../../entities/user/Person";
+import { Gender } from "../../../types/persons";
 
 let server: ApiServer;
 
@@ -27,7 +29,9 @@ describe("Create attempt", () => {
   let window: QuestionnaireWindow;
 
   beforeAll(async () => {
-    const userData = new User("Bobby", "Bobby");
+    const person = new Person("Bobby", Gender.MALE);
+    const userData = new User(person, "Bobby", "Bobby");
+    await getRepository(Person).save(userData.person);
     user = await getRepository(User).save(userData);
 
     const question = new Question(
