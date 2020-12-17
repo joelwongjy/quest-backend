@@ -67,7 +67,7 @@ describe("Create and Query ClassUser", () => {
     expect(classUserQuery[0].class.name).toBe(class_.name);
 
     const personsInClass = classUserQuery.map(
-      (classUser) => classUser.person.name
+      (classPerson) => classPerson.person.name
     );
     expect(personsInClass).toContain(person1.name);
     expect(personsInClass).toContain(person2.name);
@@ -76,13 +76,13 @@ describe("Create and Query ClassUser", () => {
   it("query using class table", async () => {
     const classQuery: Class[] = await getRepository(Class).find({
       where: { id: class_.id },
-      relations: ["classUsers", "classUsers.person"],
+      relations: ["classPersons", "classPersons.person"],
     });
 
     expect(classQuery).toHaveLength(1);
 
-    const personsInClass = classQuery[0].classUsers.map(
-      (classUser: ClassUser) => classUser.person.name
+    const personsInClass = classQuery[0].classPersons.map(
+      (classPerson: ClassUser) => classPerson.person.name
     );
     expect(personsInClass).toContain(person1.name);
     expect(personsInClass).toContain(person2.name);
@@ -91,13 +91,13 @@ describe("Create and Query ClassUser", () => {
   it("query using person table", async () => {
     const personQuery: Person[] = await getRepository(Person).find({
       where: { id: person1.id },
-      relations: ["classUsers", "classUsers.class"],
+      relations: ["classPersons", "classPersons.class"],
     });
 
     expect(personQuery).toHaveLength(1);
 
-    const classesInvolvedIn = personQuery[0].classUsers.map(
-      (classUser: ClassUser) => classUser.class.name
+    const classesInvolvedIn = personQuery[0].classPersons.map(
+      (classPerson: ClassUser) => classPerson.class.name
     );
     expect(classesInvolvedIn).toHaveLength(1);
     expect(classesInvolvedIn).toContain(class_.name);

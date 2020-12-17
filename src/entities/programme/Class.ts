@@ -25,7 +25,7 @@ export class Class extends Discardable {
   programme: Programme;
 
   @OneToMany((type) => ClassUser, (classUser) => classUser.class)
-  classUsers!: ClassUser[];
+  classPersons!: ClassUser[];
 
   @OneToMany(
     (type) => ClassQuestionnaire,
@@ -38,13 +38,13 @@ export class Class extends Discardable {
     teachers: ClassUser[];
   }> => {
     const classUsers =
-      this.classUsers ||
+      this.classPersons ||
       (
         await getRepository(Class).findOneOrFail({
           where: { id: this.id },
-          relations: ["classUsers", "classUsers.user"],
+          relations: ["classPersons", "classPersons.person"],
         })
-      ).classUsers;
+      ).classPersons;
     return {
       students: classUsers.filter((cu) => cu.role === ClassUserRole.STUDENT),
       teachers: classUsers.filter((cu) => cu.role === ClassUserRole.TEACHER),

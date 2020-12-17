@@ -17,13 +17,13 @@ export const allowedRequester = async (
   requiredRole: ClassUserRole
 ): Promise<false | { class_: Class; requester: ClassUser }> => {
   const class_ = await getRepository(Class).findOne(classId, {
-    relations: ["classUsers"],
+    relations: ["classPersons"],
   });
   if (!class_) {
     return false;
   }
-  const requester = class_.classUsers!.find(
-    (classUser) => classUser.id === classUserId && !classUser.discardedAt
+  const requester = class_.classPersons!.find(
+    (classPerson) => classPerson.id === classUserId && !classPerson.discardedAt
   );
   if (!requester || !allowedRole(requester.role, requiredRole)) {
     return false;

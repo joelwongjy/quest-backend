@@ -16,10 +16,10 @@ export class ClassUser extends Discardable {
     this.role = role;
   }
 
-  @ManyToOne((type) => Person, (person) => person.classUsers)
+  @ManyToOne((type) => Person, (person) => person.classPersons)
   person: Person;
 
-  @ManyToOne((type) => Class, (class_) => class_.classUsers)
+  @ManyToOne((type) => Class, (class_) => class_.classPersons)
   class: Class;
 
   @Column({

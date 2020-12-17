@@ -82,7 +82,7 @@ export class Person extends Discardable {
   user: User | null;
 
   @OneToMany((type) => ClassUser, (classUser) => classUser.person)
-  classUsers!: ClassUser[];
+  classPersons!: ClassUser[];
 
   @OneToMany(
     (type) => Relationship,
@@ -127,14 +127,14 @@ export class Person extends Discardable {
       const fullPerson = await getRepository(Person).findOneOrFail({
         where: { id: this.id },
         relations: [
-          "classUsers",
-          "classUsers.class",
-          "classUsers.class.programme",
+          "classPersons",
+          "classPersons.class",
+          "classPersons.class.programme",
         ],
       });
 
       highestClassRole = ClassUserRole.STUDENT;
-      fullPerson.classUsers.forEach((cu) => {
+      fullPerson.classPersons.forEach((cu) => {
         if (cu.role === ClassUserRole.TEACHER) {
           highestClassRole = ClassUserRole.TEACHER;
         }
