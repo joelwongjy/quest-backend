@@ -4,21 +4,12 @@ import {
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
-  Validate,
 } from "class-validator";
-import {
-  Column,
-  Entity,
-  getRepository,
-  JoinColumn,
-  OneToMany,
-  OneToOne,
-} from "typeorm";
+import { Column, Entity, getRepository, OneToMany, OneToOne } from "typeorm";
 import { Discardable } from "../Discardable";
 import { User } from "./User";
 import { Gender, PersonData, PersonListData } from "../../types/persons";
 import { Relationship } from "./Relationship";
-import IsPersonlessUser from "../../constraints/IsPersonlessUser";
 import { DefaultUserRole } from "../../types/users";
 import { ClassPersonRole } from "../../types/classPersons";
 import { Programme } from "../programme/Programme";
@@ -100,7 +91,7 @@ export class Person extends Discardable {
     const user =
       this.user ||
       (await getRepository(User).findOne({
-        where: { personId: this.id },
+        where: { person: { id: this.id } },
       }));
 
     let highestClassRole: ClassPersonRole;
@@ -165,7 +156,7 @@ export class Person extends Discardable {
     const youths =
       this.youths ||
       (await getRepository(Relationship).find({
-        where: { familyMemberId: this.id },
+        where: { familyMember: { id: this.id } },
         relations: ["youth"],
       }));
     youths.forEach((y) =>
@@ -177,7 +168,7 @@ export class Person extends Discardable {
     const familyMembers =
       this.familyMembers ||
       (await getRepository(Relationship).find({
-        where: { youthId: this.id },
+        where: { youth: { id: this.id } },
         relations: ["familyMember"],
       }));
     familyMembers.forEach((f) => {
