@@ -1,10 +1,10 @@
 import { IsNotEmpty } from "class-validator";
-import { ClassUserRole } from "../../types/classUsers";
+import { ClassPersonRole } from "../../types/classPersons";
 import { Column, Entity, getRepository, ManyToOne, OneToMany } from "typeorm";
 import { ClassData, ClassListData } from "../../types/classes";
 import { Discardable } from "../Discardable";
 import { ClassQuestionnaire } from "../questionnaire/ClassQuestionnaire";
-import { ClassUser } from "./ClassPerson";
+import { ClassPerson } from "./ClassPerson";
 import { Programme } from "./Programme";
 
 @Entity()
@@ -24,8 +24,8 @@ export class Class extends Discardable {
   @ManyToOne((type) => Programme, (programme) => programme.classes)
   programme: Programme;
 
-  @OneToMany((type) => ClassUser, (classUser) => classUser.class)
-  classPersons!: ClassUser[];
+  @OneToMany((type) => ClassPerson, (classUser) => classUser.class)
+  classPersons!: ClassPerson[];
 
   @OneToMany(
     (type) => ClassQuestionnaire,
@@ -34,10 +34,10 @@ export class Class extends Discardable {
   classQuestionnaires!: ClassQuestionnaire[];
 
   private getStudentsAndTeachers = async (): Promise<{
-    students: ClassUser[];
-    teachers: ClassUser[];
+    students: ClassPerson[];
+    teachers: ClassPerson[];
   }> => {
-    const classUsers =
+    const classPersons =
       this.classPersons ||
       (
         await getRepository(Class).findOneOrFail({
@@ -46,8 +46,12 @@ export class Class extends Discardable {
         })
       ).classPersons;
     return {
-      students: classUsers.filter((cu) => cu.role === ClassUserRole.STUDENT),
-      teachers: classUsers.filter((cu) => cu.role === ClassUserRole.TEACHER),
+      students: classPersons.filter(
+        (cu) => cu.role === ClassPersonRole.STUDENT
+      ),
+      teachers: classPersons.filter(
+        (cu) => cu.role === ClassPersonRole.TEACHER
+      ),
     };
   };
 

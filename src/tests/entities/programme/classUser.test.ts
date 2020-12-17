@@ -1,8 +1,8 @@
 import { getRepository } from "typeorm";
 import { Class } from "../../../entities/programme/Class";
-import { ClassUser } from "../../../entities/programme/ClassPerson";
+import { ClassPerson } from "../../../entities/programme/ClassPerson";
 import { Programme } from "../../../entities/programme/Programme";
-import { ClassUserRole } from "../../../types/classUsers";
+import { ClassPersonRole } from "../../../types/classPersons";
 import ApiServer from "../../../server";
 import { synchronize } from "../../../utils/tests";
 import { Person } from "../../../entities/user/Person";
@@ -43,18 +43,28 @@ describe("Create and Query ClassUser", () => {
   });
 
   it("create classUsers", async () => {
-    const user1Class = new ClassUser(class_, person1, ClassUserRole.TEACHER);
-    const user2Class = new ClassUser(class_, person2, ClassUserRole.STUDENT);
+    const user1Class = new ClassPerson(
+      class_,
+      person1,
+      ClassPersonRole.TEACHER
+    );
+    const user2Class = new ClassPerson(
+      class_,
+      person2,
+      ClassPersonRole.STUDENT
+    );
 
-    const savedUser1Class = await getRepository(ClassUser).save(user1Class);
-    const savedUser2Class = await getRepository(ClassUser).save(user2Class);
+    const savedUser1Class = await getRepository(ClassPerson).save(user1Class);
+    const savedUser2Class = await getRepository(ClassPerson).save(user2Class);
 
     expect(savedUser1Class.id).toBeTruthy();
     expect(savedUser2Class.id).toBeTruthy();
   });
 
   it("query using classUser table", async () => {
-    const classUserQuery: ClassUser[] = await getRepository(ClassUser).find({
+    const classPersonQuery: ClassPerson[] = await getRepository(
+      ClassPerson
+    ).find({
       where: {
         class: {
           id: class_.id,
@@ -63,10 +73,10 @@ describe("Create and Query ClassUser", () => {
       relations: ["class", "person"],
     });
 
-    expect(classUserQuery).toHaveLength(2);
-    expect(classUserQuery[0].class.name).toBe(class_.name);
+    expect(classPersonQuery).toHaveLength(2);
+    expect(classPersonQuery[0].class.name).toBe(class_.name);
 
-    const personsInClass = classUserQuery.map(
+    const personsInClass = classPersonQuery.map(
       (classPerson) => classPerson.person.name
     );
     expect(personsInClass).toContain(person1.name);
@@ -82,7 +92,7 @@ describe("Create and Query ClassUser", () => {
     expect(classQuery).toHaveLength(1);
 
     const personsInClass = classQuery[0].classPersons.map(
-      (classPerson: ClassUser) => classPerson.person.name
+      (classPerson: ClassPerson) => classPerson.person.name
     );
     expect(personsInClass).toContain(person1.name);
     expect(personsInClass).toContain(person2.name);
@@ -97,7 +107,7 @@ describe("Create and Query ClassUser", () => {
     expect(personQuery).toHaveLength(1);
 
     const classesInvolvedIn = personQuery[0].classPersons.map(
-      (classPerson: ClassUser) => classPerson.class.name
+      (classPerson: ClassPerson) => classPerson.class.name
     );
     expect(classesInvolvedIn).toHaveLength(1);
     expect(classesInvolvedIn).toContain(class_.name);

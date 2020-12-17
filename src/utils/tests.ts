@@ -4,8 +4,8 @@ import { getRepository } from "typeorm";
 import { User } from "../entities/user/User";
 import ApiServer from "../server";
 import { Class } from "../entities/programme/Class";
-import { ClassUser } from "../entities/programme/ClassPerson";
-import { ClassUserRole } from "../types/classUsers";
+import { ClassPerson } from "../entities/programme/ClassPerson";
+import { ClassPersonRole } from "../types/classPersons";
 import { DefaultUserRole } from "../types/users";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionType } from "../types/questions";
@@ -45,10 +45,10 @@ export class Fixtures {
   public class_: Class;
   public admin: User;
   public adminAccessToken: string;
-  public teacher: ClassUser;
+  public teacher: ClassPerson;
   public teacherAccessToken: string;
   public teacherPassword: string;
-  public student: ClassUser;
+  public student: ClassPerson;
   public studentAccessToken: string;
   public studentPassword: string;
 
@@ -124,8 +124,8 @@ export class Fixtures {
     programme: Programme,
     class_: Class,
     admin: User,
-    teacher: ClassUser,
-    student: ClassUser
+    teacher: ClassPerson,
+    student: ClassPerson
   ) {
     this.faker = faker;
     this.programme = programme;
@@ -146,7 +146,7 @@ export class Fixtures {
     this.studentPassword = studentPassword;
   }
 
-  public async createClassUser(role: ClassUserRole, class_?: Class) {
+  public async createClassUser(role: ClassPersonRole, class_?: Class) {
     const name = faker.name.findName();
     const person = new Person(name, Gender.MALE);
     const user = new User(
@@ -155,11 +155,11 @@ export class Fixtures {
       faker.internet.password(8)
     );
     person.user = user;
-    const classUser = new ClassUser(class_ || this.class_, person, role);
+    const classUser = new ClassPerson(class_ || this.class_, person, role);
 
     await getRepository(User).save(user);
     await getRepository(Person).save(person);
-    await getRepository(ClassUser).save(classUser);
+    await getRepository(ClassPerson).save(classUser);
     const accessToken =
       "Bearer " + user.createAuthenticationToken().accessToken;
     return { classUser, accessToken };
@@ -205,7 +205,7 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
   const programme = new Programme("Study Buddy");
   const class_ = new Class("Class 1", programme);
 
-  const classUsers: ClassUser[] = [];
+  const classPersons: ClassPerson[] = [];
   const persons: Person[] = [];
   const users: User[] = [];
 
@@ -217,25 +217,25 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
   );
   users.push(admin);
 
-  const teacher = new ClassUser(
+  const teacher = new ClassPerson(
     class_,
     new Person("Teacher", Gender.FEMALE),
-    ClassUserRole.TEACHER
+    ClassPersonRole.TEACHER
   );
   const teacherUser = new User("teacher", "Teacher", teacherPassword);
   teacher.person.user = teacherUser;
-  classUsers.push(teacher);
+  classPersons.push(teacher);
   persons.push(teacher.person);
   users.push(teacherUser);
 
-  const student = new ClassUser(
+  const student = new ClassPerson(
     class_,
     new Person("Student", Gender.MALE),
-    ClassUserRole.STUDENT
+    ClassPersonRole.STUDENT
   );
   const studentUser = new User("student", "Student", studentPassword);
   student.person.user = studentUser;
-  classUsers.push(student);
+  classPersons.push(student);
   persons.push(student.person);
   users.push(studentUser);
 
@@ -243,7 +243,7 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
   await getRepository(User).save(users);
   await getRepository(Programme).save(programme);
   await getRepository(Class).save(class_);
-  await getRepository(ClassUser).save(classUsers);
+  await getRepository(ClassPerson).save(classPersons);
 
   return new Fixtures(programme, class_, admin, teacher, student);
 }
