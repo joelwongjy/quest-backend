@@ -6,7 +6,7 @@ import { DefaultUserRole } from "../types/users";
 import { Programme } from "../entities/programme/Programme";
 import { Class } from "../entities/programme/Class";
 import { ClassUserRole } from "../types/classUsers";
-import { ClassUser } from "../entities/programme/ClassUser";
+import { ClassUser } from "../entities/programme/ClassPerson";
 import { Person } from "../entities/user/Person";
 import { Gender } from "../types/persons";
 
@@ -110,18 +110,18 @@ export async function seed(
   }
 }
 
-async function seedUserIfAbsent(user: User, person: Person): Promise<User> {
+async function seedUserIfAbsent(user: User, person: Person): Promise<Person> {
   const userRepo = getRepository(User);
   const personRepo = getRepository(Person);
 
   const { username } = user;
 
   // return if username already exists
-  const findUser = await userRepo.findOne({
-    where: { username: username },
+  const findPerson = await personRepo.findOne({
+    where: { user: { username: username } },
   });
-  if (findUser) {
-    return findUser;
+  if (findPerson) {
+    return findPerson;
   }
 
   // create new user
@@ -131,7 +131,7 @@ async function seedUserIfAbsent(user: User, person: Person): Promise<User> {
   const seededUser = await userRepo.save(user);
   seededPerson.user = seededUser;
   await personRepo.save(seededPerson);
-  return seededUser;
+  return seededPerson;
 }
 
 async function seedProgrammesClasses(seed: ProgrammeSeed[]): Promise<void> {

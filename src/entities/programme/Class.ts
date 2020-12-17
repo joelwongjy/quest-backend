@@ -4,7 +4,7 @@ import { Column, Entity, getRepository, ManyToOne, OneToMany } from "typeorm";
 import { ClassData, ClassListData } from "../../types/classes";
 import { Discardable } from "../Discardable";
 import { ClassQuestionnaire } from "../questionnaire/ClassQuestionnaire";
-import { ClassUser } from "./ClassUser";
+import { ClassUser } from "./ClassPerson";
 import { Programme } from "./Programme";
 
 @Entity()

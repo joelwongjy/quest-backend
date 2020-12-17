@@ -1,6 +1,6 @@
 import { getRepository } from "typeorm";
 import { Class } from "../entities/programme/Class";
-import { ClassUser } from "../entities/programme/ClassUser";
+import { ClassUser } from "../entities/programme/ClassPerson";
 import { ClassUserRole } from "../types/classUsers";
 
 export function allowedRole(role: ClassUserRole, requiredRole: ClassUserRole) {

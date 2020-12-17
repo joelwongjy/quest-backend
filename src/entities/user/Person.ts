@@ -22,7 +22,7 @@ import IsPersonlessUser from "../../constraints/IsPersonlessUser";
 import { DefaultUserRole } from "../../types/users";
 import { ClassUserRole } from "../../types/classUsers";
 import { Programme } from "../programme/Programme";
-import { ClassUser } from "../programme/ClassUser";
+import { ClassUser } from "../programme/ClassPerson";
 
 @Entity()
 export class Person extends Discardable {

@@ -4,7 +4,7 @@ import { getRepository } from "typeorm";
 import { User } from "../entities/user/User";
 import ApiServer from "../server";
 import { Class } from "../entities/programme/Class";
-import { ClassUser } from "../entities/programme/ClassUser";
+import { ClassUser } from "../entities/programme/ClassPerson";
 import { ClassUserRole } from "../types/classUsers";
 import { DefaultUserRole } from "../types/users";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
