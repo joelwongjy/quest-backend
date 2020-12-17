@@ -6,12 +6,8 @@ import _ from "lodash";
 import IsUniqueUsername from "../../constraints/IsUniqueUsername";
 import { AuthenticationData } from "../../types/auth";
 import { BearerTokenType } from "../../types/tokens";
-import { ClassUserRole } from "../../types/classUsers";
 import { DefaultUserRole, UserListData, UserData } from "../../types/users";
 import { Discardable } from "../Discardable";
-import { Class } from "../programme/Class";
-import { ClassUser } from "../programme/ClassUser";
-import { Programme } from "../programme/Programme";
 
 @Entity()
 export class User extends Discardable {
@@ -51,9 +47,6 @@ export class User extends Discardable {
   })
   @IsEnum(DefaultUserRole)
   defaultRole: DefaultUserRole;
-
-  @OneToMany((type) => ClassUser, (classUser) => classUser.user)
-  classUsers!: ClassUser[];
 
   private createBearerToken = (
     tokenType: BearerTokenType,

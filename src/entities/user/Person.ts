@@ -22,6 +22,7 @@ import IsPersonlessUser from "../../constraints/IsPersonlessUser";
 import { DefaultUserRole } from "../../types/users";
 import { ClassUserRole } from "../../types/classUsers";
 import { Programme } from "../programme/Programme";
+import { ClassUser } from "../programme/ClassUser";
 
 @Entity()
 export class Person extends Discardable {
@@ -80,6 +81,9 @@ export class Person extends Discardable {
   @Validate(IsPersonlessUser)
   user: User | null;
 
+  @OneToMany((type) => ClassUser, (classUser) => classUser.person)
+  classUsers!: ClassUser[];
+
   @OneToMany(
     (type) => Relationship,
     (relationship) => relationship.familyMember
@@ -119,19 +123,18 @@ export class Person extends Discardable {
           })),
         };
       });
-    } else if (user) {
-      // Need to rewrite this and the next else case after
-      // refactoring ClassUser to ClassPerson
-      const fullUser = await getRepository(User).findOneOrFail({
-        where: { personId: this.id },
+    } else {
+      const fullPerson = await getRepository(Person).findOneOrFail({
+        where: { id: this.id },
         relations: [
           "classUsers",
           "classUsers.class",
           "classUsers.class.programme",
         ],
       });
+
       highestClassRole = ClassUserRole.STUDENT;
-      fullUser.classUsers.forEach((cu) => {
+      fullPerson.classUsers.forEach((cu) => {
         if (cu.role === ClassUserRole.TEACHER) {
           highestClassRole = ClassUserRole.TEACHER;
         }
@@ -158,8 +161,6 @@ export class Person extends Discardable {
           });
         }
       });
-    } else {
-      highestClassRole = ClassUserRole.STUDENT;
     }
 
     const relatives: PersonData["relatives"] = [];

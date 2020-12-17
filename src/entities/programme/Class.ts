@@ -76,8 +76,8 @@ export class Class extends Discardable {
       ...(await this.getListData()),
       programmeId: programme.id,
       programmeName: programme.name,
-      students: members.students.map((s) => s.user.getListData()),
-      teachers: members.teachers.map((s) => s.user.getListData()),
+      students: members.students.map((s) => s.person.getListData()),
+      teachers: members.teachers.map((s) => s.person.getListData()),
     };
   };
 }
