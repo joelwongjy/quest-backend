@@ -10,7 +10,7 @@ import { QuestionOrder } from "../../entities/questionnaire/QuestionOrder";
 import { QuestionSet } from "../../entities/questionnaire/QuestionSet";
 import ApiServer from "../../server";
 import {
-  QuestionnaireEditData,
+  QuestionnairePatchData,
   QuestionnaireFullData,
   QuestionnaireOneWindowData,
   QuestionnairePostData,
@@ -26,7 +26,6 @@ import { Attempt } from "../../entities/questionnaire/Attempt";
 const QUESTIONNAIRE_ONE_TIME: QuestionnairePostData = {
   title: "My One Time Questionnaire",
   type: QuestionnaireType.ONE_TIME,
-  status: QuestionnaireStatus.DRAFT,
   questionWindows: [
     {
       startAt: new Date("2020/03/01"),
@@ -50,7 +49,6 @@ const QUESTIONNAIRE_ONE_TIME: QuestionnairePostData = {
 const QUESTIONNAIRE_BEFORE_AFTER: QuestionnairePostData = {
   title: "My Before/After Questionnaire!",
   type: QuestionnaireType.PRE_POST,
-  status: QuestionnaireStatus.DRAFT,
   questionWindows: [
     {
       startAt: new Date("2020/01/01"),
@@ -382,7 +380,7 @@ describe("POST /questionnaires/edit/:id", () => {
 
   it("should return 200 if is admin and data is correct", async () => {
     // only change title, status, openAt, closeAt
-    const editData: QuestionnaireEditData = {
+    const editData: QuestionnairePatchData = {
       ...originalData,
       title: "Edited Qnnaire",
       status: QuestionnaireStatus.PUBLISHED,
@@ -422,7 +420,7 @@ describe("POST /questionnaires/edit/:id", () => {
   });
 
   it("should return 200 if is admin and qns are added", async () => {
-    const editData: QuestionnaireEditData = {
+    const editData: QuestionnairePatchData = {
       ...originalData,
       title: "Edited Qnnaire",
       status: QuestionnaireStatus.PUBLISHED,
@@ -476,7 +474,7 @@ describe("POST /questionnaires/edit/:id", () => {
       originalData.questionWindows[0].questions[0];
     const newOrdering = originalQnOrder.order + 5;
 
-    const editData: QuestionnaireEditData = {
+    const editData: QuestionnairePatchData = {
       ...originalData,
       title: "Edited Qnnaire",
       status: QuestionnaireStatus.PUBLISHED,
