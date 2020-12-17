@@ -81,7 +81,7 @@ export async function show(
       return;
     }
 
-    const user: UserData = await attempt.user.getData();
+    const user: UserData = attempt.user.getData();
 
     const {
       id: windowId,
