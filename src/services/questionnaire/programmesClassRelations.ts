@@ -1,4 +1,5 @@
 import { getRepository } from "typeorm";
+import _ from "lodash";
 import { Class } from "../../entities/programme/Class";
 import { Programme } from "../../entities/programme/Programme";
 import { ClassQuestionnaire } from "../../entities/questionnaire/ClassQuestionnaire";
@@ -313,15 +314,21 @@ export class QuestionnaireProgrammesAndClassesViewer {
       ],
     });
 
-    const programmes = await Promise.all(
-      qnnaire.programmeQuestionnaires
-        .filter((pqnnaire) => !pqnnaire.discardedAt)
-        .map((pqnnaire) => pqnnaire.programme.getData())
+    const programmes = _.uniqBy(
+      await Promise.all(
+        qnnaire.programmeQuestionnaires
+          .filter((pqnnaire) => !pqnnaire.discardedAt)
+          .map((pqnnaire) => pqnnaire.programme.getData())
+      ),
+      "id"
     );
-    const classes = await Promise.all(
-      qnnaire.classQuestionnaires
-        .filter((cqnnaire) => !cqnnaire.discardedAt)
-        .map((cqnnaire) => cqnnaire.class.getData())
+    const classes = _.uniqBy(
+      await Promise.all(
+        qnnaire.classQuestionnaires
+          .filter((cqnnaire) => !cqnnaire.discardedAt)
+          .map((cqnnaire) => cqnnaire.class.getData())
+      ),
+      "id"
     );
 
     return { programmes, classes };
