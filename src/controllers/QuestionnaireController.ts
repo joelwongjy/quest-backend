@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import {
-  QuestionnaireEditData,
+  QuestionnairePatchData,
   QuestionnaireFullData,
   QuestionnaireId,
   QuestionnaireListData,
@@ -141,7 +141,6 @@ export async function show(
       response.sendStatus(404);
       return;
     }
-
     const result = await qnnaire!.getAllWindows();
     response.status(200).json(result);
     return;
@@ -185,7 +184,7 @@ export async function showWindow(
 }
 
 export async function edit(
-  request: Request<QuestionnaireId, any, QuestionnaireEditData, any>,
+  request: Request<QuestionnaireId, any, QuestionnairePatchData, any>,
   response: Response<QuestionnaireFullData | Message>
 ): Promise<void> {
   const { id } = request.params;

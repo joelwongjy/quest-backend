@@ -37,7 +37,8 @@ export interface QuestionSetPostData {
   questions: QuestionPostData[];
 }
 
-export interface OptionData extends OptionPostData {
+export interface OptionData {
+  optionText: string;
   optionId: number;
 }
 
@@ -53,6 +54,6 @@ export interface QuestionSetData {
   questions: QuestionData[];
 }
 
-export interface QuestionSetEditData {
+export interface QuestionSetPatchData {
   questions: (QuestionData | QuestionPostData)[];
 }

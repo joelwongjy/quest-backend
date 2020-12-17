@@ -17,11 +17,11 @@ export interface ProgrammePostData {
 export interface ProgrammeListData extends DiscardableData {
   name: string;
   classCount: number;
+  description?: string;
 }
 
 // GET /programmes/:programmeId
 export interface ProgrammeData extends ProgrammeListData {
-  description?: string;
   classes: ClassListData[];
   studentCount: number; // unique students
   teacherCount: number; // unique teachers

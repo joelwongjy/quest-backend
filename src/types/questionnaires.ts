@@ -4,7 +4,7 @@ import { ProgrammeData } from "./programmes";
 import {
   QuestionPostData,
   QuestionSetData,
-  QuestionSetEditData,
+  QuestionSetPatchData,
   QuestionSetPostData,
 } from "./questions";
 
@@ -27,7 +27,6 @@ export enum QuestionnaireStatus {
 export interface QuestionnairePostData {
   title: string;
   type: QuestionnaireType;
-  status: QuestionnaireStatus;
   questionWindows: QuestionnaireWindowPostData[];
   sharedQuestions: QuestionSetPostData;
   classes: number[];
@@ -38,6 +37,13 @@ export interface QuestionnaireWindowPostData {
   startAt: Date;
   endAt: Date;
   questions: QuestionPostData[];
+}
+
+export interface QuestionnairePatchData
+  extends Omit<QuestionnairePostData, "questionWindows" | "sharedQuestions"> {
+  status: QuestionnaireStatus;
+  questionWindows: QuestionnaireWindowPatchData[];
+  sharedQuestions?: QuestionSetPatchData;
 }
 
 export interface QuestionnaireListData extends DiscardableData {
@@ -62,37 +68,26 @@ export interface QuestionnaireWindowData extends QuestionSetData {
   endAt: string;
 }
 
-export interface QuestionnaireWindowEditData extends QuestionSetEditData {
+export interface QuestionnaireWindowPatchData extends QuestionSetPatchData {
   windowId: number;
   startAt: string;
   endAt: string;
 }
 
-export interface QuestionnaireFullData
-  extends Omit<
-      QuestionnairePostData,
-      "questionWindows" | "sharedQuestions" | "classes" | "programmes"
-    >,
-    QuestionnaireProgramClassData {
+export interface QuestionnaireFullData extends QuestionnaireProgramClassData {
+  title: string;
+  type: QuestionnaireType;
+  status: QuestionnaireStatus;
   questionnaireId: number;
   questionWindows: QuestionnaireWindowData[];
-  sharedQuestions: QuestionSetData | undefined;
+  sharedQuestions?: QuestionSetData;
 }
 
 export interface QuestionnaireOneWindowData
   extends Omit<QuestionnaireFullData, "questionWindows">,
-    QuestionnaireWindowData {
-  questionnaireId: number;
-}
+    QuestionnaireWindowData {}
 
 export interface QuestionnaireProgramClassData {
   programmes: ProgrammeData[];
   classes: ClassData[];
-}
-
-export interface QuestionnaireEditData
-  extends Omit<QuestionnairePostData, "questionWindows" | "sharedQuestions"> {
-  questionnaireId: number;
-  questionWindows: QuestionnaireWindowEditData[];
-  sharedQuestions: QuestionSetEditData | undefined;
 }

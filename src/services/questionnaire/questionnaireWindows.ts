@@ -9,12 +9,12 @@ import {
 } from "../../types/errors";
 import {
   QuestionnaireWindowPostData,
-  QuestionnaireWindowEditData,
+  QuestionnaireWindowPatchData,
   QuestionnaireWindowData,
 } from "../../types/questionnaires";
 import {
   QuestionSetPostData,
-  QuestionSetEditData,
+  QuestionSetPatchData,
   QuestionSetData,
 } from "../../types/questions";
 import {
@@ -121,17 +121,17 @@ export class QuestionnaireWindowEditor {
   private qnnaireWindow: QuestionnaireWindow;
 
   private mainSet: QuestionSet;
-  private editWindowAndMainQnSetData: QuestionnaireWindowEditData;
+  private editWindowAndMainQnSetData: QuestionnaireWindowPatchData;
   private mainSetEditor: QuestionSetEditor;
 
   private sharedSet: QuestionSet | null;
-  private editSharedQnSetData: QuestionSetEditData | null;
+  private editSharedQnSetData: QuestionSetPatchData | null;
   private sharedSetEditor: QuestionSetEditor | null;
 
   constructor(
     qnnaireWindow: QuestionnaireWindow,
-    editWindowAndMainQnSetData: QuestionnaireWindowEditData,
-    editSharedQnSetData: QuestionSetEditData | undefined
+    editWindowAndMainQnSetData: QuestionnaireWindowPatchData,
+    editSharedQnSetData: QuestionSetPatchData | undefined
   ) {
     this.validateEditorOrReject(
       qnnaireWindow,
@@ -156,8 +156,8 @@ export class QuestionnaireWindowEditor {
 
   private validateEditor(
     qnnaireWindow: QuestionnaireWindow,
-    editWindowAndMainQnSetData: QuestionnaireWindowEditData,
-    editSharedQnSetData: QuestionSetEditData | undefined
+    editWindowAndMainQnSetData: QuestionnaireWindowPatchData,
+    editSharedQnSetData: QuestionSetPatchData | undefined
   ): boolean {
     const windowHasId = Boolean(qnnaireWindow.id);
 
@@ -177,8 +177,8 @@ export class QuestionnaireWindowEditor {
 
   private validateEditorOrReject(
     qnnaireWindow: QuestionnaireWindow,
-    editWindowAndMainQnSet: QuestionnaireWindowEditData,
-    editSharedQnSet: QuestionSetEditData | undefined
+    editWindowAndMainQnSet: QuestionnaireWindowPatchData,
+    editSharedQnSet: QuestionSetPatchData | undefined
   ): boolean {
     const isValid = this.validateEditor(
       qnnaireWindow,

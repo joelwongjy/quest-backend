@@ -104,7 +104,6 @@ describe("Create questionnaire using util methods", () => {
     const creator = new OneTimeQuestionnaireCreator({
       title: "First Questionnaire!",
       type: QuestionnaireType.ONE_TIME,
-      status: QuestionnaireStatus.DRAFT,
       questionWindows: [input],
       sharedQuestions: {
         questions: [],
@@ -163,7 +162,6 @@ describe("Create questionnaire using util methods", () => {
     const creator = new PrePostQuestionnaireCreator({
       title: "First Questionnaire!",
       type: QuestionnaireType.PRE_POST,
-      status: QuestionnaireStatus.DRAFT,
       questionWindows: input,
       sharedQuestions: {
         questions: QUESTIONS,

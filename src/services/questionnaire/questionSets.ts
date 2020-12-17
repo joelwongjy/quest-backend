@@ -8,7 +8,7 @@ import {
 } from "../../types/errors";
 import {
   QuestionPostData,
-  QuestionSetEditData,
+  QuestionSetPatchData,
   QuestionData,
 } from "../../types/questions";
 import { QuestionOrderCreator } from "./questionOrders";
@@ -61,11 +61,11 @@ export class QuestionSetCreator {
 export class QuestionSetEditor {
   private qnSet: QuestionSet;
   private existingQnOrders: QuestionOrder[];
-  private editData: QuestionSetEditData;
+  private editData: QuestionSetPatchData;
   private existingQnOrderMap: Map<number, ExistingQnOrderStatusTuple>;
   private orderCreator = new QuestionOrderCreator();
 
-  constructor(questionSet: QuestionSet, editData: QuestionSetEditData) {
+  constructor(questionSet: QuestionSet, editData: QuestionSetPatchData) {
     this.qnSet = questionSet;
     this.existingQnOrders = questionSet.questionOrders;
     this.editData = editData;
@@ -85,7 +85,7 @@ export class QuestionSetEditor {
 
   public validateEditor(
     questionSet: QuestionSet,
-    editData: QuestionSetEditData
+    editData: QuestionSetPatchData
   ): boolean {
     const setHasId = Boolean(questionSet.id);
 
@@ -109,7 +109,7 @@ export class QuestionSetEditor {
 
   public validateEditorOrReject(
     questionSet: QuestionSet,
-    editData: QuestionSetEditData
+    editData: QuestionSetPatchData
   ): boolean {
     const isValidated = this.validateEditor(questionSet, editData);
     if (!isValidated) {
