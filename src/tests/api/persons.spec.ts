@@ -19,7 +19,6 @@ afterAll(async () => {
   await server.close();
 });
 
-// Need to rewrite test cases after person-user refactoring
 describe("POST /persons/:id/user", () => {
   let person: Person;
 
