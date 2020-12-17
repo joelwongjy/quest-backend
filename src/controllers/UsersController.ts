@@ -70,7 +70,6 @@ export async function showSelf(
     const data = await user.getPersonData();
     response.status(200).json({ user: data });
   } catch (error) {
-    console.log(error);
     response.sendStatus(400);
   }
 }
