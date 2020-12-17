@@ -3,6 +3,7 @@ import { validate, validateOrReject } from "class-validator";
 import { Request, Response } from "express";
 import { pick } from "lodash";
 import { getRepository, IsNull } from "typeorm";
+import { PersonData } from "../types/persons";
 import { Person } from "../entities/user/Person";
 import { User } from "../entities/user/User";
 import { AccessTokenSignedPayload } from "../types/tokens";
@@ -51,7 +52,7 @@ export async function create(
 
 export async function showSelf(
   _request: Request,
-  response: Response
+  response: Response<{ user: PersonData }>
 ): Promise<void> {
   const payload = response.locals.payload as AccessTokenSignedPayload;
   const { userId } = payload;
@@ -65,9 +66,8 @@ export async function showSelf(
     response.sendStatus(404);
     return;
   }
-
   try {
-    const data = user.getData();
+    const data = await user.getPersonData();
     response.status(200).json({ user: data });
   } catch (error) {
     response.sendStatus(400);

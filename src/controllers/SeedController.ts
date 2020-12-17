@@ -119,11 +119,12 @@ async function seedUserIfAbsent(user: User, person: Person): Promise<Person> {
   const { username } = user;
 
   // return if username already exists
-  const findPerson = await personRepo.findOne({
-    where: { user: { username: username } },
+  const findUser = await userRepo.findOne({
+    where: { username },
+    relations: ["person"],
   });
-  if (findPerson) {
-    return findPerson;
+  if (findUser) {
+    return findUser.person;
   }
 
   // create new user
