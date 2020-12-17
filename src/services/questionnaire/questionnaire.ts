@@ -14,14 +14,15 @@ import {
   QuestionnaireType,
   QuestionnairePostData,
   QuestionnaireWindowPostData,
-  QuestionnaireEditData,
-  QuestionnaireWindowEditData,
+  QuestionnairePatchData,
+  QuestionnaireWindowPatchData,
   QuestionnaireFullData,
   QuestionnaireProgramClassData,
+  QuestionnaireStatus,
 } from "../../types/questionnaires";
 import {
   QuestionSetPostData,
-  QuestionSetEditData,
+  QuestionSetPatchData,
 } from "../../types/questions";
 import {
   ProgrammeClassesQuestionnaires,
@@ -155,12 +156,15 @@ export abstract class QuestionnaireCreator {
     const {
       title,
       type,
-      status,
       programmes: programmesData,
       classes: classesData,
     } = this.createData;
 
-    const newQnnaire = new Questionnaire(title, type, status);
+    const newQnnaire = new Questionnaire(
+      title,
+      type,
+      QuestionnaireStatus.DRAFT
+    );
     const saved = await getRepository(Questionnaire).save(newQnnaire);
 
     const {
@@ -311,12 +315,12 @@ export abstract class QuestionnaireEditor {
   private qnnaire: Questionnaire;
   private qnnaireType: QuestionnaireType;
 
-  private editData: QuestionnaireEditData;
+  private editData: QuestionnairePatchData;
 
   private programmesClassesQnnaireEditor: QuestionnaireProgrammesAndClassesEditor;
 
   /** Constructor for `QuestionnaireEditor`. Note it does not perform validations on `editData` */
-  constructor(qnnaire: Questionnaire, editData: QuestionnaireEditData) {
+  constructor(qnnaire: Questionnaire, editData: QuestionnairePatchData) {
     this.validator.validateQnnaireOrReject(qnnaire);
     this.qnnaire = qnnaire;
     this.qnnaireType = qnnaire.questionnaireType;
@@ -332,7 +336,7 @@ export abstract class QuestionnaireEditor {
     return this.validator;
   }
 
-  getEditData(): QuestionnaireEditData {
+  getEditData(): QuestionnairePatchData {
     return this.editData;
   }
 
@@ -358,10 +362,10 @@ export abstract class QuestionnaireEditor {
  */
 export class OneTimeQuestionnaireEditor extends QuestionnaireEditor {
   private window: QuestionnaireWindow;
-  private windowEditData: QuestionnaireWindowEditData;
+  private windowEditData: QuestionnaireWindowPatchData;
   private windowEditor: QuestionnaireWindowEditor;
 
-  constructor(qnnaire: Questionnaire, editData: QuestionnaireEditData) {
+  constructor(qnnaire: Questionnaire, editData: QuestionnairePatchData) {
     super(qnnaire, editData);
     // qnnaire will be valid qnnaire
 
@@ -380,7 +384,7 @@ export class OneTimeQuestionnaireEditor extends QuestionnaireEditor {
 
   private validateEditor(
     qnnaire: Questionnaire,
-    editData: QuestionnaireEditData
+    editData: QuestionnairePatchData
   ): boolean {
     const editDatahasMatchingId = editData.questionnaireId === qnnaire.id;
     const editDataHasOneWindow = editData.questionWindows.length === 1;
@@ -394,7 +398,7 @@ export class OneTimeQuestionnaireEditor extends QuestionnaireEditor {
 
   private validateEditorOrReject(
     qnnaire: Questionnaire,
-    editData: QuestionnaireEditData
+    editData: QuestionnairePatchData
   ): boolean {
     const isValid = this.validateEditor(qnnaire, editData);
     if (!isValid) {
@@ -430,18 +434,18 @@ export class OneTimeQuestionnaireEditor extends QuestionnaireEditor {
  */
 export class PrePostQuestionnaireEditor extends QuestionnaireEditor {
   private window1: QuestionnaireWindow;
-  private window1EditData: QuestionnaireWindowEditData;
+  private window1EditData: QuestionnaireWindowPatchData;
   private window1Editor: QuestionnaireWindowEditor;
 
   private window2: QuestionnaireWindow;
-  private window2EditData: QuestionnaireWindowEditData;
+  private window2EditData: QuestionnaireWindowPatchData;
   private window2Editor: QuestionnaireWindowEditor;
 
-  private sharedQnSetData: QuestionSetEditData;
+  private sharedQnSetData: QuestionSetPatchData;
 
-  private editDataWindowMap: Map<WindowId, QuestionnaireWindowEditData>;
+  private editDataWindowMap: Map<WindowId, QuestionnaireWindowPatchData>;
 
-  constructor(qnnaire: Questionnaire, editData: QuestionnaireEditData) {
+  constructor(qnnaire: Questionnaire, editData: QuestionnairePatchData) {
     super(qnnaire, editData);
     // qnnaire will be a valid qnnaire
 
@@ -480,7 +484,7 @@ export class PrePostQuestionnaireEditor extends QuestionnaireEditor {
 
   validateEditor(
     qnnaire: Questionnaire,
-    editData: QuestionnaireEditData
+    editData: QuestionnairePatchData
   ): boolean {
     const editDataHasMatchingId = editData.questionnaireId === qnnaire.id;
     const editDataHasTwoWindows = editData.questionWindows.length === 2;
@@ -494,7 +498,7 @@ export class PrePostQuestionnaireEditor extends QuestionnaireEditor {
 
   validateEditorOrReject(
     qnnaire: Questionnaire,
-    editData: QuestionnaireEditData
+    editData: QuestionnairePatchData
   ): boolean {
     const isValid = this.validateEditor(qnnaire, editData);
     if (!isValid) {
@@ -590,7 +594,6 @@ export class OneTimeQuestionnaireViewer extends QuestionnaireViewer {
 
     this.window = qnnaire.questionnaireWindows[0];
     this.windowViewer = new QuestionnaireWindowViewer(this.window);
-
     const windowData = await this.windowViewer.getWindowAndMainSet();
     return {
       questionnaireId: this.qnnaireId,

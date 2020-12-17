@@ -31,7 +31,7 @@ export class Programme extends Discardable {
     const classCount =
       this.classes?.length ||
       (await getRepository(Class).count({
-        where: { programmeId: this.id },
+        where: { programme: { id: this.id } },
       }));
     return {
       ...this.getBase(),
@@ -43,7 +43,9 @@ export class Programme extends Discardable {
   getData = async (): Promise<ProgrammeData> => {
     const classes =
       this.classes ||
-      (await getRepository(Class).find({ where: { programmeId: this.id } }));
+      (await getRepository(Class).find({
+        where: { programme: { id: this.id } },
+      }));
     const classesListData = await Promise.all(
       classes.map((c) => c.getListData())
     );

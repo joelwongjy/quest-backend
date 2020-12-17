@@ -162,7 +162,6 @@ export class Fixtures {
     const creator = new OneTimeQuestionnaireCreator({
       title: "Sample One-Time Questionnaire",
       type: QuestionnaireType.ONE_TIME,
-      status: QuestionnaireStatus.DRAFT,
       questionWindows: [this.sampleWindow1],
       sharedQuestions: {
         questions: [],
@@ -182,7 +181,6 @@ export class Fixtures {
     const creator = new PrePostQuestionnaireCreator({
       title: "Sample Before-After Questionnaire",
       type: QuestionnaireType.PRE_POST,
-      status: QuestionnaireStatus.DRAFT,
       questionWindows: [beforeWindow, afterWindow],
       sharedQuestions: this.sampleWindow3,
       classes: [],
