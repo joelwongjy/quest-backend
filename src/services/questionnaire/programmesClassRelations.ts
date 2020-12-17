@@ -313,12 +313,16 @@ export class QuestionnaireProgrammesAndClassesViewer {
       ],
     });
 
-    const programmes = qnnaire.programmeQuestionnaires
-      .filter((pqnnaire) => !pqnnaire.discardedAt)
-      .map((pqnnaire) => pqnnaire.programme);
-    const classes = qnnaire.classQuestionnaires
-      .filter((cqnnaire) => !cqnnaire.discardedAt)
-      .map((cqnnaire) => cqnnaire.class);
+    const programmes = await Promise.all(
+      qnnaire.programmeQuestionnaires
+        .filter((pqnnaire) => !pqnnaire.discardedAt)
+        .map((pqnnaire) => pqnnaire.programme.getData())
+    );
+    const classes = await Promise.all(
+      qnnaire.classQuestionnaires
+        .filter((cqnnaire) => !cqnnaire.discardedAt)
+        .map((cqnnaire) => cqnnaire.class.getData())
+    );
 
     return { programmes, classes };
   }
