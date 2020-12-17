@@ -1,7 +1,7 @@
 import { hashSync } from "bcryptjs";
 import { IsEnum, IsNotEmpty, IsString, Validate } from "class-validator";
 import { sign } from "jsonwebtoken";
-import { Column, Entity, JoinColumn, OneToOne } from "typeorm";
+import { Column, Entity, getRepository, JoinColumn, OneToOne } from "typeorm";
 import _ from "lodash";
 import IsUniqueUsername from "../../constraints/IsUniqueUsername";
 import { AuthenticationData } from "../../types/auth";
@@ -9,6 +9,7 @@ import { BearerTokenType } from "../../types/tokens";
 import { DefaultUserRole, UserListData, UserData } from "../../types/users";
 import { Discardable } from "../Discardable";
 import { Person } from "./Person";
+import { PersonData } from "../../types/persons";
 
 @Entity()
 export class User extends Discardable {
@@ -84,5 +85,18 @@ export class User extends Discardable {
 
   getData = (): UserData => {
     return this.getListData();
+  };
+
+  getPersonData = async (): Promise<PersonData> => {
+    const person =
+      this.person ||
+      (
+        await getRepository(User).findOneOrFail({
+          where: { id: this.id },
+          relations: ["person"],
+        })
+      ).person;
+
+    return await person.getData();
   };
 }
