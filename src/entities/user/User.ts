@@ -1,29 +1,28 @@
 import { hashSync } from "bcryptjs";
 import { IsEnum, IsNotEmpty, IsString, Validate } from "class-validator";
 import { sign } from "jsonwebtoken";
-import { Column, Entity, getRepository, OneToMany } from "typeorm";
+import { Column, Entity, JoinColumn, OneToOne } from "typeorm";
 import _ from "lodash";
 import IsUniqueUsername from "../../constraints/IsUniqueUsername";
 import { AuthenticationData } from "../../types/auth";
 import { BearerTokenType } from "../../types/tokens";
-import { ClassUserRole } from "../../types/classUsers";
 import { DefaultUserRole, UserListData, UserData } from "../../types/users";
 import { Discardable } from "../Discardable";
-import { Class } from "../programme/Class";
-import { ClassUser } from "../programme/ClassUser";
-import { Programme } from "../programme/Programme";
+import { Person } from "./Person";
 
 @Entity()
 export class User extends Discardable {
   entityName = "User";
 
   constructor(
+    person: Person,
     username: string,
     name: string,
     password?: string,
     defaultRole?: DefaultUserRole
   ) {
     super();
+    this.person = person;
     this.username = username;
     this.password = password ? hashSync(password) : null;
     this.defaultRole = defaultRole ?? DefaultUserRole.USER;
@@ -52,8 +51,9 @@ export class User extends Discardable {
   @IsEnum(DefaultUserRole)
   defaultRole: DefaultUserRole;
 
-  @OneToMany((type) => ClassUser, (classUser) => classUser.user)
-  classUsers!: ClassUser[];
+  @OneToOne((type) => Person, (person) => person.user)
+  @JoinColumn()
+  person: Person;
 
   private createBearerToken = (
     tokenType: BearerTokenType,

@@ -2,9 +2,11 @@ import { getRepository, IsNull } from "typeorm";
 import { synchronize } from "../../utils/tests";
 import ApiServer from "../../server";
 import { User } from "../../entities/user/User";
-import { isDiscardableData } from "../../types/entities";
+import { Person } from "../../entities/user/Person";
+import { Gender } from "../../types/persons";
 
 let server: ApiServer;
+let person: Person;
 
 beforeAll(async () => {
   server = new ApiServer();
@@ -25,17 +27,19 @@ afterAll(async () => {
 describe("Use User to test Discardable", () => {
   beforeEach(async () => {
     await synchronize(server);
+
+    person = await getRepository(Person).save(new Person("Name!", Gender.MALE));
   });
 
   it("has an initial null discardedAt date", async () => {
-    const user: User = new User("username", "name", "password");
+    const user: User = new User(person, "username", "name", "password");
     const savedUser = await getRepository(User).save(user);
     expect(savedUser).toBeTruthy();
     expect(savedUser.discardedAt).toBeFalsy();
   });
 
   it("allows for soft deletion", async () => {
-    const user: User = new User("username", "name", "password");
+    const user: User = new User(person, "username", "name", "password");
     const savedUser = await getRepository(User).save(user);
     expect(savedUser).toBeTruthy();
 
@@ -52,7 +56,7 @@ describe("Use User to test Discardable", () => {
   });
 
   it("can restore soft deletion", async () => {
-    const user: User = new User("username", "name", "password");
+    const user: User = new User(person, "username", "name", "password");
     const savedUser = await getRepository(User).save(user);
     expect(savedUser).toBeTruthy();
 

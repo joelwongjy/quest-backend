@@ -5,23 +5,23 @@ import { getRepository } from "typeorm";
 import { DefaultUserRole } from "../types/users";
 import { Programme } from "../entities/programme/Programme";
 import { Class } from "../entities/programme/Class";
-import { ClassUserRole } from "../types/classUsers";
-import { ClassUser } from "../entities/programme/ClassUser";
+import { ClassPersonRole } from "../types/classPersons";
+import { ClassPerson } from "../entities/programme/ClassPerson";
 import { Person } from "../entities/user/Person";
 import { Gender } from "../types/persons";
 
 const DEFAULT_PASSWORD = "password";
 
-type UserSeed = [string, ClassUserRole];
+type UserSeed = [string, ClassPersonRole];
 
-type ClassUserSeed = {
+type ClassPersonSeed = {
   name: string;
   users: UserSeed[];
 };
 
 type ProgrammeSeed = {
   name: string;
-  classes: ClassUserSeed[];
+  classes: ClassPersonSeed[];
 };
 
 const PROGRAMME_SEED: ProgrammeSeed[] = [
@@ -31,15 +31,15 @@ const PROGRAMME_SEED: ProgrammeSeed[] = [
       {
         name: "Class A1",
         users: [
-          ["A1-Teacher", ClassUserRole.TEACHER],
-          ["A1-Student", ClassUserRole.STUDENT],
+          ["A1-Teacher", ClassPersonRole.TEACHER],
+          ["A1-Student", ClassPersonRole.STUDENT],
         ],
       },
       {
         name: "Class A2",
         users: [
-          ["A2-Teacher", ClassUserRole.TEACHER],
-          ["A2-Student", ClassUserRole.STUDENT],
+          ["A2-Teacher", ClassPersonRole.TEACHER],
+          ["A2-Student", ClassPersonRole.STUDENT],
         ],
       },
     ],
@@ -50,15 +50,15 @@ const PROGRAMME_SEED: ProgrammeSeed[] = [
       {
         name: "Class B1",
         users: [
-          ["B1-Teacher", ClassUserRole.TEACHER],
-          ["B1-Student", ClassUserRole.STUDENT],
+          ["B1-Teacher", ClassPersonRole.TEACHER],
+          ["B1-Student", ClassPersonRole.STUDENT],
         ],
       },
       {
         name: "Class B2",
         users: [
-          ["B2-Teacher", ClassUserRole.TEACHER],
-          ["B2-Student", ClassUserRole.STUDENT],
+          ["B2-Teacher", ClassPersonRole.TEACHER],
+          ["B2-Student", ClassPersonRole.STUDENT],
         ],
       },
     ],
@@ -69,35 +69,37 @@ const PROGRAMME_SEED: ProgrammeSeed[] = [
       {
         name: "Class C1",
         users: [
-          ["C1-Teacher", ClassUserRole.TEACHER],
-          ["C1-Student", ClassUserRole.STUDENT],
+          ["C1-Teacher", ClassPersonRole.TEACHER],
+          ["C1-Student", ClassPersonRole.STUDENT],
         ],
       },
       {
         name: "Class C2",
         users: [
-          ["C2-Teacher", ClassUserRole.TEACHER],
-          ["C2-Student", ClassUserRole.STUDENT],
+          ["C2-Teacher", ClassPersonRole.TEACHER],
+          ["C2-Student", ClassPersonRole.STUDENT],
         ],
       },
     ],
   },
 ];
 
-const COMMON_STUDENT: UserSeed = ["XX-Student", ClassUserRole.STUDENT];
+const COMMON_STUDENT: UserSeed = ["XX-Student", ClassPersonRole.STUDENT];
 
 export async function seed(
   _request: Request,
   response: Response
 ): Promise<void> {
   try {
+    const superuserPerson = new Person("superuser", Gender.FEMALE);
     const superuser = new User(
+      superuserPerson,
       "superuser",
       "superuser",
       DEFAULT_PASSWORD,
       DefaultUserRole.ADMIN
     );
-    await seedUserIfAbsent(superuser, new Person("superuser", Gender.FEMALE));
+    await seedUserIfAbsent(superuser, superuserPerson);
     await seedProgrammesClasses(PROGRAMME_SEED);
 
     response.status(200).json({
@@ -110,18 +112,18 @@ export async function seed(
   }
 }
 
-async function seedUserIfAbsent(user: User, person: Person): Promise<User> {
+async function seedUserIfAbsent(user: User, person: Person): Promise<Person> {
   const userRepo = getRepository(User);
   const personRepo = getRepository(Person);
 
   const { username } = user;
 
   // return if username already exists
-  const findUser = await userRepo.findOne({
-    where: { username: username },
+  const findPerson = await personRepo.findOne({
+    where: { user: { username: username } },
   });
-  if (findUser) {
-    return findUser;
+  if (findPerson) {
+    return findPerson;
   }
 
   // create new user
@@ -131,13 +133,13 @@ async function seedUserIfAbsent(user: User, person: Person): Promise<User> {
   const seededUser = await userRepo.save(user);
   seededPerson.user = seededUser;
   await personRepo.save(seededPerson);
-  return seededUser;
+  return seededPerson;
 }
 
 async function seedProgrammesClasses(seed: ProgrammeSeed[]): Promise<void> {
   const programmeRepo = getRepository(Programme);
   const classRepo = getRepository(Class);
-  const classUserRepo = getRepository(ClassUser);
+  const classPersonRepo = getRepository(ClassPerson);
 
   const seededClasses = await Promise.all(
     seed.map(async (seed) => {
@@ -173,20 +175,26 @@ async function seedProgrammesClasses(seed: ProgrammeSeed[]): Promise<void> {
 
   // add a common student to all classes
   const commonStudentName = COMMON_STUDENT[0];
+  const commonStudentPerson = new Person(commonStudentName, Gender.FEMALE);
   const commonStudent = await seedUserIfAbsent(
-    new User(commonStudentName, commonStudentName, DEFAULT_PASSWORD),
-    new Person(commonStudentName, Gender.FEMALE)
+    new User(
+      commonStudentPerson,
+      commonStudentName,
+      commonStudentName,
+      DEFAULT_PASSWORD
+    ),
+    commonStudentPerson
   );
   await Promise.all(
     seededClasses.map(async (classes) => {
       classes?.map(async (class_) => {
-        const classUserData = new ClassUser(
+        const classPersonData = new ClassPerson(
           class_,
           commonStudent,
           COMMON_STUDENT[1]
         );
 
-        await classUserRepo.save(classUserData);
+        await classPersonRepo.save(classPersonData);
       });
     })
   );
@@ -196,18 +204,19 @@ async function seedClassWithUsers(
   class_: Class,
   users: UserSeed[]
 ): Promise<void> {
-  const classUserRepo = getRepository(ClassUser);
+  const classPersonRepo = getRepository(ClassPerson);
 
   await Promise.all(
     users.map(async (userTuple) => {
       const name = userTuple[0];
+      const person = new Person(name, Gender.MALE);
       const user = await seedUserIfAbsent(
-        new User(name, name, DEFAULT_PASSWORD),
-        new Person(name, Gender.MALE)
+        new User(person, name, name, DEFAULT_PASSWORD),
+        person
       );
 
-      const classUser = new ClassUser(class_, user, userTuple[1]);
-      await classUserRepo.save(classUser);
+      const classPerson = new ClassPerson(class_, user, userTuple[1]);
+      await classPersonRepo.save(classPerson);
     })
   );
 }

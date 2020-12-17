@@ -1,10 +1,10 @@
 import { IsNotEmpty } from "class-validator";
-import { ClassUserRole } from "../../types/classUsers";
+import { ClassPersonRole } from "../../types/classPersons";
 import { Column, Entity, getRepository, ManyToOne, OneToMany } from "typeorm";
 import { ClassData, ClassListData } from "../../types/classes";
 import { Discardable } from "../Discardable";
 import { ClassQuestionnaire } from "../questionnaire/ClassQuestionnaire";
-import { ClassUser } from "./ClassUser";
+import { ClassPerson } from "./ClassPerson";
 import { Programme } from "./Programme";
 
 @Entity()
@@ -24,8 +24,8 @@ export class Class extends Discardable {
   @ManyToOne((type) => Programme, (programme) => programme.classes)
   programme: Programme;
 
-  @OneToMany((type) => ClassUser, (classUser) => classUser.class)
-  classUsers!: ClassUser[];
+  @OneToMany((type) => ClassPerson, (classPerson) => classPerson.class)
+  classPersons!: ClassPerson[];
 
   @OneToMany(
     (type) => ClassQuestionnaire,
@@ -34,20 +34,24 @@ export class Class extends Discardable {
   classQuestionnaires!: ClassQuestionnaire[];
 
   private getStudentsAndTeachers = async (): Promise<{
-    students: ClassUser[];
-    teachers: ClassUser[];
+    students: ClassPerson[];
+    teachers: ClassPerson[];
   }> => {
-    const classUsers =
-      this.classUsers ||
+    const classPersons =
+      this.classPersons ||
       (
         await getRepository(Class).findOneOrFail({
           where: { id: this.id },
-          relations: ["classUsers", "classUsers.user"],
+          relations: ["classPersons", "classPersons.person"],
         })
-      ).classUsers;
+      ).classPersons;
     return {
-      students: classUsers.filter((cu) => cu.role === ClassUserRole.STUDENT),
-      teachers: classUsers.filter((cu) => cu.role === ClassUserRole.TEACHER),
+      students: classPersons.filter(
+        (cu) => cu.role === ClassPersonRole.STUDENT
+      ),
+      teachers: classPersons.filter(
+        (cu) => cu.role === ClassPersonRole.TEACHER
+      ),
     };
   };
 
@@ -76,8 +80,8 @@ export class Class extends Discardable {
       ...(await this.getListData()),
       programmeId: programme.id,
       programmeName: programme.name,
-      students: members.students.map((s) => s.user.getListData()),
-      teachers: members.teachers.map((s) => s.user.getListData()),
+      students: members.students.map((s) => s.person.getListData()),
+      teachers: members.teachers.map((s) => s.person.getListData()),
     };
   };
 }

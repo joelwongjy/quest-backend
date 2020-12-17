@@ -21,7 +21,7 @@ describe("POST /auth/login", () => {
     const response = await request(server.server)
       .post(`${fixtures.api}/auth/login`)
       .send({
-        username: fixtures.teacher.user.username,
+        username: fixtures.teacher.person.user!.username,
         password: fixtures.teacherPassword,
       });
     expect(response.status).toEqual(200);
@@ -32,7 +32,7 @@ describe("POST /auth/login", () => {
     const response = await request(server.server)
       .post(`${fixtures.api}/auth/login`)
       .send({
-        username: fixtures.teacher.user.username,
+        username: fixtures.teacher.person.user!.username,
         password: fixtures.studentPassword,
       });
     expect(response.status).toEqual(400);

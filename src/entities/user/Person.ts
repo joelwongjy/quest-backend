@@ -20,8 +20,9 @@ import { Gender, PersonData, PersonListData } from "../../types/persons";
 import { Relationship } from "./Relationship";
 import IsPersonlessUser from "../../constraints/IsPersonlessUser";
 import { DefaultUserRole } from "../../types/users";
-import { ClassUserRole } from "../../types/classUsers";
+import { ClassPersonRole } from "../../types/classPersons";
 import { Programme } from "../programme/Programme";
+import { ClassPerson } from "../programme/ClassPerson";
 
 @Entity()
 export class Person extends Discardable {
@@ -75,10 +76,11 @@ export class Person extends Discardable {
   @Column({ type: "date", nullable: true })
   birthday: Date | null;
 
-  @OneToOne((type) => User, { nullable: true })
-  @JoinColumn()
-  @Validate(IsPersonlessUser)
+  @OneToOne((type) => User, (user) => user.person, { nullable: true })
   user: User | null;
+
+  @OneToMany((type) => ClassPerson, (classPerson) => classPerson.person)
+  classPersons!: ClassPerson[];
 
   @OneToMany(
     (type) => Relationship,
@@ -101,10 +103,10 @@ export class Person extends Discardable {
         where: { personId: this.id },
       }));
 
-    let highestClassRole: ClassUserRole;
+    let highestClassRole: ClassPersonRole;
     let programmes: PersonData["programmes"] = [];
     if (user && user.defaultRole === DefaultUserRole.ADMIN) {
-      highestClassRole = ClassUserRole.ADMIN;
+      highestClassRole = ClassPersonRole.ADMIN;
       const allProgrammes = await getRepository(Programme).find({
         relations: ["classes"],
       });
@@ -115,25 +117,24 @@ export class Person extends Discardable {
           classes: p.classes.map((c) => ({
             id: c.id,
             name: c.name,
-            role: ClassUserRole.ADMIN,
+            role: ClassPersonRole.ADMIN,
           })),
         };
       });
-    } else if (user) {
-      // Need to rewrite this and the next else case after
-      // refactoring ClassUser to ClassPerson
-      const fullUser = await getRepository(User).findOneOrFail({
-        where: { personId: this.id },
+    } else {
+      const fullPerson = await getRepository(Person).findOneOrFail({
+        where: { id: this.id },
         relations: [
-          "classUsers",
-          "classUsers.class",
-          "classUsers.class.programme",
+          "classPersons",
+          "classPersons.class",
+          "classPersons.class.programme",
         ],
       });
-      highestClassRole = ClassUserRole.STUDENT;
-      fullUser.classUsers.forEach((cu) => {
-        if (cu.role === ClassUserRole.TEACHER) {
-          highestClassRole = ClassUserRole.TEACHER;
+
+      highestClassRole = ClassPersonRole.STUDENT;
+      fullPerson.classPersons.forEach((cu) => {
+        if (cu.role === ClassPersonRole.TEACHER) {
+          highestClassRole = ClassPersonRole.TEACHER;
         }
         const index = programmes.findIndex(
           (p) => p.id === cu.class.programme.id
@@ -158,8 +159,6 @@ export class Person extends Discardable {
           });
         }
       });
-    } else {
-      highestClassRole = ClassUserRole.STUDENT;
     }
 
     const relatives: PersonData["relatives"] = [];

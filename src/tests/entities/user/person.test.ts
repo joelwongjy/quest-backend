@@ -20,8 +20,8 @@ afterAll(async () => {
 
 describe("Create person", () => {
   afterEach(async () => {
-    await getRepository(Person).delete({});
     await getRepository(User).delete({});
+    await getRepository(Person).delete({});
   });
 
   it("with valid name", async () => {
@@ -68,38 +68,12 @@ describe("Create person", () => {
   });
 
   it("with user", async () => {
-    const user = new User("Bobby", "Bobby");
     const person = new Person("Bobby Tan", Gender.MALE);
+    const user = new User(person, "Bobby", "Bobby");
 
-    const newUser = await getRepository(User).save(user);
-
-    person.user = newUser;
     const newPerson = await getRepository(Person).save(person);
+    await getRepository(User).save(user);
 
     expect(newPerson.id).toBeTruthy();
-    expect(newPerson.user?.name).toBe(newUser.name);
-  });
-
-  it("connect one user to 2 persons", async () => {
-    const userData = new User("Bobby", "Bobby");
-    const user = await getRepository(User).save(userData);
-
-    const firstPersonData = new Person("BobbyPerson", Gender.MALE);
-    firstPersonData.user = user;
-    await getRepository(Person).save(firstPersonData);
-
-    const secondPersonData = new Person("TimmyPerson", Gender.MALE);
-    secondPersonData.user = user;
-
-    const errors = await validate(secondPersonData);
-    expect(errors).toHaveLength(1);
-
-    let saveError;
-    try {
-      await getRepository(Person).save(secondPersonData);
-    } catch (e) {
-      saveError = e;
-    }
-    expect(saveError).toBeInstanceOf(QueryFailedError);
   });
 });

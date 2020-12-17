@@ -4,8 +4,8 @@ import { getRepository } from "typeorm";
 import { User } from "../entities/user/User";
 import ApiServer from "../server";
 import { Class } from "../entities/programme/Class";
-import { ClassUser } from "../entities/programme/ClassUser";
-import { ClassUserRole } from "../types/classUsers";
+import { ClassPerson } from "../entities/programme/ClassPerson";
+import { ClassPersonRole } from "../types/classPersons";
 import { DefaultUserRole } from "../types/users";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionType } from "../types/questions";
@@ -18,6 +18,8 @@ import {
   OneTimeQuestionnaireCreator,
   PrePostQuestionnaireCreator,
 } from "../services/questionnaire";
+import { Person } from "../entities/user/Person";
+import { Gender } from "../types/persons";
 
 faker.seed(127);
 
@@ -43,10 +45,10 @@ export class Fixtures {
   public class_: Class;
   public admin: User;
   public adminAccessToken: string;
-  public teacher: ClassUser;
+  public teacher: ClassPerson;
   public teacherAccessToken: string;
   public teacherPassword: string;
-  public student: ClassUser;
+  public student: ClassPerson;
   public studentAccessToken: string;
   public studentPassword: string;
 
@@ -122,8 +124,8 @@ export class Fixtures {
     programme: Programme,
     class_: Class,
     admin: User,
-    teacher: ClassUser,
-    student: ClassUser
+    teacher: ClassPerson,
+    student: ClassPerson
   ) {
     this.faker = faker;
     this.programme = programme;
@@ -134,28 +136,33 @@ export class Fixtures {
     this.class_ = class_;
     this.teacher = teacher;
     this.teacherAccessToken = `Bearer ${
-      teacher.user!.createAuthenticationToken().accessToken
+      teacher.person.user!.createAuthenticationToken().accessToken
     }`;
     this.teacherPassword = teacherPassword;
     this.student = student;
     this.studentAccessToken = `Bearer ${
-      student.user!.createAuthenticationToken().accessToken
+      student.person.user!.createAuthenticationToken().accessToken
     }`;
     this.studentPassword = studentPassword;
   }
 
-  public async createClassUser(role: ClassUserRole, class_?: Class) {
+  public async createClassPerson(role: ClassPersonRole, class_?: Class) {
+    const name = faker.name.findName();
+    const person = new Person(name, Gender.MALE);
     const user = new User(
+      person,
       faker.internet.userName(),
-      faker.name.findName(),
       faker.internet.password(8)
     );
-    const classUser = new ClassUser(class_ || this.class_, user, role);
+    person.user = user;
+    const classPerson = new ClassPerson(class_ || this.class_, person, role);
+
     await getRepository(User).save(user);
-    await getRepository(ClassUser).save(classUser);
+    await getRepository(Person).save(person);
+    await getRepository(ClassPerson).save(classPerson);
     const accessToken =
       "Bearer " + user.createAuthenticationToken().accessToken;
-    return { classUser, accessToken };
+    return { classPerson, accessToken };
   }
 
   public async createSampleOneTimeQuestionnaire() {
@@ -196,37 +203,57 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
   const programme = new Programme("Study Buddy");
   const class_ = new Class("Class 1", programme);
 
-  const classUsers: ClassUser[] = [];
+  const classPersons: ClassPerson[] = [];
+  const persons: Person[] = [];
   const users: User[] = [];
 
   const admin = new User(
+    new Person("Admin", Gender.MALE),
     "admin",
     "Admin",
     adminPassword,
     DefaultUserRole.ADMIN
   );
+  persons.push(admin.person);
   users.push(admin);
 
-  const teacher = new ClassUser(
+  const teacher = new ClassPerson(
     class_,
-    new User("teacher", "Teacher", teacherPassword),
-    ClassUserRole.TEACHER
+    new Person("Teacher", Gender.FEMALE),
+    ClassPersonRole.TEACHER
   );
-  classUsers.push(teacher);
-  users.push(teacher.user);
+  const teacherUser = new User(
+    teacher.person,
+    "teacher",
+    "Teacher",
+    teacherPassword
+  );
+  teacher.person.user = teacherUser;
+  classPersons.push(teacher);
+  persons.push(teacher.person);
+  users.push(teacherUser);
 
-  const student = new ClassUser(
+  const student = new ClassPerson(
     class_,
-    new User("student", "Student", studentPassword),
-    ClassUserRole.STUDENT
+    new Person("Student", Gender.MALE),
+    ClassPersonRole.STUDENT
   );
-  classUsers.push(student);
-  users.push(student.user);
+  const studentUser = new User(
+    student.person,
+    "student",
+    "Student",
+    studentPassword
+  );
+  student.person.user = studentUser;
+  classPersons.push(student);
+  persons.push(student.person);
+  users.push(studentUser);
 
+  await getRepository(Person).save(persons);
   await getRepository(User).save(users);
   await getRepository(Programme).save(programme);
   await getRepository(Class).save(class_);
-  await getRepository(ClassUser).save(classUsers);
+  await getRepository(ClassPerson).save(classPersons);
 
   return new Fixtures(programme, class_, admin, teacher, student);
 }

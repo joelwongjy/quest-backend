@@ -1,5 +1,8 @@
 import request from "supertest";
+import { getRepository } from "typeorm";
+import { Person } from "../../entities/user/Person";
 import { ApiServer } from "../../server";
+import { Gender } from "../../types/persons";
 import { Fixtures, loadFixtures, synchronize } from "../../utils/tests";
 
 let server: ApiServer;
@@ -16,11 +19,18 @@ afterAll(async () => {
   await server.close();
 });
 
-// Need to rewrite test cases after person-user refactoring
 describe("POST /persons/:id/user", () => {
+  let person: Person;
+
+  beforeEach(async () => {
+    person = await getRepository(Person).save(
+      new Person("Test Person", Gender.FEMALE)
+    );
+  });
+
   it("should create a User", async () => {
     const response = await request(server.server)
-      .post(`${fixtures.api}/persons/1/user`)
+      .post(`${fixtures.api}/persons/${person.id}/user`)
       .set("Authorization", fixtures.adminAccessToken)
       .send({
         username: "testuser",
@@ -36,7 +46,7 @@ describe("POST /persons/:id/user", () => {
 
   it("should not allow duplicate username", async () => {
     const response = await request(server.server)
-      .post(`${fixtures.api}/persons/2/user`)
+      .post(`${fixtures.api}/persons/${person.id}/user`)
       .set("Authorization", fixtures.adminAccessToken)
       .send({
         username: "testuser",
@@ -51,7 +61,7 @@ describe("POST /persons/:id/user", () => {
 
   it("should not allow empty username", async () => {
     const response = await request(server.server)
-      .post(`${fixtures.api}/persons/3/user`)
+      .post(`${fixtures.api}/persons/${person.id}/user`)
       .set("Authorization", fixtures.adminAccessToken)
       .send({
         username: "",
@@ -66,7 +76,7 @@ describe("POST /persons/:id/user", () => {
 
   it("should not allow empty name", async () => {
     const response = await request(server.server)
-      .post(`${fixtures.api}/persons/4/user`)
+      .post(`${fixtures.api}/persons/${person.id}/user`)
       .set("Authorization", fixtures.adminAccessToken)
       .send({
         username: "testuser4",
