@@ -42,7 +42,6 @@ export interface QuestionnaireWindowPostData {
 export interface QuestionnairePatchData
   extends Omit<QuestionnairePostData, "questionWindows" | "sharedQuestions"> {
   status: QuestionnaireStatus;
-  questionnaireId: number; // do we need this?
   questionWindows: QuestionnaireWindowPatchData[];
   sharedQuestions?: QuestionSetPatchData;
 }

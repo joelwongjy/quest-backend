@@ -386,14 +386,11 @@ export class OneTimeQuestionnaireEditor extends QuestionnaireEditor {
     qnnaire: Questionnaire,
     editData: QuestionnairePatchData
   ): boolean {
-    const editDatahasMatchingId = editData.questionnaireId === qnnaire.id;
     const editDataHasOneWindow = editData.questionWindows.length === 1;
     const isValidOneTimeQnnaire = super
       .getValidator()
       .isOneTimeQnnaire(qnnaire);
-    return (
-      isValidOneTimeQnnaire && editDatahasMatchingId && editDataHasOneWindow
-    );
+    return isValidOneTimeQnnaire && editDataHasOneWindow;
   }
 
   private validateEditorOrReject(
@@ -486,14 +483,11 @@ export class PrePostQuestionnaireEditor extends QuestionnaireEditor {
     qnnaire: Questionnaire,
     editData: QuestionnairePatchData
   ): boolean {
-    const editDataHasMatchingId = editData.questionnaireId === qnnaire.id;
     const editDataHasTwoWindows = editData.questionWindows.length === 2;
     const isValidPrePostQnnaire = super
       .getValidator()
       .isPrePostQnnaire(qnnaire);
-    return (
-      isValidPrePostQnnaire && editDataHasMatchingId && editDataHasTwoWindows
-    );
+    return isValidPrePostQnnaire && editDataHasTwoWindows;
   }
 
   validateEditorOrReject(
