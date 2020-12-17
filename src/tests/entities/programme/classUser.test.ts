@@ -6,6 +6,8 @@ import { User } from "../../../entities/user/User";
 import { ClassUserRole } from "../../../types/classUsers";
 import ApiServer from "../../../server";
 import { synchronize } from "../../../utils/tests";
+import { Person } from "../../../entities/user/Person";
+import { Gender } from "../../../types/persons";
 
 let server: ApiServer;
 
@@ -22,19 +24,19 @@ afterAll(async () => {
 describe("Create and Query ClassUser", () => {
   let programme: Programme;
   let class_: Class;
-  let user1: User;
-  let user2: User;
+  let person1: Person;
+  let person2: Person;
 
   beforeAll(async () => {
     const programmeData = new Programme("X-Programme");
     const classData = new Class("X-Programme-Class 1", programmeData);
-    const user1Data = new User("Bobby", "Bobby");
-    const user2Data = new User("Timmy", "Timmy");
+    const person1Data = new Person("Bobby", Gender.MALE);
+    const person2Data = new Person("Timmy", Gender.MALE);
 
     programme = await getRepository(Programme).save(programmeData);
     class_ = await getRepository(Class).save(classData);
-    user1 = await getRepository(User).save(user1Data);
-    user2 = await getRepository(User).save(user2Data);
+    person1 = await getRepository(Person).save(person1Data);
+    person2 = await getRepository(Person).save(person2Data);
   });
 
   afterAll(async () => {
@@ -42,8 +44,8 @@ describe("Create and Query ClassUser", () => {
   });
 
   it("create classUsers", async () => {
-    const user1Class = new ClassUser(class_, user1, ClassUserRole.TEACHER);
-    const user2Class = new ClassUser(class_, user2, ClassUserRole.STUDENT);
+    const user1Class = new ClassUser(class_, person1, ClassUserRole.TEACHER);
+    const user2Class = new ClassUser(class_, person2, ClassUserRole.STUDENT);
 
     const savedUser1Class = await getRepository(ClassUser).save(user1Class);
     const savedUser2Class = await getRepository(ClassUser).save(user2Class);
@@ -59,41 +61,43 @@ describe("Create and Query ClassUser", () => {
           id: class_.id,
         },
       },
-      relations: ["class", "user"],
+      relations: ["class", "person"],
     });
 
     expect(classUserQuery).toHaveLength(2);
     expect(classUserQuery[0].class.name).toBe(class_.name);
 
-    const usersInClass = classUserQuery.map((classUser) => classUser.user.name);
-    expect(usersInClass).toContain(user1.name);
-    expect(usersInClass).toContain(user2.name);
+    const personsInClass = classUserQuery.map(
+      (classUser) => classUser.person.name
+    );
+    expect(personsInClass).toContain(person1.name);
+    expect(personsInClass).toContain(person2.name);
   });
 
   it("query using class table", async () => {
     const classQuery: Class[] = await getRepository(Class).find({
       where: { id: class_.id },
-      relations: ["classUsers", "classUsers.user"],
+      relations: ["classUsers", "classUsers.person"],
     });
 
     expect(classQuery).toHaveLength(1);
 
-    const usersInClass = classQuery[0].classUsers.map(
-      (classUser: ClassUser) => classUser.user.name
+    const personsInClass = classQuery[0].classUsers.map(
+      (classUser: ClassUser) => classUser.person.name
     );
-    expect(usersInClass).toContain(user1.name);
-    expect(usersInClass).toContain(user2.name);
+    expect(personsInClass).toContain(person1.name);
+    expect(personsInClass).toContain(person2.name);
   });
 
-  it("query using user table", async () => {
-    const userQuery: User[] = await getRepository(User).find({
-      where: { id: user1.id },
+  it("query using person table", async () => {
+    const personQuery: Person[] = await getRepository(Person).find({
+      where: { id: person1.id },
       relations: ["classUsers", "classUsers.class"],
     });
 
-    expect(userQuery).toHaveLength(1);
+    expect(personQuery).toHaveLength(1);
 
-    const classesInvolvedIn = userQuery[0].classUsers.map(
+    const classesInvolvedIn = personQuery[0].classUsers.map(
       (classUser: ClassUser) => classUser.class.name
     );
     expect(classesInvolvedIn).toHaveLength(1);

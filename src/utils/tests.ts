@@ -18,6 +18,8 @@ import {
   OneTimeQuestionnaireCreator,
   PrePostQuestionnaireCreator,
 } from "../services/questionnaire";
+import { Person } from "../entities/user/Person";
+import { Gender } from "../types/persons";
 
 faker.seed(127);
 
@@ -134,24 +136,29 @@ export class Fixtures {
     this.class_ = class_;
     this.teacher = teacher;
     this.teacherAccessToken = `Bearer ${
-      teacher.user!.createAuthenticationToken().accessToken
+      teacher.person.user!.createAuthenticationToken().accessToken
     }`;
     this.teacherPassword = teacherPassword;
     this.student = student;
     this.studentAccessToken = `Bearer ${
-      student.user!.createAuthenticationToken().accessToken
+      student.person.user!.createAuthenticationToken().accessToken
     }`;
     this.studentPassword = studentPassword;
   }
 
   public async createClassUser(role: ClassUserRole, class_?: Class) {
+    const name = faker.name.findName();
+    const person = new Person(name, Gender.MALE);
     const user = new User(
+      name,
       faker.internet.userName(),
-      faker.name.findName(),
       faker.internet.password(8)
     );
-    const classUser = new ClassUser(class_ || this.class_, user, role);
+    person.user = user;
+    const classUser = new ClassUser(class_ || this.class_, person, role);
+
     await getRepository(User).save(user);
+    await getRepository(Person).save(person);
     await getRepository(ClassUser).save(classUser);
     const accessToken =
       "Bearer " + user.createAuthenticationToken().accessToken;
@@ -199,6 +206,7 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
   const class_ = new Class("Class 1", programme);
 
   const classUsers: ClassUser[] = [];
+  const persons: Person[] = [];
   const users: User[] = [];
 
   const admin = new User(
@@ -211,20 +219,27 @@ export async function loadFixtures(_apiServer: ApiServer): Promise<Fixtures> {
 
   const teacher = new ClassUser(
     class_,
-    new User("teacher", "Teacher", teacherPassword),
+    new Person("Teacher", Gender.FEMALE),
     ClassUserRole.TEACHER
   );
+  const teacherUser = new User("teacher", "Teacher", teacherPassword);
+  teacher.person.user = teacherUser;
   classUsers.push(teacher);
-  users.push(teacher.user);
+  persons.push(teacher.person);
+  users.push(teacherUser);
 
   const student = new ClassUser(
     class_,
-    new User("student", "Student", studentPassword),
+    new Person("Student", Gender.MALE),
     ClassUserRole.STUDENT
   );
+  const studentUser = new User("student", "Student", studentPassword);
+  student.person.user = studentUser;
   classUsers.push(student);
-  users.push(student.user);
+  persons.push(student.person);
+  users.push(studentUser);
 
+  await getRepository(Person).save(persons);
   await getRepository(User).save(users);
   await getRepository(Programme).save(programme);
   await getRepository(Class).save(class_);
