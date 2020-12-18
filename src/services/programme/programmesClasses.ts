@@ -16,21 +16,17 @@ export class ProgrammeClassGetter {
       programmeIds.length === 0
         ? []
         : await getRepository(Programme).find({
-            where: {
-              id: programmeIds.map((id) => {
-                return { id };
-              }),
-            },
+            where: programmeIds.map((id) => {
+              return { id };
+            }),
           });
     const classes =
       classIds.length === 0
         ? []
         : await getRepository(Class).find({
-            where: {
-              id: classIds.map((id) => {
-                return { id };
-              }),
-            },
+            where: classIds.map((id) => {
+              return { id };
+            }),
           });
 
     return { programmes, classes };

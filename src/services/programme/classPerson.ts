@@ -42,7 +42,7 @@ export class ClassPersonCreator {
   private validateHasIdsOrReject(persons: Person[], classes: Class[]): void {
     const noIdPersons = persons.filter((p) => !p.id);
     const noIdClasses = classes.filter((c) => !c.id);
-    if (noIdPersons.length === 0 || noIdClasses.length === 0) {
+    if (noIdPersons.length !== 0 || noIdClasses.length !== 0) {
       throw new ClassPersonCreatorError(
         `One or more provided persons/classes have no ids`
       );

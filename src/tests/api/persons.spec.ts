@@ -2,7 +2,8 @@ import request from "supertest";
 import { getRepository } from "typeorm";
 import { Person } from "../../entities/user/Person";
 import { ApiServer } from "../../server";
-import { Gender } from "../../types/persons";
+import { StudentCreator } from "../../services/user";
+import { Gender, PersonPostData } from "../../types/persons";
 import { Fixtures, loadFixtures, synchronize } from "../../utils/tests";
 
 let server: ApiServer;
@@ -87,5 +88,25 @@ describe("POST /persons/:id/user", () => {
     expect(response.body.error).toEqual(
       "Something went wrong. Please try again!"
     );
+  });
+});
+
+describe("POST /persons/student", () => {
+  it("should create a person", async () => {
+    const personData: PersonPostData = {
+      name: "Bobby",
+      gender: Gender.MALE,
+      classes: [fixtures.class_.id],
+    };
+
+    const response = await request(server.server)
+      .post(`${fixtures.api}/persons/student`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(personData);
+    expect(response.status).toBe(200);
+    expect(response.body.id).toBeTruthy();
+    expect(
+      await StudentCreator.verify(response.body.id, personData)
+    ).toBeTruthy();
   });
 });

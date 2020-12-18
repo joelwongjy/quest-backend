@@ -4,7 +4,7 @@ import { Person } from "../../entities/user/Person";
 import { ClassPersonRole } from "../../types/classPersons";
 import { isValidDate } from "../../types/entities";
 import { PERSON_CREATOR_ERROR } from "../../types/errors";
-import { PersonPostData } from "../../types/persons";
+import { Gender, PersonPostData } from "../../types/persons";
 import { ClassPersonCreator, ProgrammeClassGetter } from "../programme/";
 
 class PersonCreatorError extends Error {
@@ -68,5 +68,29 @@ export class StudentCreator {
     // since person is new, it is save to do this
     person.classPersons = classPersons;
     return person;
+  }
+
+  public static async verify(
+    id: number,
+    input: PersonPostData
+  ): Promise<boolean> {
+    const person = await getRepository(Person).findOne({
+      where: { id },
+      relations: ["classPersons"],
+    });
+
+    if (!person) {
+      return false;
+    }
+    if (input.birthday && !person.birthday) {
+      return false;
+    }
+
+    const { classPersons } = person;
+    if (classPersons.length !== input.classes.length) {
+      return false;
+    }
+
+    return true;
   }
 }
