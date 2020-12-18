@@ -1,0 +1,1 @@
+export { StudentCreator } from "./persons";

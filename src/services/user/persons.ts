@@ -5,8 +5,7 @@ import { ClassPersonRole } from "../../types/classPersons";
 import { isValidDate } from "../../types/entities";
 import { PERSON_CREATOR_ERROR } from "../../types/errors";
 import { PersonPostData } from "../../types/persons";
-import { ClassPersonCreator } from "../programme/classPerson";
-import { ProgrammeClassGetter } from "../programme/programmesClasses";
+import { ClassPersonCreator, ProgrammeClassGetter } from "../programme/";
 
 class PersonCreatorError extends Error {
   constructor(message: string) {

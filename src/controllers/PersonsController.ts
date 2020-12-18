@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { StudentCreator } from "../services/user/persons";
+import { StudentCreator } from "../services/user/";
 import { SuccessId } from "../types/errors";
 import { PersonPostData } from "../types/persons";
 
