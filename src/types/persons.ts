@@ -15,7 +15,7 @@ export interface PersonPostData {
   mobileNumber?: string;
   homeNumber?: string;
   birthday?: Date | string;
-  classes: number[];
+  classIds: number[];
 }
 
 export interface PersonListData extends DiscardableData {

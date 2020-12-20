@@ -8,10 +8,10 @@ export async function createStudent(
   response: Response<SuccessId | { error: string }>
 ): Promise<void> {
   try {
-    const { classes } = request.body;
+    const { classIds } = request.body;
     const student = await new StudentCreator().createStudent(
       request.body,
-      classes
+      classIds
     );
 
     response.status(200).json({ success: true, id: student.id });

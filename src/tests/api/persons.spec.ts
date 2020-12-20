@@ -96,7 +96,7 @@ describe("POST /persons/student", () => {
     const personData: PersonPostData = {
       name: "Bobby",
       gender: Gender.MALE,
-      classes: [fixtures.class_.id],
+      classIds: [fixtures.class_.id],
     };
 
     const response = await request(server.server)

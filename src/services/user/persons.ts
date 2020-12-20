@@ -87,7 +87,7 @@ export class StudentCreator {
     }
 
     const { classPersons } = person;
-    if (classPersons.length !== input.classes.length) {
+    if (classPersons.length !== input.classIds.length) {
       return false;
     }
 
