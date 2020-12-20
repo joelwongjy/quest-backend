@@ -8,6 +8,16 @@ export enum Gender {
   FEMALE = "Female",
 }
 
+export interface PersonPostData {
+  name: string;
+  gender: Gender;
+  email?: string;
+  mobileNumber?: string;
+  homeNumber?: string;
+  birthday?: Date | string;
+  classIds: number[];
+}
+
 export interface PersonListData extends DiscardableData {
   name: string;
   mobileNumber?: string;
