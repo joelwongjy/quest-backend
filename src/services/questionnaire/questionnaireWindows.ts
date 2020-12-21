@@ -67,7 +67,7 @@ export class QuestionnaireWindowCreator {
   }
 
   private validateCreatorOrReject(mainQnsData: QuestionSetPostData): void {
-    if (!mainQnsData.questions || mainQnsData.questions.length === 0) {
+    if (!mainQnsData.questions) {
       throw new QuestionnaireWindowCreatorError(
         `Cannot create as there are no questions provided in the MainQuestionSet`
       );
