@@ -7,12 +7,11 @@ import { Answer } from "../entities/questionnaire/Answer";
 import { associateAttemptWithAnswers } from "../utils/attempts";
 import { createAnswers } from "../utils/answers";
 import { AccessTokenSignedPayload } from "../types/tokens";
-import { AttemptFullData } from "../types/attempts";
+import { AttemptFullData, AttemptListData } from "../types/attempts";
 import { Message } from "../types/errors";
-import { UserData } from "../types/users";
 import { QuestionnaireWindowData } from "../types/questionnaires";
 import { AnswerData } from "../types/answers";
-import { OptionData, QuestionData } from "../types/questions";
+import { QuestionData } from "../types/questions";
 
 export async function create(
   request: Request,
@@ -66,7 +65,6 @@ export async function show(
     let attempt = await getRepository(Attempt).findOne({
       where: { id },
       relations: [
-        "user",
         "questionnaireWindow",
         "answers",
         "answers.questionOrder",
@@ -80,8 +78,6 @@ export async function show(
       response.sendStatus(404);
       return;
     }
-
-    const user: UserData = attempt.user.getData();
 
     const {
       id: windowId,
@@ -133,11 +129,31 @@ export async function show(
     }
 
     const result: AttemptFullData = {
-      user: user,
+      ...(await attempt.getListData()),
+      windowId: questionnaireWindow.windowId,
       questionnaireWindow: questionnaireWindow,
       answers: answers,
     };
 
+    response.status(200).json(result);
+    return;
+  } catch (e) {
+    response.status(400).json({ message: e.message });
+    return;
+  }
+}
+
+export async function index(
+  request: Request,
+  response: Response<AttemptListData[] | Message>
+): Promise<void> {
+  const payload = response.locals.payload as AccessTokenSignedPayload;
+  const { userId } = payload;
+  try {
+    const attempts = await getRepository(Attempt).find({
+      where: { user: { id: userId } }, // intentionally did not filter for discarded
+    });
+    const result = await Promise.all(attempts.map((a) => a.getListData()));
     response.status(200).json(result);
     return;
   } catch (e) {
