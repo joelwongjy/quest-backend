@@ -1,8 +1,8 @@
-name: Deploy to Production via SSH
+name: Deploy to Staging via SSH
 
 on:
   push:
-    branches: [production]
+    branches: [master]
 
 jobs:
   test:
@@ -42,9 +42,9 @@ jobs:
         id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-production-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-staging-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-production-yarn-
+            ${{ runner.os }}-staging-yarn-
       - name: Install dependencies
         run: yarn install
       - name: Run tests
@@ -76,9 +76,9 @@ jobs:
         id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-production-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-staging-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-production-yarn-
+            ${{ runner.os }}-staging-yarn-
       - name: Install dependencies
         run: yarn install
       - name: Build application
@@ -91,7 +91,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           rm: true
           source: "build/"
-          target: "${{ secrets.REMOTE_DIR }}/build"
+          target: "${{ secrets.REMOTE_STAGING_DIR }}/build"
 
   deploy:
     runs-on: ubuntu-latest
@@ -105,8 +105,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script: |
-            cd ${{ secrets.REMOTE_DIR }}
-            git checkout production
+            cd ${{ secrets.REMOTE_STAGING_DIR }}
+            git checkout master
             git pull
             yarn install
             cd build/build
@@ -114,5 +114,5 @@ jobs:
             cd ..
             rm -rf build
             cd ..
-            pm2 restart quest-backend
+            pm2 restart staging
             pm2 logs --nostream
