@@ -1,4 +1,5 @@
-import { Entity, ManyToOne, OneToMany } from "typeorm";
+import { AttemptListData } from "src/types/attempts";
+import { Entity, getRepository, ManyToOne, OneToMany } from "typeorm";
 import { Discardable } from "../Discardable";
 import { User } from "../user/User";
 import { Answer } from "./Answer";
@@ -22,4 +23,17 @@ export class Attempt extends Discardable {
 
   @OneToMany((type) => Answer, (answer) => answer.attempt)
   answers!: Answer[];
+
+  getListData = async (): Promise<AttemptListData> => {
+    const attempt = await getRepository(Attempt).findOneOrFail(this.id, {
+      relations: ["user", "questionnaireWindow"],
+    });
+    const user = this.user || attempt.user;
+    const window = this.questionnaireWindow || attempt.questionnaireWindow;
+    return {
+      ...this.getBase(),
+      user: user.getData(),
+      windowId: window.id,
+    };
+  };
 }

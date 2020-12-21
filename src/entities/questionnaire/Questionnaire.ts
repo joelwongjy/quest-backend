@@ -13,7 +13,6 @@ import {
   QuestionnaireStatus,
   QuestionnaireListData,
   QuestionnaireFullData,
-  QuestionnaireWindowData,
   QuestionnaireOneWindowData,
   QuestionnaireProgramClassData,
   QuestionnaireListDataType,
@@ -21,7 +20,7 @@ import {
 import { QuestionnaireWindow } from "./QuestionnaireWindow";
 import { ProgrammeQuestionnaire } from "./ProgrammeQuestionnaire";
 import { ClassQuestionnaire } from "./ClassQuestionnaire";
-import { QuestionData, QuestionSetData } from "../../types/questions";
+import { QuestionData } from "../../types/questions";
 import { QuestionOrder } from "./QuestionOrder";
 import { QuestionnaireProgrammesAndClassesViewer } from "../../services/questionnaire/programmesClassRelations";
 import {
@@ -100,9 +99,12 @@ export class Questionnaire extends Discardable {
       .map((w: QuestionnaireWindow) => w.openAt)
       .sort((a, b) => a.getTime() - b.getTime())[0];
 
+    const programmesClasses = await this.getProgrammesAndClasses();
+
     return windows.map((w: QuestionnaireWindow) => {
       return {
         ...this.getBase(),
+        windowId: w.id,
         name: this.name,
         status: this.questionnaireStatus,
         startAt: w.openAt,
@@ -112,6 +114,14 @@ export class Questionnaire extends Discardable {
           : w.openAt === earlierOpenAt
           ? QuestionnaireListDataType.PRE
           : QuestionnaireListDataType.POST,
+        programmes: programmesClasses.programmes.map((p) => ({
+          id: p.id,
+          name: p.name,
+        })),
+        classes: programmesClasses.classes.map((c) => ({
+          id: c.id,
+          name: c.name,
+        })),
       };
     });
   };

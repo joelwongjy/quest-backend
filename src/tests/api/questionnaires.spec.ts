@@ -518,7 +518,7 @@ describe("POST /questionnaires/edit/:id", () => {
   });
 });
 
-describe("POST /questionnaires/submissions/create", () => {
+describe("POST /questionnaires/submissions", () => {
   let originalData: QuestionnaireFullData;
   let answerData: AnswerPostData[];
   let attemptData: AttemptPostData;
@@ -563,9 +563,10 @@ describe("POST /questionnaires/submissions/create", () => {
     let allAnswers = await getRepository(Answer).findAndCount();
     const numAnswersBefore: number = allAnswers[1];
     const response = await request(server.server)
-      .post(`${fixtures.api}/questionnaires/submissions/create`)
+      .post(`${fixtures.api}/questionnaires/submissions`)
       .set("Authorization", fixtures.adminAccessToken)
       .send(attemptData);
+    expect(response.status).toBe(200);
     allAnswers = await getRepository(Answer).findAndCount();
     const numAnswersAfter: number = allAnswers[1];
     expect(numAnswersAfter).toBeGreaterThan(numAnswersBefore);
@@ -573,7 +574,7 @@ describe("POST /questionnaires/submissions/create", () => {
 
   it("should create an attempt successfully", async () => {
     const response = await request(server.server)
-      .post(`${fixtures.api}/questionnaires/submissions/create`)
+      .post(`${fixtures.api}/questionnaires/submissions`)
       .set("Authorization", fixtures.adminAccessToken)
       .send(attemptData);
     expect(response.status).toEqual(200);
@@ -600,7 +601,7 @@ describe("POST /questionnaires/submissions/create", () => {
 
   it("should return 401 if not logged in", async () => {
     const response = await request(server.server)
-      .post(`${fixtures.api}/questionnaires/submissions/create`)
+      .post(`${fixtures.api}/questionnaires/submissions`)
       .send(attemptData);
     expect(response.status).toBe(401);
   });
