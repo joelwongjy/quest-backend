@@ -21,7 +21,7 @@ import {
 } from "../services/questionnaire";
 import { getRepository } from "typeorm";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
-import { Message, SuccessId } from "../types/errors";
+import { Message, SuccessId, TYPEORM_ENTITYNOTFOUND } from "../types/errors";
 
 export async function index(
   _request: Request,
@@ -73,7 +73,7 @@ export async function softDelete(
 ) {
   const { id } = request.params;
   try {
-    const questionnaire = await getRepository(Questionnaire).findOne({
+    const questionnaire = await getRepository(Questionnaire).findOneOrFail({
       where: { id },
       relations: [
         "questionnaireWindows",
@@ -86,19 +86,20 @@ export async function softDelete(
       ],
     });
 
-    if (!questionnaire) {
-      response.status(404).json({ success: false });
-      return;
-    }
-
     await new QuestionnaireDeleter().deleteQuestionnaire(questionnaire);
 
     response.status(200).json({ success: true, id });
     return;
   } catch (e) {
-    console.log(e);
-    response.status(400).json({ success: false });
-    return;
+    switch (e.name) {
+      case TYPEORM_ENTITYNOTFOUND:
+        response.status(404).json({ success: false });
+        return;
+      default:
+        console.log(e);
+        response.status(400).json({ success: false });
+        return;
+    }
   }
 }
 
