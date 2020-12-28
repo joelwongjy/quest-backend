@@ -7,9 +7,9 @@ import {
   QuestionnaireOneWindowData,
   QuestionnaireType,
   QuestionnaireWindowId,
+  QuestionnairePostData,
 } from "../types/questionnaires";
 import { selectQuestionnaireData } from "../selectors/questionnaires";
-import { QuestionnairePostData } from "../types/questionnaires";
 import {
   OneTimeQuestionnaireCreator,
   OneTimeQuestionnaireEditor,
@@ -17,12 +17,10 @@ import {
   PrePostQuestionnaireEditor,
   QuestionnaireCreator,
   QuestionnaireEditor,
+  QuestionnaireDeleter,
 } from "../services/questionnaire";
 import { getRepository } from "typeorm";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
-import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
-import { QuestionSet } from "../entities/questionnaire/QuestionSet";
-import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
 import { Message, SuccessId } from "../types/errors";
 
 export async function index(
@@ -71,58 +69,32 @@ export async function create(
 
 export async function softDelete(
   request: Request<QuestionnaireId, any, any, any>,
-  response: Response
+  response: Response<SuccessId>
 ) {
   const { id } = request.params;
-  const questionnaire = await getRepository(Questionnaire).findOne({
-    where: { id },
-    relations: [
-      "questionnaireWindows",
-      "questionnaireWindows.mainSet",
-      "questionnaireWindows.mainSet.questionOrders",
-      "questionnaireWindows.sharedSet",
-      "questionnaireWindows.sharedSet.questionOrders",
-    ],
-  });
+  try {
+    const questionnaire = await getRepository(Questionnaire).findOneOrFail({
+      where: { id },
+      relations: [
+        "questionnaireWindows",
+        "questionnaireWindows.mainSet",
+        "questionnaireWindows.mainSet.questionOrders",
+        "questionnaireWindows.sharedSet",
+        "questionnaireWindows.sharedSet.questionOrders",
+        "questionnaireWindows.programmeQuestionnaires",
+        "questionnaireWindows.classQuestionnaires",
+      ],
+    });
 
-  if (!questionnaire) {
-    response.sendStatus(404);
+    await new QuestionnaireDeleter().deleteQuestionnaire(questionnaire);
+
+    response.status(200).json({ success: true, id });
+    return;
+  } catch (e) {
+    console.log(e);
+    response.status(400).json({ success: false });
     return;
   }
-
-  // soft-delete the questionnaire
-  await getRepository(Questionnaire).softRemove(questionnaire);
-
-  // soft-delete the windows
-  await getRepository(QuestionnaireWindow).softRemove(
-    questionnaire.questionnaireWindows!
-  );
-
-  const questionSets: QuestionSet[] = [];
-  let questionOrders: QuestionOrder[] = [];
-  let includesSharedSet = false;
-  questionnaire.questionnaireWindows.forEach((window) => {
-    if (window.mainSet) {
-      questionSets.push(window.mainSet);
-      questionOrders = questionOrders.concat(window.mainSet.questionOrders);
-    }
-
-    if (window.sharedSet && !includesSharedSet) {
-      questionSets.push(window.sharedSet);
-      questionOrders = questionOrders.concat(window.sharedSet.questionOrders);
-
-      includesSharedSet = true;
-    }
-  });
-
-  // soft-delete the sets
-  await getRepository(QuestionSet).softRemove(questionSets);
-
-  // soft-delete the question orders
-  await getRepository(QuestionOrder).softRemove(questionOrders);
-
-  response.sendStatus(200);
-  return;
 }
 
 export async function show(

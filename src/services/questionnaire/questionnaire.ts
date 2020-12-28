@@ -1,6 +1,10 @@
 import { getRepository } from "typeorm";
+import { ClassQuestionnaire } from "../../entities/questionnaire/ClassQuestionnaire";
+import { ProgrammeQuestionnaire } from "../../entities/questionnaire/ProgrammeQuestionnaire";
 import { Questionnaire } from "../../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../../entities/questionnaire/QuestionnaireWindow";
+import { QuestionOrder } from "../../entities/questionnaire/QuestionOrder";
+import { QuestionSet } from "../../entities/questionnaire/QuestionSet";
 import {
   ONE_TIME_QUESTIONNAIRE_CREATOR_ERROR,
   PRE_POST_QUESTIONNAIRE_CREATOR_ERROR,
@@ -643,5 +647,60 @@ export class PrePostQuestionnaireViewer extends QuestionnaireViewer {
       programmes,
       classes,
     };
+  }
+}
+
+export class QuestionnaireDeleter {
+  public async deleteQuestionnaire(qnnaire: Questionnaire): Promise<void> {
+    await this._deleteWindowsAndQuestions(qnnaire);
+    await this._deleteProgrammeClassQnnaires(qnnaire);
+  }
+
+  private async _deleteWindowsAndQuestions(
+    qnnaire: Questionnaire
+  ): Promise<void> {
+    // soft-delete the questionnaire
+    await getRepository(Questionnaire).softRemove(qnnaire);
+
+    // soft-delete the windows
+    await getRepository(QuestionnaireWindow).softRemove(
+      qnnaire.questionnaireWindows!
+    );
+
+    const questionSets: QuestionSet[] = [];
+    let questionOrders: QuestionOrder[] = [];
+    let includesSharedSet = false;
+    qnnaire.questionnaireWindows.forEach((window) => {
+      if (window.mainSet) {
+        questionSets.push(window.mainSet);
+        questionOrders = questionOrders.concat(window.mainSet.questionOrders);
+      }
+
+      if (window.sharedSet && !includesSharedSet) {
+        questionSets.push(window.sharedSet);
+        questionOrders = questionOrders.concat(window.sharedSet.questionOrders);
+
+        includesSharedSet = true;
+      }
+    });
+    // soft-delete the sets
+    await getRepository(QuestionSet).softRemove(questionSets);
+
+    // soft-delete the question orders
+    await getRepository(QuestionOrder).softRemove(questionOrders);
+  }
+
+  private async _deleteProgrammeClassQnnaires(
+    qnnaire: Questionnaire
+  ): Promise<void> {
+    // soft-delete the related programme questionnaires
+    await getRepository(ProgrammeQuestionnaire).softRemove(
+      qnnaire.programmeQuestionnaires
+    );
+
+    // soft-delete the related class questionnaire
+    await getRepository(ClassQuestionnaire).softRemove(
+      qnnaire.classQuestionnaires
+    );
   }
 }

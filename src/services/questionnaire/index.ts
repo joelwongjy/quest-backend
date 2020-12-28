@@ -6,6 +6,7 @@ export {
   OneTimeQuestionnaireEditor,
   PrePostQuestionnaireCreator,
   PrePostQuestionnaireEditor,
+  QuestionnaireDeleter,
 } from "./questionnaire";
 
 export { QuestionnaireWindowViewer } from "./questionnaireWindows";
