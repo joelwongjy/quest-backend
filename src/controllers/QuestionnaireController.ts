@@ -74,24 +74,7 @@ export async function softDelete(
   const { id } = request.params;
   try {
     await getConnection().transaction<void>(async (manager) => {
-      const questionnaire = await manager
-        .getRepository(Questionnaire)
-        .findOneOrFail({
-          where: { id },
-          relations: [
-            "questionnaireWindows",
-            "questionnaireWindows.mainSet",
-            "questionnaireWindows.mainSet.questionOrders",
-            "questionnaireWindows.sharedSet",
-            "questionnaireWindows.sharedSet.questionOrders",
-            "programmeQuestionnaires",
-            "classQuestionnaires",
-          ],
-        });
-
-      await new QuestionnaireDeleter(manager).deleteQuestionnaire(
-        questionnaire
-      );
+      await new QuestionnaireDeleter(manager).deleteQuestionnaire(id);
     });
 
     response.status(200).json({ success: true, id });

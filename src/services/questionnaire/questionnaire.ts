@@ -657,7 +657,22 @@ export class QuestionnaireDeleter {
     this.manager = manager;
   }
 
-  public async deleteQuestionnaire(qnnaire: Questionnaire): Promise<void> {
+  public async deleteQuestionnaire(id: number): Promise<void> {
+    const qnnaire = await this.manager
+      .getRepository(Questionnaire)
+      .findOneOrFail({
+        where: { id },
+        relations: [
+          "questionnaireWindows",
+          "questionnaireWindows.mainSet",
+          "questionnaireWindows.mainSet.questionOrders",
+          "questionnaireWindows.sharedSet",
+          "questionnaireWindows.sharedSet.questionOrders",
+          "programmeQuestionnaires",
+          "classQuestionnaires",
+        ],
+      });
+
     await this._deleteWindowsAndQuestions(qnnaire);
     await this._deleteProgrammeClassQnnaires(qnnaire);
   }
