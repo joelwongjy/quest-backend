@@ -19,7 +19,7 @@ import {
   QuestionnaireEditor,
   QuestionnaireDeleter,
 } from "../services/questionnaire";
-import { getRepository } from "typeorm";
+import { getConnection, getRepository } from "typeorm";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { Message, SuccessId, TYPEORM_ENTITYNOTFOUND } from "../types/errors";
 
@@ -73,20 +73,26 @@ export async function softDelete(
 ) {
   const { id } = request.params;
   try {
-    const questionnaire = await getRepository(Questionnaire).findOneOrFail({
-      where: { id },
-      relations: [
-        "questionnaireWindows",
-        "questionnaireWindows.mainSet",
-        "questionnaireWindows.mainSet.questionOrders",
-        "questionnaireWindows.sharedSet",
-        "questionnaireWindows.sharedSet.questionOrders",
-        "programmeQuestionnaires",
-        "classQuestionnaires",
-      ],
-    });
+    await getConnection().transaction<void>(async (manager) => {
+      const questionnaire = await manager
+        .getRepository(Questionnaire)
+        .findOneOrFail({
+          where: { id },
+          relations: [
+            "questionnaireWindows",
+            "questionnaireWindows.mainSet",
+            "questionnaireWindows.mainSet.questionOrders",
+            "questionnaireWindows.sharedSet",
+            "questionnaireWindows.sharedSet.questionOrders",
+            "programmeQuestionnaires",
+            "classQuestionnaires",
+          ],
+        });
 
-    await new QuestionnaireDeleter().deleteQuestionnaire(questionnaire);
+      await new QuestionnaireDeleter(manager).deleteQuestionnaire(
+        questionnaire
+      );
+    });
 
     response.status(200).json({ success: true, id });
     return;

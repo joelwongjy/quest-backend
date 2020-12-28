@@ -1,4 +1,4 @@
-import { getRepository } from "typeorm";
+import { EntityManager, getRepository } from "typeorm";
 import { ClassQuestionnaire } from "../../entities/questionnaire/ClassQuestionnaire";
 import { ProgrammeQuestionnaire } from "../../entities/questionnaire/ProgrammeQuestionnaire";
 import { Questionnaire } from "../../entities/questionnaire/Questionnaire";
@@ -651,6 +651,12 @@ export class PrePostQuestionnaireViewer extends QuestionnaireViewer {
 }
 
 export class QuestionnaireDeleter {
+  private manager: EntityManager;
+
+  constructor(manager: EntityManager) {
+    this.manager = manager;
+  }
+
   public async deleteQuestionnaire(qnnaire: Questionnaire): Promise<void> {
     await this._deleteWindowsAndQuestions(qnnaire);
     await this._deleteProgrammeClassQnnaires(qnnaire);
@@ -660,12 +666,12 @@ export class QuestionnaireDeleter {
     qnnaire: Questionnaire
   ): Promise<void> {
     // soft-delete the questionnaire
-    await getRepository(Questionnaire).softRemove(qnnaire);
+    await this.manager.getRepository(Questionnaire).softRemove(qnnaire);
 
     // soft-delete the windows
-    await getRepository(QuestionnaireWindow).softRemove(
-      qnnaire.questionnaireWindows!
-    );
+    await this.manager
+      .getRepository(QuestionnaireWindow)
+      .softRemove(qnnaire.questionnaireWindows!);
 
     const questionSets: QuestionSet[] = [];
     let questionOrders: QuestionOrder[] = [];
@@ -684,24 +690,24 @@ export class QuestionnaireDeleter {
       }
     });
     // soft-delete the sets
-    await getRepository(QuestionSet).softRemove(questionSets);
+    await this.manager.getRepository(QuestionSet).softRemove(questionSets);
 
     // soft-delete the question orders
-    await getRepository(QuestionOrder).softRemove(questionOrders);
+    await this.manager.getRepository(QuestionOrder).softRemove(questionOrders);
   }
 
   private async _deleteProgrammeClassQnnaires(
     qnnaire: Questionnaire
   ): Promise<void> {
     // soft-delete the related programme questionnaires
-    await getRepository(ProgrammeQuestionnaire).softRemove(
-      qnnaire.programmeQuestionnaires
-    );
+    await this.manager
+      .getRepository(ProgrammeQuestionnaire)
+      .softRemove(qnnaire.programmeQuestionnaires);
 
     // soft-delete the related class questionnaire
-    await getRepository(ClassQuestionnaire).softRemove(
-      qnnaire.classQuestionnaires
-    );
+    await this.manager
+      .getRepository(ClassQuestionnaire)
+      .softRemove(qnnaire.classQuestionnaires);
   }
 
   public static async verify(id: number): Promise<boolean> {
