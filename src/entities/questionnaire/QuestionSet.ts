@@ -23,7 +23,7 @@ export class QuestionSet extends Discardable {
       .filter((order) => !order.discardedAt)
       .map((order) => {
         return {
-          // ...order.getBase(), having issues with the types: date vs string
+          ...order.getBase(),
           qnOrderId: order.id,
           order: order.order,
           questionType: order.question.questionType,

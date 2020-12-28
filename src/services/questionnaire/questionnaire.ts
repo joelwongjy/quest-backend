@@ -703,4 +703,79 @@ export class QuestionnaireDeleter {
       qnnaire.classQuestionnaires
     );
   }
+
+  public static async verify(id: number): Promise<boolean> {
+    // leverage on softdeletion to find the ids of related entities
+    const qnnaire = await getRepository(Questionnaire).findOneOrFail({
+      where: { id },
+      withDeleted: true,
+      relations: [
+        "questionnaireWindows",
+        "questionnaireWindows.mainSet",
+        "questionnaireWindows.mainSet.questionOrders",
+        "questionnaireWindows.sharedSet",
+        "questionnaireWindows.sharedSet.questionOrders",
+        "programmeQuestionnaires",
+        "classQuestionnaires",
+      ],
+    });
+
+    const isQnnaireDeleted = !!qnnaire.discardedAt;
+    const areWindowsDeleted =
+      qnnaire.questionnaireWindows.filter((w) => !w.discardedAt).length === 0;
+
+    const areRelatedProgrammeQuestionnairesDeleted =
+      qnnaire.programmeQuestionnaires.filter((pq) => !pq.discardedAt).length ===
+      0;
+    const areRelatedClassQuestionnairesDeleted =
+      qnnaire.classQuestionnaires.filter((cq) => !cq.discardedAt).length === 0;
+
+    let areQnSetsDeleted: boolean = false;
+    let areQnOrdersDeleted: boolean = false;
+    switch (qnnaire.questionnaireType) {
+      case QuestionnaireType.ONE_TIME:
+        const mainSet = qnnaire.questionnaireWindows[0].mainSet;
+
+        areQnSetsDeleted = !!mainSet.discardedAt;
+        areQnOrdersDeleted =
+          mainSet.questionOrders.filter((q) => !q.discardedAt).length === 0;
+        break;
+
+      case QuestionnaireType.PRE_POST:
+        const set1Main = qnnaire.questionnaireWindows[0].mainSet;
+        const set2Main = qnnaire.questionnaireWindows[1].mainSet;
+
+        const set1Shared = qnnaire.questionnaireWindows[0].sharedSet!;
+
+        areQnSetsDeleted =
+          !!set1Main.discardedAt &&
+          !!set2Main.discardedAt &&
+          !!set1Shared?.discardedAt;
+        areQnOrdersDeleted =
+          set1Main.questionOrders.filter((q) => !q.discardedAt).length === 0 &&
+          set2Main.questionOrders.filter((q) => !q.discardedAt).length === 0 &&
+          set1Shared.questionOrders.filter((q) => !q.discardedAt).length === 0;
+        break;
+
+      default:
+        return false;
+    }
+
+    // console.log({
+    //   isQnnaireDeleted: isQnnaireDeleted,
+    //   areWindowsDeleted: areWindowsDeleted,
+    //   areRelatedProgrammeQuestionnairesDeleted: areRelatedProgrammeQuestionnairesDeleted,
+    //   areRelatedClassQuestionnairesDeleted: areRelatedClassQuestionnairesDeleted,
+    //   areQnSetsDeleted: areQnSetsDeleted,
+    //   areQnOrdersDeleted: areQnOrdersDeleted,
+    // });
+    return (
+      isQnnaireDeleted &&
+      areWindowsDeleted &&
+      areRelatedProgrammeQuestionnairesDeleted &&
+      areRelatedClassQuestionnairesDeleted &&
+      areQnSetsDeleted &&
+      areQnOrdersDeleted
+    );
+  }
 }

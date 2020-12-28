@@ -73,7 +73,7 @@ export async function softDelete(
 ) {
   const { id } = request.params;
   try {
-    const questionnaire = await getRepository(Questionnaire).findOneOrFail({
+    const questionnaire = await getRepository(Questionnaire).findOne({
       where: { id },
       relations: [
         "questionnaireWindows",
@@ -81,10 +81,15 @@ export async function softDelete(
         "questionnaireWindows.mainSet.questionOrders",
         "questionnaireWindows.sharedSet",
         "questionnaireWindows.sharedSet.questionOrders",
-        "questionnaireWindows.programmeQuestionnaires",
-        "questionnaireWindows.classQuestionnaires",
+        "programmeQuestionnaires",
+        "classQuestionnaires",
       ],
     });
+
+    if (!questionnaire) {
+      response.status(404).json({ success: false });
+      return;
+    }
 
     await new QuestionnaireDeleter().deleteQuestionnaire(questionnaire);
 
