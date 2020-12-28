@@ -1,6 +1,7 @@
 import { getRepository } from "typeorm";
 import { Class } from "../../entities/programme/Class";
 import { Programme } from "../../entities/programme/Programme";
+import { ProgrammeListData } from "../../types/programmes";
 
 export type ProgrammeClass = {
   programmes: Programme[];
@@ -31,6 +32,7 @@ export class ProgrammeClassGetter {
 
     return { programmes, classes };
   }
+
   public async getProgrammes(programmeIds: number[]): Promise<Programme[]> {
     const { programmes } = await this.getProgrammesAndClass(programmeIds, []);
     return programmes;
@@ -39,5 +41,29 @@ export class ProgrammeClassGetter {
   public async getClasses(classIds: number[]): Promise<Class[]> {
     const { classes } = await this.getProgrammesAndClass([], classIds);
     return classes;
+  }
+
+  public async getProgrammeList(
+    programmeIds: number[]
+  ): Promise<ProgrammeListData[]> {
+    if (programmeIds.length === 0) {
+      return [];
+    }
+
+    const programmesOR = programmeIds.map((id) => {
+      return { id };
+    });
+    const query = await getRepository(Programme).find({
+      where: programmesOR,
+      relations: ["classes"],
+    });
+    const result = query.map((p) => {
+      return {
+        ...p.getBase(),
+        name: p.name,
+        classCount: p.classes.length,
+      };
+    });
+    return result;
   }
 }
