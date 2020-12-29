@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { SuccessId } from "../types/errors";
+import { SuccessId, TYPEORM_ENTITYNOTFOUND } from "../types/errors";
 import {
   ProgrammeData,
   ProgrammeListData,
@@ -112,8 +112,7 @@ export async function softDelete(
     return;
   } catch (e) {
     switch (e.name) {
-      // TODO: convert magic literal after Qnnaire deletion bug has been fixed
-      case "EntityNotFound":
+      case TYPEORM_ENTITYNOTFOUND:
         response.status(404).json({ success: false });
         return;
 
