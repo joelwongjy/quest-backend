@@ -1,14 +1,16 @@
+import { Request, Response } from "express";
 import { SuccessId } from "../types/errors";
 import {
   ProgrammeData,
   ProgrammeListData,
   ProgrammePostData,
 } from "../types/programmes";
-import { Request, Response } from "express";
-import { ProgrammeClassGetter } from "../services/programme";
+import {
+  ProgrammeClassGetter,
+  ProgrammeClassCreator,
+} from "../services/programme";
 import { ProgrammeClassIds } from "../middlewares/findRelevantEntities";
 import { getConnection } from "typeorm";
-import { ProgrammeClassCreator } from "../services/programme/programmesClasses";
 import { Programme } from "../entities/programme/Programme";
 
 export async function index(

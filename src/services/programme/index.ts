@@ -1,3 +1,6 @@
 export { ClassPersonCreator } from "./classPerson";
 
-export { ProgrammeClassGetter } from "./programmesClasses";
+export {
+  ProgrammeClassGetter,
+  ProgrammeClassCreator,
+} from "./programmesClasses";
