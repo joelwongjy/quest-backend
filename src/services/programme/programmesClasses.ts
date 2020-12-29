@@ -1,9 +1,22 @@
-import { getRepository } from "typeorm";
+import { validate } from "class-validator";
+import { EntityManager, getRepository } from "typeorm";
 import { Class } from "../../entities/programme/Class";
 import { Programme } from "../../entities/programme/Programme";
 import { ClassListData } from "../../types/classes";
 import { ClassPersonRole } from "../../types/classPersons";
-import { ProgrammeData, ProgrammeListData } from "../../types/programmes";
+import { PROGRAMME_CLASS_CREATOR_ERROR } from "../../types/errors";
+import {
+  ProgrammeData,
+  ProgrammeListData,
+  ProgrammePostData,
+} from "../../types/programmes";
+
+class ProgrammeClassCreatorError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = PROGRAMME_CLASS_CREATOR_ERROR;
+  }
+}
 
 export type ProgrammeClass = {
   programmes: Programme[];
@@ -133,5 +146,61 @@ export class ProgrammeClassGetter {
     };
 
     return result;
+  }
+}
+
+export class ProgrammeClassCreator {
+  private manager: EntityManager;
+
+  constructor(manager: EntityManager) {
+    this.manager = manager;
+  }
+
+  public async createProgrammeWithClasses(
+    createData: ProgrammePostData
+  ): Promise<Programme> {
+    const { name, description, classes: classesCreateData } = createData;
+
+    let programme: Programme = new Programme(name, description);
+    const errors = await validate(programme);
+    if (errors.length > 0) {
+      throw new ProgrammeClassCreatorError(
+        `Provided programme details (name: ${name}, description: ${description}) ` +
+          `failed validation checks (failed properties: ${errors.map(
+            (e) => e.property
+          )})`
+      );
+    }
+
+    programme = await this.manager.getRepository(Programme).save(programme);
+
+    if (!classesCreateData || classesCreateData.length === 0) {
+      return programme;
+    }
+
+    let classes: Class[] = await Promise.all(
+      classesCreateData.map(async (c) => {
+        const { name, description } = c;
+        let clazz = new Class(name, programme, description);
+
+        const errors = await validate(clazz);
+        if (errors.length > 0) {
+          throw new ProgrammeClassCreatorError(
+            `Provided class details (name: ${name}, description: ${description})` +
+              `failed validation checks (failed properties: ${errors.map(
+                (e) => e.property
+              )})`
+          );
+        }
+
+        return clazz;
+      })
+    );
+
+    classes = await this.manager.getRepository(Class).save(classes);
+
+    // safe to do this since programme is new
+    programme.classes = classes;
+    return programme;
   }
 }

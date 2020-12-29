@@ -40,3 +40,5 @@ export const PRE_POST_QUESTIONNAIRE_VIEWER_ERROR =
 
 export const PERSON_CREATOR_ERROR = "PersonCreatorError";
 export const CLASS_PERSON_CREATOR_ERROR = "ClassPersonCreatorError";
+
+export const PROGRAMME_CLASS_CREATOR_ERROR = "ProgrammeClassCreatorError";

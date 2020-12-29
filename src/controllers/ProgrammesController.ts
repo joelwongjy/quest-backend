@@ -1,8 +1,15 @@
 import { SuccessId } from "../types/errors";
-import { ProgrammeData, ProgrammeListData } from "../types/programmes";
+import {
+  ProgrammeData,
+  ProgrammeListData,
+  ProgrammePostData,
+} from "../types/programmes";
 import { Request, Response } from "express";
 import { ProgrammeClassGetter } from "../services/programme";
 import { ProgrammeClassIds } from "../middlewares/findRelevantEntities";
+import { getConnection } from "typeorm";
+import { ProgrammeClassCreator } from "../services/programme/programmesClasses";
+import { Programme } from "../entities/programme/Programme";
 
 export async function index(
   _request: Request<{}, any, any, any>,
@@ -17,6 +24,27 @@ export async function index(
     );
 
     response.status(200).json({ programmes });
+    return;
+  } catch (e) {
+    console.log(e);
+    response.status(400).json({ success: false });
+    return;
+  }
+}
+
+export async function create(
+  request: Request<{}, any, ProgrammePostData, any>,
+  response: Response<SuccessId>
+): Promise<void> {
+  try {
+    const programme = await getConnection().transaction<Programme>(
+      async (manager) => {
+        const creator = new ProgrammeClassCreator(manager);
+        return await creator.createProgrammeWithClasses(request.body);
+      }
+    );
+
+    response.status(200).json({ success: true, id: programme.id });
     return;
   } catch (e) {
     console.log(e);

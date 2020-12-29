@@ -11,6 +11,10 @@ export interface ProgrammePatchData {
 export interface ProgrammePostData {
   name: string;
   description?: string;
+  classes?: {
+    name: string;
+    description?: string;
+  }[];
 }
 
 // GET /programmes
