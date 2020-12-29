@@ -2,6 +2,8 @@ import request from "supertest";
 import { getRepository } from "typeorm";
 import { Programme } from "../../entities/programme/Programme";
 import ApiServer from "../../server";
+import { ProgrammeClassCreator } from "../../services/programme/programmesClasses";
+import { ProgrammePostData } from "../../types/programmes";
 import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
 
 let server: ApiServer;
@@ -71,5 +73,47 @@ describe("GET /programmes/:id", () => {
       .get(`${fixtures.api}/programmes/${fixtures.programme.id}`)
       .send();
     expect(response.status).toEqual(401);
+  });
+});
+
+describe("POST /", () => {
+  const postData: ProgrammePostData = {
+    name: "Winter programme for kids!",
+    description: "Enjoy your december holidays with us!",
+    classes: [
+      {
+        name: "Snowflake origami",
+        description: "Make some origami with us!",
+      },
+      {
+        name: "Hiking @ Bukit Timah",
+      },
+    ],
+  };
+
+  it("should return 200 and create programmes if admin", async () => {
+    const response = await request(server.server)
+      .post(`${fixtures.api}/programmes`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(postData);
+    expect(response.status).toBe(200);
+    expect(
+      await ProgrammeClassCreator.verify(response.body.id, postData)
+    ).toBeTruthy();
+  });
+
+  it("should return 401 if not admin", async () => {
+    const response = await request(server.server)
+      .post(`${fixtures.api}/programmes`)
+      .set("Authorization", fixtures.teacherAccessToken)
+      .send(postData);
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 401 if not logged in", async () => {
+    const response = await request(server.server)
+      .post(`${fixtures.api}/programmes`)
+      .send(postData);
+    expect(response.status).toBe(401);
   });
 });

@@ -14,7 +14,7 @@ router.use(findRelevantProgramClasses);
 router.get("/", ProgrammesController.index);
 router.get("/:id", ProgrammesController.show);
 
-router.use(checkIfAdmin);
+router.use(checkIfAdmin());
 router.post("/", ProgrammesController.create);
 
 export default router;

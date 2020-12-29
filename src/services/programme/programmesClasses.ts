@@ -203,4 +203,30 @@ export class ProgrammeClassCreator {
     programme.classes = classes;
     return programme;
   }
+
+  public static async verify(
+    id: number,
+    createData: ProgrammePostData
+  ): Promise<boolean> {
+    const query = await getRepository(Programme).findOne({
+      where: { id },
+      relations: ["classes"],
+    });
+
+    if (!query) {
+      return false;
+    }
+
+    const { classes } = createData;
+    if (!classes || classes.length === 0) {
+      // verification has been completed
+      return true;
+    }
+
+    if (classes.length !== query.classes.length) {
+      return false;
+    }
+
+    return true;
+  }
 }
