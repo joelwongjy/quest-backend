@@ -13,7 +13,7 @@ export async function index(
       .programmeClassIds as ProgrammeClassIds;
     const { programmeIds } = programmeClassIds;
     const programmes = await new ProgrammeClassGetter().getProgrammeList(
-      programmeIds
+      Array.from(programmeIds)
     );
 
     response.status(200).json({ programmes });
@@ -41,7 +41,7 @@ export async function show(
     const programmeClassIds = response.locals
       .programmeClassIds as ProgrammeClassIds;
     const { programmeIds } = programmeClassIds;
-    if (!programmeIds.includes(idInt)) {
+    if (!programmeIds.has(idInt)) {
       response.status(401).json({ success: false });
       return;
     }

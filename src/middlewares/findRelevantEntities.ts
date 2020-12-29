@@ -7,8 +7,8 @@ import { AccessTokenSignedPayload } from "../types/tokens";
 import { DefaultUserRole } from "../types/users";
 
 export type ProgrammeClassIds = {
-  programmeIds: number[];
-  classIds: number[];
+  programmeIds: Set<number>;
+  classIds: Set<number>;
 };
 
 /** Should be called after `checkBearerToken` */
