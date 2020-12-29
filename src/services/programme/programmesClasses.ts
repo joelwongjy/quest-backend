@@ -1,4 +1,5 @@
 import { validate } from "class-validator";
+import { flatMap } from "lodash";
 import { EntityManager, getRepository } from "typeorm";
 import { Class } from "../../entities/programme/Class";
 import { ClassPerson } from "../../entities/programme/ClassPerson";
@@ -307,5 +308,48 @@ export class ProgrammeClassDeleter {
     classPersons: ClassPerson[]
   ): Promise<void> {
     await this.manager.getRepository(ClassPerson).softRemove(classPersons);
+  }
+
+  public static async verify(id: number): Promise<boolean> {
+    const programme = await getRepository(Programme).findOneOrFail({
+      select: ["id", "discardedAt"],
+      where: { id },
+      withDeleted: true,
+      relations: [
+        "programmeQuestionnaires",
+        "classes",
+        "classes.classQuestionnaires",
+        "classes.classPersons",
+      ],
+    });
+
+    const classQuestionnaires: ClassQuestionnaire[] = flatMap(
+      programme.classes.map((c) => c.classQuestionnaires)
+    );
+    const classPersons: ClassPerson[] = flatMap(
+      programme.classes.map((c) => c.classPersons)
+    );
+
+    const isProgrammeDeleted = !!programme.discardedAt;
+    const areProgrammeQnnairesDeleted =
+      programme.programmeQuestionnaires.filter(
+        (pqnnaire) => !pqnnaire.discardedAt
+      ).length === 0;
+
+    const areClassesDeleted =
+      programme.classes.filter((c) => !c.discardedAt).length === 0;
+    const areClassQnnairesDeleted =
+      classQuestionnaires.filter((cqnnaire) => !cqnnaire.discardedAt).length ===
+      0;
+    const areClassPersonsDeleted =
+      classPersons.filter((cp) => !cp.discardedAt).length === 0;
+
+    return (
+      isProgrammeDeleted &&
+      areProgrammeQnnairesDeleted &&
+      areClassesDeleted &&
+      areClassQnnairesDeleted &&
+      areClassPersonsDeleted
+    );
   }
 }
