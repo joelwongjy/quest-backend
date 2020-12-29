@@ -782,14 +782,6 @@ export class QuestionnaireDeleter {
         return false;
     }
 
-    // console.log({
-    //   isQnnaireDeleted: isQnnaireDeleted,
-    //   areWindowsDeleted: areWindowsDeleted,
-    //   areRelatedProgrammeQuestionnairesDeleted: areRelatedProgrammeQuestionnairesDeleted,
-    //   areRelatedClassQuestionnairesDeleted: areRelatedClassQuestionnairesDeleted,
-    //   areQnSetsDeleted: areQnSetsDeleted,
-    //   areQnOrdersDeleted: areQnOrdersDeleted,
-    // });
     return (
       isQnnaireDeleted &&
       areWindowsDeleted &&
