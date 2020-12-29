@@ -49,6 +49,7 @@ export const findRelevantProgramClasses = async (
       programmes.forEach((p) => programmeIds.add(p.id));
       classes.forEach((c) => classIds.add(c.id));
 
+      break;
     case DefaultUserRole.USER:
       user.person.classPersons.forEach((cp) => {
         if (cp.discardedAt) {
