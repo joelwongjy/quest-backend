@@ -1,7 +1,9 @@
 import { getRepository } from "typeorm";
 import { Class } from "../../entities/programme/Class";
 import { Programme } from "../../entities/programme/Programme";
-import { ProgrammeListData } from "../../types/programmes";
+import { ClassListData } from "../../types/classes";
+import { ClassPersonRole } from "../../types/classPersons";
+import { ProgrammeData, ProgrammeListData } from "../../types/programmes";
 
 export type ProgrammeClass = {
   programmes: Programme[];
@@ -64,6 +66,72 @@ export class ProgrammeClassGetter {
         classCount: p.classes.length,
       };
     });
+    return result;
+  }
+
+  public async getProgramme(id: number): Promise<ProgrammeData | undefined> {
+    const programme = await getRepository(Programme).findOne({
+      where: { id },
+      relations: [
+        "classes",
+        "classes.classPersons",
+        "classes.classPersons.person",
+      ],
+    });
+
+    if (!programme) {
+      return undefined;
+    }
+
+    const classes: ClassListData[] = [];
+    const uniqTeachers: Set<number> = new Set();
+    const uniqStudents: Set<number> = new Set();
+
+    programme.classes.forEach((c) => {
+      let teacherCount: number = 0;
+      let studentCount: number = 0;
+
+      if (c.discardedAt) {
+        return;
+      }
+
+      c.classPersons.forEach((cp) => {
+        if (cp.discardedAt) {
+          return;
+        }
+        switch (cp.role) {
+          case ClassPersonRole.TEACHER:
+            teacherCount++;
+            uniqTeachers.add(cp.person.id);
+            break;
+          case ClassPersonRole.STUDENT:
+            studentCount++;
+            uniqStudents.add(cp.person.id);
+            break;
+          case ClassPersonRole.ADMIN:
+            break;
+          default:
+            break;
+        }
+      });
+
+      classes.push({
+        ...c.getBase(),
+        name: c.name,
+        teacherCount,
+        studentCount,
+      });
+    });
+
+    const result: ProgrammeData = {
+      ...programme.getBase(),
+      name: programme.name,
+      classes,
+      classCount: classes.length,
+      teacherCount: uniqTeachers.size,
+      studentCount: uniqStudents.size,
+    };
+
     return result;
   }
 }

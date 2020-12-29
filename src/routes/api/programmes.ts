@@ -9,5 +9,6 @@ export const router = Router();
 router.use(checkBearerToken(BearerTokenType.AccessToken));
 router.use(findRelevantProgramClasses);
 router.get("/", ProgrammesController.index);
+router.get("/:id", ProgrammesController.show);
 
 export default router;
