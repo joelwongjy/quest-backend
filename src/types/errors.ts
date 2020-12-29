@@ -7,6 +7,8 @@ export interface SuccessId {
   id?: number;
 }
 
+export const TYPEORM_ENTITYNOTFOUND = "EntityNotFound";
+
 export const QUESTION_ORDER_CREATION_ERROR = "QuestionOrderCreationError";
 export const QUESTION_ORDER_EDITOR_ERROR = "QuestionOrderEditorError";
 export const QUESTION_ORDER_VIEWER_ERROR = "QuestionOrderViewerError";

@@ -7,9 +7,9 @@ import {
   QuestionnaireOneWindowData,
   QuestionnaireType,
   QuestionnaireWindowId,
+  QuestionnairePostData,
 } from "../types/questionnaires";
 import { selectQuestionnaireData } from "../selectors/questionnaires";
-import { QuestionnairePostData } from "../types/questionnaires";
 import {
   OneTimeQuestionnaireCreator,
   OneTimeQuestionnaireEditor,
@@ -17,13 +17,11 @@ import {
   PrePostQuestionnaireEditor,
   QuestionnaireCreator,
   QuestionnaireEditor,
+  QuestionnaireDeleter,
 } from "../services/questionnaire";
-import { getRepository } from "typeorm";
+import { getConnection, getRepository } from "typeorm";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
-import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
-import { QuestionSet } from "../entities/questionnaire/QuestionSet";
-import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
-import { Message, SuccessId } from "../types/errors";
+import { Message, SuccessId, TYPEORM_ENTITYNOTFOUND } from "../types/errors";
 
 export async function index(
   _request: Request,
@@ -71,58 +69,27 @@ export async function create(
 
 export async function softDelete(
   request: Request<QuestionnaireId, any, any, any>,
-  response: Response
+  response: Response<SuccessId>
 ) {
   const { id } = request.params;
-  const questionnaire = await getRepository(Questionnaire).findOne({
-    where: { id },
-    relations: [
-      "questionnaireWindows",
-      "questionnaireWindows.mainSet",
-      "questionnaireWindows.mainSet.questionOrders",
-      "questionnaireWindows.sharedSet",
-      "questionnaireWindows.sharedSet.questionOrders",
-    ],
-  });
+  try {
+    await getConnection().transaction<void>(async (manager) => {
+      await new QuestionnaireDeleter(manager).deleteQuestionnaire(id);
+    });
 
-  if (!questionnaire) {
-    response.sendStatus(404);
+    response.status(200).json({ success: true, id });
     return;
+  } catch (e) {
+    switch (e.name) {
+      case TYPEORM_ENTITYNOTFOUND:
+        response.status(404).json({ success: false });
+        return;
+      default:
+        console.log(e);
+        response.status(400).json({ success: false });
+        return;
+    }
   }
-
-  // soft-delete the questionnaire
-  await getRepository(Questionnaire).softRemove(questionnaire);
-
-  // soft-delete the windows
-  await getRepository(QuestionnaireWindow).softRemove(
-    questionnaire.questionnaireWindows!
-  );
-
-  const questionSets: QuestionSet[] = [];
-  let questionOrders: QuestionOrder[] = [];
-  let includesSharedSet = false;
-  questionnaire.questionnaireWindows.forEach((window) => {
-    if (window.mainSet) {
-      questionSets.push(window.mainSet);
-      questionOrders = questionOrders.concat(window.mainSet.questionOrders);
-    }
-
-    if (window.sharedSet && !includesSharedSet) {
-      questionSets.push(window.sharedSet);
-      questionOrders = questionOrders.concat(window.sharedSet.questionOrders);
-
-      includesSharedSet = true;
-    }
-  });
-
-  // soft-delete the sets
-  await getRepository(QuestionSet).softRemove(questionSets);
-
-  // soft-delete the question orders
-  await getRepository(QuestionOrder).softRemove(questionOrders);
-
-  response.sendStatus(200);
-  return;
 }
 
 export async function show(

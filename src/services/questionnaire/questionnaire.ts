@@ -1,6 +1,10 @@
-import { getRepository } from "typeorm";
+import { EntityManager, getRepository } from "typeorm";
+import { ClassQuestionnaire } from "../../entities/questionnaire/ClassQuestionnaire";
+import { ProgrammeQuestionnaire } from "../../entities/questionnaire/ProgrammeQuestionnaire";
 import { Questionnaire } from "../../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../../entities/questionnaire/QuestionnaireWindow";
+import { QuestionOrder } from "../../entities/questionnaire/QuestionOrder";
+import { QuestionSet } from "../../entities/questionnaire/QuestionSet";
 import {
   ONE_TIME_QUESTIONNAIRE_CREATOR_ERROR,
   PRE_POST_QUESTIONNAIRE_CREATOR_ERROR,
@@ -643,5 +647,148 @@ export class PrePostQuestionnaireViewer extends QuestionnaireViewer {
       programmes,
       classes,
     };
+  }
+}
+
+export class QuestionnaireDeleter {
+  private manager: EntityManager;
+
+  constructor(manager: EntityManager) {
+    this.manager = manager;
+  }
+
+  public async deleteQuestionnaire(id: number): Promise<void> {
+    const qnnaire = await this.manager
+      .getRepository(Questionnaire)
+      .findOneOrFail({
+        where: { id },
+        relations: [
+          "questionnaireWindows",
+          "questionnaireWindows.mainSet",
+          "questionnaireWindows.mainSet.questionOrders",
+          "questionnaireWindows.sharedSet",
+          "questionnaireWindows.sharedSet.questionOrders",
+          "programmeQuestionnaires",
+          "classQuestionnaires",
+        ],
+      });
+
+    await this._deleteWindowsAndQuestions(qnnaire);
+    await this._deleteProgrammeClassQnnaires(qnnaire);
+  }
+
+  private async _deleteWindowsAndQuestions(
+    qnnaire: Questionnaire
+  ): Promise<void> {
+    // soft-delete the questionnaire
+    await this.manager.getRepository(Questionnaire).softRemove(qnnaire);
+
+    // soft-delete the windows
+    await this.manager
+      .getRepository(QuestionnaireWindow)
+      .softRemove(qnnaire.questionnaireWindows!);
+
+    const questionSets: QuestionSet[] = [];
+    let questionOrders: QuestionOrder[] = [];
+    let includesSharedSet = false;
+    qnnaire.questionnaireWindows.forEach((window) => {
+      if (window.mainSet) {
+        questionSets.push(window.mainSet);
+        questionOrders = questionOrders.concat(window.mainSet.questionOrders);
+      }
+
+      if (window.sharedSet && !includesSharedSet) {
+        questionSets.push(window.sharedSet);
+        questionOrders = questionOrders.concat(window.sharedSet.questionOrders);
+
+        includesSharedSet = true;
+      }
+    });
+    // soft-delete the sets
+    await this.manager.getRepository(QuestionSet).softRemove(questionSets);
+
+    // soft-delete the question orders
+    await this.manager.getRepository(QuestionOrder).softRemove(questionOrders);
+  }
+
+  private async _deleteProgrammeClassQnnaires(
+    qnnaire: Questionnaire
+  ): Promise<void> {
+    // soft-delete the related programme questionnaires
+    await this.manager
+      .getRepository(ProgrammeQuestionnaire)
+      .softRemove(qnnaire.programmeQuestionnaires);
+
+    // soft-delete the related class questionnaire
+    await this.manager
+      .getRepository(ClassQuestionnaire)
+      .softRemove(qnnaire.classQuestionnaires);
+  }
+
+  public static async verify(id: number): Promise<boolean> {
+    // leverage on softdeletion to find the ids of related entities
+    const qnnaire = await getRepository(Questionnaire).findOneOrFail({
+      where: { id },
+      withDeleted: true,
+      relations: [
+        "questionnaireWindows",
+        "questionnaireWindows.mainSet",
+        "questionnaireWindows.mainSet.questionOrders",
+        "questionnaireWindows.sharedSet",
+        "questionnaireWindows.sharedSet.questionOrders",
+        "programmeQuestionnaires",
+        "classQuestionnaires",
+      ],
+    });
+
+    const isQnnaireDeleted = !!qnnaire.discardedAt;
+    const areWindowsDeleted =
+      qnnaire.questionnaireWindows.filter((w) => !w.discardedAt).length === 0;
+
+    const areRelatedProgrammeQuestionnairesDeleted =
+      qnnaire.programmeQuestionnaires.filter((pq) => !pq.discardedAt).length ===
+      0;
+    const areRelatedClassQuestionnairesDeleted =
+      qnnaire.classQuestionnaires.filter((cq) => !cq.discardedAt).length === 0;
+
+    let areQnSetsDeleted: boolean = false;
+    let areQnOrdersDeleted: boolean = false;
+    switch (qnnaire.questionnaireType) {
+      case QuestionnaireType.ONE_TIME:
+        const mainSet = qnnaire.questionnaireWindows[0].mainSet;
+
+        areQnSetsDeleted = !!mainSet.discardedAt;
+        areQnOrdersDeleted =
+          mainSet.questionOrders.filter((q) => !q.discardedAt).length === 0;
+        break;
+
+      case QuestionnaireType.PRE_POST:
+        const set1Main = qnnaire.questionnaireWindows[0].mainSet;
+        const set2Main = qnnaire.questionnaireWindows[1].mainSet;
+
+        const set1Shared = qnnaire.questionnaireWindows[0].sharedSet!;
+
+        areQnSetsDeleted =
+          !!set1Main.discardedAt &&
+          !!set2Main.discardedAt &&
+          !!set1Shared?.discardedAt;
+        areQnOrdersDeleted =
+          set1Main.questionOrders.filter((q) => !q.discardedAt).length === 0 &&
+          set2Main.questionOrders.filter((q) => !q.discardedAt).length === 0 &&
+          set1Shared.questionOrders.filter((q) => !q.discardedAt).length === 0;
+        break;
+
+      default:
+        return false;
+    }
+
+    return (
+      isQnnaireDeleted &&
+      areWindowsDeleted &&
+      areRelatedProgrammeQuestionnairesDeleted &&
+      areRelatedClassQuestionnairesDeleted &&
+      areQnSetsDeleted &&
+      areQnOrdersDeleted
+    );
   }
 }

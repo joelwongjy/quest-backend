@@ -173,7 +173,7 @@ export class Fixtures {
       sharedQuestions: {
         questions: [],
       },
-      classes: [],
+      classes: [this.class_.id],
       programmes: [],
     });
     const result: Questionnaire = await creator.createQuestionnaire();
@@ -190,7 +190,7 @@ export class Fixtures {
       type: QuestionnaireType.PRE_POST,
       questionWindows: [beforeWindow, afterWindow],
       sharedQuestions: this.sampleWindow3,
-      classes: [],
+      classes: [this.class_.id],
       programmes: [],
     });
     const result: Questionnaire = await creator.createQuestionnaire();
