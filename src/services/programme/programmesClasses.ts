@@ -343,6 +343,10 @@ export class ClassDeletor {
   }
 
   public async deleteClasses(classes: Class[]): Promise<void> {
+    if (classes.length === 0) {
+      return;
+    }
+
     const classesOR = classes.map((c) => {
       return { id: c.id };
     });
@@ -351,10 +355,12 @@ export class ClassDeletor {
       relations: ["classQuestionnaires", "classPersons"],
     });
 
-    const classQnnaires = flatMap(classes.map((c) => c.classQuestionnaires));
-    const classPersons = flatMap(classes.map((c) => c.classPersons));
+    const classQnnaires = flatMap(
+      queryClasses.map((c) => c.classQuestionnaires)
+    );
+    const classPersons = flatMap(queryClasses.map((c) => c.classPersons));
 
-    await this._deleteClasses(classes);
+    await this._deleteClasses(queryClasses);
     await this._deleteClassQuestionnaires(classQnnaires);
     await this._deleteClassPersons(classPersons);
   }
@@ -516,5 +522,80 @@ export class ProgrammeClassEditor {
     const result = toKeep.concat(recoveredClasses);
 
     return result;
+  }
+
+  public static async verify(
+    id: string | number,
+    editData: ProgrammePatchData
+  ): Promise<boolean> {
+    const programme = await getRepository(Programme).findOne({
+      where: { id },
+      relations: [
+        "classes",
+        "classes.classPersons",
+        "classes.classQuestionnaires",
+      ],
+    });
+    if (!programme) {
+      return false;
+    }
+
+    const { name, description, classes: editClasses } = editData;
+    if (name && name !== programme.name) {
+      return false;
+    }
+    if (description && description !== programme.description) {
+      return false;
+    }
+
+    if (!editClasses) {
+      // verification has completed
+      return true;
+    }
+
+    const activeClasses: Class[] = [];
+    const discardedClasses: Class[] = [];
+    programme.classes.forEach((c) => {
+      if (c.discardedAt) {
+        discardedClasses.push(c);
+      } else {
+        activeClasses.push(c);
+      }
+    });
+
+    if (activeClasses.length !== editClasses.length) {
+      return false;
+    }
+
+    // check activeClasses
+    const activeClassPersons: ClassPerson[] = flatMap(
+      activeClasses.map((c) => c.classPersons)
+    );
+    const activeClassQnnaires: ClassQuestionnaire[] = flatMap(
+      activeClasses.map((c) => c.classQuestionnaires)
+    );
+    const areActiveClassPersonsActive =
+      activeClassPersons.filter((cp) => cp.discardedAt).length === 0;
+    const areActiveClassQnnairesActive =
+      activeClassQnnaires.filter((cq) => cq.discardedAt).length === 0;
+
+    // check discardedClasses
+    const discardedClassPersons: ClassPerson[] = flatMap(
+      discardedClasses.map((c) => c.classPersons)
+    );
+    const discardedClassQnnaires: ClassQuestionnaire[] = flatMap(
+      discardedClasses.map((c) => c.classQuestionnaires)
+    );
+    const areDiscardedClassPersonsDiscarded =
+      discardedClassPersons.filter((cp) => !cp.discardedAt).length === 0;
+    const areDiscardedClassQnnairesDiscarded =
+      discardedClassQnnaires.filter((cq) => !cq.discardedAt).length === 0;
+
+    return (
+      areActiveClassPersonsActive &&
+      areActiveClassQnnairesActive &&
+      areDiscardedClassPersonsDiscarded &&
+      areDiscardedClassQnnairesDiscarded
+    );
   }
 }
