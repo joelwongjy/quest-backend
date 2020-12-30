@@ -11,10 +11,12 @@ import { ClassPersonRole } from "../../types/classPersons";
 import {
   PROGRAMME_CLASS_CREATOR_ERROR,
   PROGRAMME_CLASS_DELETOR_ERROR,
+  PROGRAMME_CLASS_EDITOR_ERROR,
 } from "../../types/errors";
 import {
   ProgrammeData,
   ProgrammeListData,
+  ProgrammePatchData,
   ProgrammePostData,
 } from "../../types/programmes";
 
@@ -29,6 +31,13 @@ class ProgrammeClassDeleterError extends Error {
   constructor(message: string) {
     super(message);
     this.name = PROGRAMME_CLASS_DELETOR_ERROR;
+  }
+}
+
+class ProgrammeClassEditorError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = PROGRAMME_CLASS_EDITOR_ERROR;
   }
 }
 
@@ -258,28 +267,16 @@ export class ProgrammeClassDeleter {
       .findOneOrFail({
         select: ["id"],
         where: { id },
-        relations: [
-          "programmeQuestionnaires",
-          "classes",
-          "classes.classQuestionnaires",
-          "classes.classPersons",
-        ],
+        relations: ["programmeQuestionnaires", "classes"],
       });
 
     const { programmeQuestionnaires, classes } = programme;
 
-    let classQnnaires: ClassQuestionnaire[] = [];
-    let classPersons: ClassPerson[] = [];
-    classes.forEach((c) => {
-      classQnnaires = classQnnaires.concat(c.classQuestionnaires);
-      classPersons = classPersons.concat(c.classPersons);
-    });
-
     await this._deleteProgramme(programme);
     await this._deleteProgrammeQuestionnaires(programmeQuestionnaires);
-    await this._deleteClasses(classes);
-    await this._deleteClassQuestionnaires(classQnnaires);
-    await this._deleteClassPersons(classPersons);
+
+    const classDeletor = new ClassDeletor(this.manager);
+    await classDeletor.deleteClasses(classes);
   }
 
   private async _deleteProgramme(programme: Programme): Promise<void> {
@@ -292,22 +289,6 @@ export class ProgrammeClassDeleter {
     await this.manager
       .getRepository(ProgrammeQuestionnaire)
       .softRemove(pqnnaire);
-  }
-
-  private async _deleteClasses(classes: Class[]): Promise<void> {
-    await this.manager.getRepository(Class).softRemove(classes);
-  }
-
-  private async _deleteClassQuestionnaires(
-    cqnnaire: ClassQuestionnaire[]
-  ): Promise<void> {
-    await this.manager.getRepository(ClassQuestionnaire).softRemove(cqnnaire);
-  }
-
-  private async _deleteClassPersons(
-    classPersons: ClassPerson[]
-  ): Promise<void> {
-    await this.manager.getRepository(ClassPerson).softRemove(classPersons);
   }
 
   public static async verify(id: number): Promise<boolean> {
@@ -351,5 +332,193 @@ export class ProgrammeClassDeleter {
       areClassQnnairesDeleted &&
       areClassPersonsDeleted
     );
+  }
+}
+
+export class ClassDeletor {
+  private manager: EntityManager;
+
+  constructor(manager: EntityManager) {
+    this.manager = manager;
+  }
+
+  public async deleteClasses(classes: Class[]): Promise<void> {
+    const classesOR = classes.map((c) => {
+      return { id: c.id };
+    });
+    const queryClasses = await this.manager.getRepository(Class).find({
+      where: classesOR,
+      relations: ["classQuestionnaires", "classPersons"],
+    });
+
+    const classQnnaires = flatMap(classes.map((c) => c.classQuestionnaires));
+    const classPersons = flatMap(classes.map((c) => c.classPersons));
+
+    await this._deleteClasses(classes);
+    await this._deleteClassQuestionnaires(classQnnaires);
+    await this._deleteClassPersons(classPersons);
+  }
+
+  private async _deleteClasses(classes: Class[]): Promise<void> {
+    await this.manager.getRepository(Class).softRemove(classes);
+  }
+
+  private async _deleteClassQuestionnaires(
+    cqnnaire: ClassQuestionnaire[]
+  ): Promise<void> {
+    await this.manager.getRepository(ClassQuestionnaire).softRemove(cqnnaire);
+  }
+
+  private async _deleteClassPersons(
+    classPersons: ClassPerson[]
+  ): Promise<void> {
+    await this.manager.getRepository(ClassPerson).softRemove(classPersons);
+  }
+}
+
+export class ProgrammeClassEditor {
+  private manager: EntityManager;
+
+  constructor(manager: EntityManager) {
+    this.manager = manager;
+  }
+
+  public async editProgramme(
+    id: string,
+    editData: ProgrammePatchData
+  ): Promise<Programme> {
+    const query = await this.manager.getRepository(Programme).findOneOrFail({
+      select: ["id"],
+      where: { id },
+      relations: [
+        "classes",
+        "classes.classQuestionnaires",
+        "classes.classPersons",
+      ],
+    });
+
+    const { name, description, classes } = editData;
+    let programme: Programme;
+    programme = await this.editProgrammeAttributes(query, name, description);
+
+    if (classes) {
+      programme = await this.editAssociatedClasses(query, {
+        classes,
+      });
+    }
+
+    return programme;
+  }
+
+  private async editProgrammeAttributes(
+    programme: Programme,
+    name?: string,
+    description?: string
+  ): Promise<Programme> {
+    if (!name && !description) {
+      return programme;
+    }
+
+    if (name) {
+      programme.name = name;
+    }
+    if (description) {
+      programme.description = description;
+    }
+
+    await this.manager.getRepository(Programme).save(programme);
+    return programme;
+  }
+
+  private async editAssociatedClasses(
+    programme: Programme,
+    editData: Required<Pick<ProgrammePatchData, "classes">>
+  ): Promise<Programme> {
+    const { classes: existingClasses } = programme;
+
+    const classesToDelete: Map<number, Class> = new Map();
+    existingClasses.forEach((c) => {
+      classesToDelete.set(c.id, c);
+    });
+
+    const toKeep: Class[] = [];
+    const toCreate: Class[] = []; // pass to a ClassCreator
+    const toSoftDelete: Class[] = []; // pass to a ClassDeletor
+
+    editData.classes.forEach((c) => {
+      if (c.id && classesToDelete.has(c.id)) {
+        const classInMap = classesToDelete.get(c.id)!;
+        toKeep.push(classInMap);
+        classesToDelete.delete(c.id);
+        return;
+      }
+
+      const { name, description } = c;
+      if (!name) {
+        throw new ProgrammeClassEditorError(``);
+      }
+      toCreate.push(new Class(name, programme, description));
+    });
+
+    classesToDelete.forEach((c) => {
+      toSoftDelete.push(c);
+    });
+
+    const keptClasses = await this.keepClasses(toKeep);
+    const createdClasses = await this.createClasses(toCreate);
+    await this.deleteClasses(toSoftDelete);
+    const associatedClasses = keptClasses.concat(createdClasses);
+
+    if (programme.classes.length < associatedClasses.length) {
+      throw new ProgrammeClassEditorError(
+        `Edit operation will cause dangling classes`
+      );
+    }
+
+    programme.classes = associatedClasses; // Risky operation
+    await this.manager.getRepository(Programme).save(programme);
+    return programme;
+  }
+
+  private async createClasses(classes: Class[]): Promise<Class[]> {
+    await Promise.all(
+      classes.map(async (c) => {
+        const errors = await validate(c);
+        if (errors.length > 0) {
+          throw new ProgrammeClassEditorError(
+            `${c} failed validation checks ` +
+              `(failed properties: ${errors.map((e) => e.property)})`
+          );
+        }
+      })
+    );
+
+    const newClasses = await this.manager.getRepository(Class).save(classes);
+    return newClasses;
+  }
+
+  private async deleteClasses(classes: Class[]): Promise<void> {
+    const deletor = new ClassDeletor(this.manager);
+    await deletor.deleteClasses(classes);
+  }
+
+  private async keepClasses(classes: Class[]): Promise<Class[]> {
+    const toRestore: Class[] = [];
+    const toKeep: Class[] = [];
+
+    classes.forEach((c) => {
+      if (c.discardedAt) {
+        toRestore.push(c);
+      } else {
+        toKeep.push(c);
+      }
+    });
+
+    const recoveredClasses = await this.manager
+      .getRepository(Class)
+      .recover(toRestore);
+    const result = toKeep.concat(recoveredClasses);
+
+    return result;
   }
 }
