@@ -99,7 +99,7 @@ export class ProgrammeClassGetter {
       return {
         ...p.getBase(),
         name: p.name,
-        classCount: p.classes.length,
+        classCount: p.classes.filter((p) => !p.discardedAt).length,
       };
     });
     return result;
@@ -390,11 +390,7 @@ export class ProgrammeClassEditor {
     const query = await this.manager.getRepository(Programme).findOneOrFail({
       select: ["id"],
       where: { id },
-      relations: [
-        "classes",
-        "classes.classQuestionnaires",
-        "classes.classPersons",
-      ],
+      relations: ["classes"],
     });
 
     const { name, description, classes } = editData;
