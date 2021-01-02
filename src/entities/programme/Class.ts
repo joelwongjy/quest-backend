@@ -1,4 +1,4 @@
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty, IsOptional } from "class-validator";
 import { ClassPersonRole } from "../../types/classPersons";
 import { Column, Entity, getRepository, ManyToOne, OneToMany } from "typeorm";
 import { ClassData, ClassListData } from "../../types/classes";
@@ -11,15 +11,20 @@ import { Programme } from "./Programme";
 export class Class extends Discardable {
   entityName = "Class";
 
-  constructor(name: string, programme: Programme) {
+  constructor(name: string, programme: Programme, description?: string) {
     super();
     this.name = name;
+    this.description = description ?? null;
     this.programme = programme;
   }
 
   @Column()
   @IsNotEmpty()
   name: string;
+
+  @Column({ type: "character varying", nullable: true })
+  @IsOptional()
+  description: string | null;
 
   @ManyToOne((type) => Programme, (programme) => programme.classes)
   programme: Programme;
