@@ -16,6 +16,7 @@ router.get("/:id", ProgrammesController.show);
 
 router.use(checkIfAdmin());
 router.post("/", ProgrammesController.create);
+router.patch("/:id", ProgrammesController.edit);
 router.delete("/:id", ProgrammesController.softDelete);
 
 export default router;

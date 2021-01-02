@@ -5,8 +5,9 @@ import ApiServer from "../../server";
 import {
   ProgrammeClassCreator,
   ProgrammeClassDeleter,
+  ProgrammeClassEditor,
 } from "../../services/programme/programmesClasses";
-import { ProgrammePostData } from "../../types/programmes";
+import { ProgrammePatchData, ProgrammePostData } from "../../types/programmes";
 import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
 
 let server: ApiServer;
@@ -118,6 +119,51 @@ describe("POST /", () => {
       .post(`${fixtures.api}/programmes`)
       .send(postData);
     expect(response.status).toBe(401);
+  });
+});
+
+describe("PATCH /id", () => {
+  let editData: ProgrammePatchData = {
+    name: "Edited programme name",
+    description: "Edited programme description",
+  };
+
+  it("should return 401 if not logged in", async () => {
+    const response = await request(server.server)
+      .patch(`${fixtures.api}/programmes/${fixtures.programme.id}`)
+      .send(editData);
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 401 if not admin", async () => {
+    const response = await request(server.server)
+      .patch(`${fixtures.api}/programmes/${fixtures.programme.id}`)
+      .set("Authorization", fixtures.teacherAccessToken)
+      .send(editData);
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 200 if admin without classes", async () => {
+    const response = await request(server.server)
+      .patch(`${fixtures.api}/programmes/${fixtures.programme.id}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(editData);
+    expect(response.status).toBe(200);
+    expect(
+      await ProgrammeClassEditor.verify(fixtures.programme.id, editData)
+    ).toBeTruthy();
+  });
+
+  it("should return 200 if admin and changed classes", async () => {
+    editData.classes = [{ name: "Editing a class" }];
+    const response = await request(server.server)
+      .patch(`${fixtures.api}/programmes/${fixtures.programme.id}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(editData);
+    expect(response.status).toBe(200);
+    expect(
+      await ProgrammeClassEditor.verify(fixtures.programme.id, editData)
+    ).toBeTruthy();
   });
 });
 

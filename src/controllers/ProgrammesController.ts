@@ -3,6 +3,7 @@ import { SuccessId, TYPEORM_ENTITYNOTFOUND } from "../types/errors";
 import {
   ProgrammeData,
   ProgrammeListData,
+  ProgrammePatchData,
   ProgrammePostData,
 } from "../types/programmes";
 import {
@@ -13,6 +14,7 @@ import {
 import { ProgrammeClassIds } from "../middlewares/findRelevantEntities";
 import { getConnection } from "typeorm";
 import { Programme } from "../entities/programme/Programme";
+import { ProgrammeClassEditor } from "../services/programme/programmesClasses";
 
 export async function index(
   _request: Request<{}, any, any, any>,
@@ -114,6 +116,37 @@ export async function softDelete(
     switch (e.name) {
       case TYPEORM_ENTITYNOTFOUND:
         response.status(404).json({ success: false });
+        return;
+
+      default:
+        console.log(e);
+        response.status(400).json({ success: false });
+        return;
+    }
+  }
+}
+
+export async function edit(
+  request: Request<{ id: string }, any, ProgrammePatchData, any>,
+  response: Response<SuccessId>
+): Promise<void> {
+  const { id } = request.params;
+  const editData = request.body;
+
+  try {
+    const programme = await getConnection().transaction<Programme>(
+      async (manager) => {
+        const editor = new ProgrammeClassEditor(manager);
+        return await editor.editProgramme(id, editData);
+      }
+    );
+
+    response.status(200).json({ success: true, id: programme.id });
+    return;
+  } catch (e) {
+    switch (e.name) {
+      case TYPEORM_ENTITYNOTFOUND:
+        response.sendStatus(404);
         return;
 
       default:
