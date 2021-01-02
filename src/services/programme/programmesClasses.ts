@@ -1,10 +1,17 @@
 import { validate } from "class-validator";
+import { flatMap } from "lodash";
 import { EntityManager, getRepository } from "typeorm";
 import { Class } from "../../entities/programme/Class";
+import { ClassPerson } from "../../entities/programme/ClassPerson";
 import { Programme } from "../../entities/programme/Programme";
+import { ClassQuestionnaire } from "../../entities/questionnaire/ClassQuestionnaire";
+import { ProgrammeQuestionnaire } from "../../entities/questionnaire/ProgrammeQuestionnaire";
 import { ClassListData } from "../../types/classes";
 import { ClassPersonRole } from "../../types/classPersons";
-import { PROGRAMME_CLASS_CREATOR_ERROR } from "../../types/errors";
+import {
+  PROGRAMME_CLASS_CREATOR_ERROR,
+  PROGRAMME_CLASS_DELETOR_ERROR,
+} from "../../types/errors";
 import {
   ProgrammeData,
   ProgrammeListData,
@@ -15,6 +22,13 @@ class ProgrammeClassCreatorError extends Error {
   constructor(message: string) {
     super(message);
     this.name = PROGRAMME_CLASS_CREATOR_ERROR;
+  }
+}
+
+class ProgrammeClassDeleterError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = PROGRAMME_CLASS_DELETOR_ERROR;
   }
 }
 
@@ -228,5 +242,114 @@ export class ProgrammeClassCreator {
     }
 
     return true;
+  }
+}
+
+export class ProgrammeClassDeleter {
+  private manager: EntityManager;
+
+  constructor(manager: EntityManager) {
+    this.manager = manager;
+  }
+
+  public async deleteProgramme(id: number) {
+    const programme = await this.manager
+      .getRepository(Programme)
+      .findOneOrFail({
+        select: ["id"],
+        where: { id },
+        relations: [
+          "programmeQuestionnaires",
+          "classes",
+          "classes.classQuestionnaires",
+          "classes.classPersons",
+        ],
+      });
+
+    const { programmeQuestionnaires, classes } = programme;
+
+    let classQnnaires: ClassQuestionnaire[] = [];
+    let classPersons: ClassPerson[] = [];
+    classes.forEach((c) => {
+      classQnnaires = classQnnaires.concat(c.classQuestionnaires);
+      classPersons = classPersons.concat(c.classPersons);
+    });
+
+    await this._deleteProgramme(programme);
+    await this._deleteProgrammeQuestionnaires(programmeQuestionnaires);
+    await this._deleteClasses(classes);
+    await this._deleteClassQuestionnaires(classQnnaires);
+    await this._deleteClassPersons(classPersons);
+  }
+
+  private async _deleteProgramme(programme: Programme): Promise<void> {
+    await this.manager.getRepository(Programme).softRemove(programme);
+  }
+
+  private async _deleteProgrammeQuestionnaires(
+    pqnnaire: ProgrammeQuestionnaire[]
+  ): Promise<void> {
+    await this.manager
+      .getRepository(ProgrammeQuestionnaire)
+      .softRemove(pqnnaire);
+  }
+
+  private async _deleteClasses(classes: Class[]): Promise<void> {
+    await this.manager.getRepository(Class).softRemove(classes);
+  }
+
+  private async _deleteClassQuestionnaires(
+    cqnnaire: ClassQuestionnaire[]
+  ): Promise<void> {
+    await this.manager.getRepository(ClassQuestionnaire).softRemove(cqnnaire);
+  }
+
+  private async _deleteClassPersons(
+    classPersons: ClassPerson[]
+  ): Promise<void> {
+    await this.manager.getRepository(ClassPerson).softRemove(classPersons);
+  }
+
+  public static async verify(id: number): Promise<boolean> {
+    const programme = await getRepository(Programme).findOneOrFail({
+      select: ["id", "discardedAt"],
+      where: { id },
+      withDeleted: true,
+      relations: [
+        "programmeQuestionnaires",
+        "classes",
+        "classes.classQuestionnaires",
+        "classes.classPersons",
+      ],
+    });
+
+    const classQuestionnaires: ClassQuestionnaire[] = flatMap(
+      programme.classes.map((c) => c.classQuestionnaires)
+    );
+    const classPersons: ClassPerson[] = flatMap(
+      programme.classes.map((c) => c.classPersons)
+    );
+
+    const isProgrammeDeleted = !!programme.discardedAt;
+    const areProgrammeQnnairesDeleted =
+      programme.programmeQuestionnaires.filter(
+        (pqnnaire) => !pqnnaire.discardedAt
+      ).length === 0;
+
+    const areClassesDeleted =
+      programme.classes.filter((c) => !c.discardedAt).length === 0;
+    const areClassQnnairesDeleted =
+      classQuestionnaires.filter((cqnnaire) => !cqnnaire.discardedAt).length ===
+      0;
+    const areClassPersonsDeleted =
+      classPersons.filter((cp) => !cp.discardedAt).length === 0;
+
+    return (
+      isProgrammeDeleted &&
+      areProgrammeQnnairesDeleted &&
+      areClassesDeleted &&
+      areClassQnnairesDeleted &&
+      areClassPersonsDeleted
+    );
   }
 }

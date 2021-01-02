@@ -2,7 +2,10 @@ import request from "supertest";
 import { getRepository } from "typeorm";
 import { Programme } from "../../entities/programme/Programme";
 import ApiServer from "../../server";
-import { ProgrammeClassCreator } from "../../services/programme/programmesClasses";
+import {
+  ProgrammeClassCreator,
+  ProgrammeClassDeleter,
+} from "../../services/programme/programmesClasses";
 import { ProgrammePostData } from "../../types/programmes";
 import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
 
@@ -115,5 +118,49 @@ describe("POST /", () => {
       .post(`${fixtures.api}/programmes`)
       .send(postData);
     expect(response.status).toBe(401);
+  });
+});
+
+describe("DELETE /:id", () => {
+  it("should return 401 if not logged in", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/programmes/${fixtures.programme.id}`)
+      .send();
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 401 if not admin", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/programmes/${fixtures.programme.id}`)
+      .set("Authorization", fixtures.teacherAccessToken)
+      .send();
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 400 if admin and NaN id", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/programmes/NanId`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(400);
+  });
+
+  it("should return 404 if admin and invalid id", async () => {
+    const invalidId = 0;
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/programmes/${invalidId}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(404);
+  });
+
+  it("should return 200 and delete programme if admin and valid id", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/programmes/${fixtures.programme.id}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(200);
+    expect(response.body.id).toBeTruthy();
+    expect(await ProgrammeClassDeleter.verify(response.body.id)).toBeTruthy();
   });
 });

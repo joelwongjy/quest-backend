@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { SuccessId } from "../types/errors";
+import { SuccessId, TYPEORM_ENTITYNOTFOUND } from "../types/errors";
 import {
   ProgrammeData,
   ProgrammeListData,
@@ -8,6 +8,7 @@ import {
 import {
   ProgrammeClassGetter,
   ProgrammeClassCreator,
+  ProgrammeClassDeleter,
 } from "../services/programme";
 import { ProgrammeClassIds } from "../middlewares/findRelevantEntities";
 import { getConnection } from "typeorm";
@@ -87,5 +88,38 @@ export async function show(
     console.log(e);
     response.status(400).json({ success: false });
     return;
+  }
+}
+
+export async function softDelete(
+  request: Request<{ id: string }, any, any, any>,
+  response: Response<SuccessId>
+): Promise<void> {
+  const { id } = request.params;
+  try {
+    const idInt = parseInt(id, 10);
+    if (isNaN(idInt)) {
+      response.status(400).json({ success: false });
+      return;
+    }
+
+    await getConnection().transaction<void>(async (manager) => {
+      const deleter = new ProgrammeClassDeleter(manager);
+      await deleter.deleteProgramme(idInt);
+    });
+
+    response.status(200).json({ success: true, id: idInt });
+    return;
+  } catch (e) {
+    switch (e.name) {
+      case TYPEORM_ENTITYNOTFOUND:
+        response.status(404).json({ success: false });
+        return;
+
+      default:
+        console.log(e);
+        response.status(400).json({ success: false });
+        return;
+    }
   }
 }
