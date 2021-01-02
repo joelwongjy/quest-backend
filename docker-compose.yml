@@ -18,3 +18,16 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: db
+
+  pgadmin:
+    image: dpage/pgadmin4:4.29
+    environment:
+      PGADMIN_DEFAULT_EMAIL: user@user.com
+      PGADMIN_DEFAULT_PASSWORD: pass
+    ports:
+      - 3002:80
+    depends_on:
+      - development
+    links:
+      - development:development
+    restart: on-failure
