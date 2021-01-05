@@ -342,9 +342,9 @@ export class ClassDeletor {
     this.manager = manager;
   }
 
-  public async deleteClasses(classes: Class[]): Promise<void> {
+  public async deleteClasses(classes: Class[]): Promise<Class[]> {
     if (classes.length === 0) {
-      return;
+      return [];
     }
 
     const classesOR = classes.map((c) => {
@@ -360,25 +360,31 @@ export class ClassDeletor {
     );
     const classPersons = flatMap(queryClasses.map((c) => c.classPersons));
 
-    await this._deleteClasses(queryClasses);
+    const result = await this._deleteClasses(queryClasses);
     await this._deleteClassQuestionnaires(classQnnaires);
     await this._deleteClassPersons(classPersons);
+
+    return result;
   }
 
-  private async _deleteClasses(classes: Class[]): Promise<void> {
-    await this.manager.getRepository(Class).softRemove(classes);
+  private async _deleteClasses(classes: Class[]): Promise<Class[]> {
+    return await this.manager.getRepository(Class).softRemove(classes);
   }
 
   private async _deleteClassQuestionnaires(
     cqnnaire: ClassQuestionnaire[]
-  ): Promise<void> {
-    await this.manager.getRepository(ClassQuestionnaire).softRemove(cqnnaire);
+  ): Promise<ClassQuestionnaire[]> {
+    return await this.manager
+      .getRepository(ClassQuestionnaire)
+      .softRemove(cqnnaire);
   }
 
   private async _deleteClassPersons(
     classPersons: ClassPerson[]
-  ): Promise<void> {
-    await this.manager.getRepository(ClassPerson).softRemove(classPersons);
+  ): Promise<ClassPerson[]> {
+    return await this.manager
+      .getRepository(ClassPerson)
+      .softRemove(classPersons);
   }
 }
 
@@ -444,8 +450,8 @@ export class ProgrammeClassEditor {
     });
 
     const toKeep: Class[] = [];
-    const toCreate: Class[] = []; // pass to a ClassCreator
-    const toSoftDelete: Class[] = []; // pass to a ClassDeletor
+    const toCreate: Class[] = [];
+    const toSoftDelete: Class[] = [];
 
     editData.classes.forEach((c) => {
       if (c.id && classesToDelete.has(c.id)) {
@@ -457,7 +463,9 @@ export class ProgrammeClassEditor {
 
       const { name, description } = c;
       if (!name) {
-        throw new ProgrammeClassEditorError(``);
+        throw new ProgrammeClassEditorError(
+          `Could not associate new class as no class name was given`
+        );
       }
       toCreate.push(new Class(name, programme, description));
     });
@@ -468,10 +476,14 @@ export class ProgrammeClassEditor {
 
     const keptClasses = await this.keepClasses(toKeep);
     const createdClasses = await this.createClasses(toCreate);
-    await this.deleteClasses(toSoftDelete);
-    const associatedClasses = keptClasses.concat(createdClasses);
+    const deletedClasses = await this.deleteClasses(toSoftDelete);
+    const associatedClasses: Class[] = [
+      ...keptClasses,
+      ...createdClasses,
+      ...deletedClasses,
+    ];
 
-    if (programme.classes.length < associatedClasses.length) {
+    if (associatedClasses.length < programme.classes.length) {
       throw new ProgrammeClassEditorError(
         `Edit operation will cause dangling classes`
       );
@@ -499,9 +511,9 @@ export class ProgrammeClassEditor {
     return newClasses;
   }
 
-  private async deleteClasses(classes: Class[]): Promise<void> {
+  private async deleteClasses(classes: Class[]): Promise<Class[]> {
     const deletor = new ClassDeletor(this.manager);
-    await deletor.deleteClasses(classes);
+    return await deletor.deleteClasses(classes);
   }
 
   private async keepClasses(classes: Class[]): Promise<Class[]> {
