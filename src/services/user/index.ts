@@ -1,1 +1,1 @@
-export { StudentCreator } from "./persons";
+export { PersonGetter, StudentCreator, StudentGetter } from "./persons";
