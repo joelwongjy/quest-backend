@@ -24,7 +24,7 @@ router.post("/submissions", AttemptController.create);
 router.get("/submissions", AttemptController.index);
 router.get("/submissions/:id", AttemptController.show);
 router.get(
-  "/submissions/:questionnaireId",
+  ":questionnaireId/submissions/",
   AttemptController.showByQuestionnaire
 );
 
