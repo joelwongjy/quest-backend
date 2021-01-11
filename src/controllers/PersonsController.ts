@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { StudentCreator } from "../services/user/";
+import { StudentCreator, StudentGetter } from "../services/user/";
 import { SuccessId } from "../types/errors";
-import { PersonPostData } from "../types/persons";
+import { PersonListDataWithProgram, PersonPostData } from "../types/persons";
 
 export async function createStudent(
   request: Request<{}, any, PersonPostData, any>,
@@ -19,6 +19,20 @@ export async function createStudent(
   } catch (error) {
     console.log(error);
     response.status(400).json({ error });
+    return;
+  }
+}
+
+export async function indexStudent(
+  _request: Request<{}, any, any, any>,
+  response: Response<{ persons: PersonListDataWithProgram[] }>
+): Promise<void> {
+  try {
+    const persons = await new StudentGetter().getStudents();
+    response.status(200).json({ persons });
+  } catch (e) {
+    console.log(e);
+    response.status(400);
     return;
   }
 }
