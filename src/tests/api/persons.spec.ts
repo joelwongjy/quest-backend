@@ -91,7 +91,7 @@ describe("POST /persons/:id/user", () => {
   });
 });
 
-describe("POST /persons/student", () => {
+describe("POST /persons/students", () => {
   it("should create a person", async () => {
     const personData: PersonPostData = {
       name: "Bobby",
@@ -100,7 +100,7 @@ describe("POST /persons/student", () => {
     };
 
     const response = await request(server.server)
-      .post(`${fixtures.api}/persons/student`)
+      .post(`${fixtures.api}/persons/students`)
       .set("Authorization", fixtures.adminAccessToken)
       .send(personData);
     expect(response.status).toBe(200);
@@ -108,5 +108,22 @@ describe("POST /persons/student", () => {
     expect(
       await StudentCreator.verify(response.body.id, personData)
     ).toBeTruthy();
+  });
+});
+
+describe("GET /persons/students", () => {
+  it("should return 200 if admin", async () => {
+    const response = await request(server.server)
+      .get(`${fixtures.api}/persons/students`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(200);
+  });
+
+  it("should return 401 if not admin", async () => {
+    const response = await request(server.server)
+      .get(`${fixtures.api}/persons/students`)
+      .send();
+    expect(response.status).toBe(401);
   });
 });

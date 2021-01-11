@@ -1,10 +1,15 @@
 import { parseISO } from "date-fns";
 import { getRepository } from "typeorm";
+import { ClassPerson } from "../../entities/programme/ClassPerson";
 import { Person } from "../../entities/user/Person";
 import { ClassPersonRole } from "../../types/classPersons";
 import { isValidDate } from "../../types/entities";
 import { PERSON_CREATOR_ERROR } from "../../types/errors";
-import { Gender, PersonPostData } from "../../types/persons";
+import {
+  Gender,
+  PersonListDataWithProgram,
+  PersonPostData,
+} from "../../types/persons";
 import { ClassPersonCreator, ProgrammeClassGetter } from "../programme/";
 
 class PersonCreatorError extends Error {
@@ -92,5 +97,84 @@ export class StudentCreator {
     }
 
     return true;
+  }
+}
+
+export class PersonGetter {
+  public async getPersons(
+    predicate: (classPerson: ClassPerson) => boolean
+  ): Promise<PersonListDataWithProgram[]> {
+    const query = await getRepository(Person).find({
+      relations: [
+        "classPersons",
+        "classPersons.class",
+        "classPersons.class.programme",
+      ],
+    });
+
+    const persons: PersonListDataWithProgram[] = [];
+
+    query.forEach((p) => {
+      let shouldInclude: boolean = false;
+      const programmes: Pick<PersonListDataWithProgram, "programmes"> = {
+        programmes: [],
+      };
+
+      p.classPersons.forEach((cp) => {
+        if (
+          cp.discardedAt ||
+          cp.class.discardedAt ||
+          cp.class.programme.discardedAt
+        ) {
+          return;
+        }
+
+        if (predicate(cp)) {
+          shouldInclude = true;
+
+          const existingProgram = programmes.programmes.find(
+            (p) => p.id === cp.class.programme.id
+          );
+
+          if (existingProgram) {
+            existingProgram.classes.push({
+              id: cp.class.id,
+              name: cp.class.name,
+              role: cp.role,
+            });
+          } else {
+            programmes.programmes.push({
+              id: cp.class.programme.id,
+              name: cp.class.programme.name,
+              classes: [
+                {
+                  id: cp.class.id,
+                  name: cp.class.name,
+                  role: cp.role,
+                },
+              ],
+            });
+          }
+        }
+      });
+
+      if (shouldInclude) {
+        persons.push({
+          ...p.getBase(),
+          name: p.name,
+          ...programmes,
+        });
+      }
+    });
+
+    return persons;
+  }
+}
+
+export class StudentGetter {
+  public async getStudents(): Promise<PersonListDataWithProgram[]> {
+    return await new PersonGetter().getPersons(
+      (cp) => cp.role === ClassPersonRole.STUDENT
+    );
   }
 }

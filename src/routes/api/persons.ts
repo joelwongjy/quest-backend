@@ -12,6 +12,7 @@ export const router = Router();
 router.use(checkBearerToken(BearerTokenType.AccessToken));
 router.use(checkIfAdmin());
 router.post("/:id/user", UsersController.create);
-router.post("/student", PersonsController.createStudent);
+router.post("/students", PersonsController.createStudent);
+router.get("/students", PersonsController.indexStudent);
 
 export default router;
