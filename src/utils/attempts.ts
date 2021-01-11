@@ -63,7 +63,7 @@ async function populateQuestionIdSets(
     return result;
   }
 
-  let sharedQuestionsIdSet: Set<Number> = await getQuestionIdSet(
+  let sharedQuestionsIdSet: Set<Number> = getQuestionIdSet(
     await attempts[0].questionnaireWindow.sharedSet?.getQuestionOrders()
   );
   let mainQuestionsBeforeIdSet: Set<Number> = new Set<Number>();
@@ -78,7 +78,7 @@ async function populateQuestionIdSets(
     }
 
     if (!preWindowFound && attempt.questionnaireWindow.id == preWindowId) {
-      mainQuestionsBeforeIdSet = await getQuestionIdSet(
+      mainQuestionsBeforeIdSet = getQuestionIdSet(
         await attempt.questionnaireWindow.mainSet.getQuestionOrders()
       );
       preWindowFound = true;
@@ -86,7 +86,7 @@ async function populateQuestionIdSets(
       !postWindowFound &&
       attempt.questionnaireWindow.id == postWindowId
     ) {
-      mainQuestionsAfterIdSet = await getQuestionIdSet(
+      mainQuestionsAfterIdSet = getQuestionIdSet(
         await attempt.questionnaireWindow.mainSet.getQuestionOrders()
       );
       postWindowFound = true;
@@ -222,7 +222,7 @@ export async function getAttemptsForPrePostQnnaire(
     // ensure dictionary has a valid key entry
     if (!userIdToAttemptDataMap[userId]) {
       userIdToAttemptDataMap[userId] = {
-        user: await attempt.user.getData(),
+        user: attempt.user.getData(),
         title,
         type: QuestionnaireType.PRE_POST,
         questionnaireWindow: questionWindows,

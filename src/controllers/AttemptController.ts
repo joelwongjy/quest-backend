@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getRepository, In } from "typeorm";
+import { getRepository } from "typeorm";
 import { User } from "../entities/user/User";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWindow";
