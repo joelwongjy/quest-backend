@@ -20,6 +20,7 @@ export interface AttemptData {
 export interface AttemptFullData {
   user: UserData;
   title: string;
+  dateSubmitted: Date | Date[];
   type: QuestionnaireType;
   questionnaireWindow: QuestionnaireWindowData | QuestionnaireWindowData[];
   answers: SharedQnnaireAnswerData | AnswerData[];

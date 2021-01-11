@@ -106,6 +106,9 @@ function processPreAttemptData(
   sharedSetIds: Set<Number>,
   mainSetBeforeIds: Set<Number>
 ) {
+  const currDatesSubmitted = currAttemptData.dateSubmitted as Date[];
+  currDatesSubmitted[0] = attempt.createdAt;
+
   for (const answer of attempt.answers) {
     const currQuestionId = answer.questionOrder.id;
 
@@ -125,9 +128,11 @@ function processPostAttemptData(
   sharedSetIds: Set<Number>,
   mainSetAfterIds: Set<Number>
 ) {
+  const currDatesSubmitted = currAttemptData.dateSubmitted as Date[];
+  currDatesSubmitted[1] = attempt.createdAt;
+
   for (const answer of attempt.answers) {
     const currQuestionId = answer.questionOrder.id;
-
     const currSharedQnnaireAnswerData = currAttemptData.answers as SharedQnnaireAnswerData;
 
     if (sharedSetIds.has(currQuestionId)) {
@@ -209,6 +214,8 @@ export async function getAttemptsForPrePostQnnaire(
 
   // create a dictionary that maps userIds to the AttemptFullData
   const userIdToAttemptDataMap: { [userId: number]: AttemptFullData } = {};
+  let dummyInvalidDate: Date = new Date();
+  dummyInvalidDate.setFullYear(dummyInvalidDate.getFullYear() + 10);
 
   for (const attempt of attempts) {
     const userId = attempt.user.id;
@@ -224,6 +231,7 @@ export async function getAttemptsForPrePostQnnaire(
       userIdToAttemptDataMap[userId] = {
         user: attempt.user.getData(),
         title,
+        dateSubmitted: [dummyInvalidDate, dummyInvalidDate],
         type: QuestionnaireType.PRE_POST,
         questionnaireWindow: questionWindows,
         // initialise answers to empty list
@@ -278,6 +286,7 @@ export async function getAttemptsForOneTimeQnnaire(
       user: attempt.user.getData(),
       title: title,
       type: QuestionnaireType.ONE_TIME,
+      dateSubmitted: attempt.createdAt,
       questionnaireWindow: questionWindows[0],
       answers: attempt.answers.map((answer) => answer.getData()),
     };
