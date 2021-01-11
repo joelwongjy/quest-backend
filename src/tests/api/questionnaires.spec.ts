@@ -558,3 +558,103 @@ describe("POST /questionnaires/submissions", () => {
     expect(response.status).toBe(401);
   });
 });
+
+describe("GET /questionnaires/:questionnaireId/submissions", () => {
+  let originalData: QuestionnaireFullData;
+  let answerData: AnswerPostData[];
+  let attemptData: AttemptPostData;
+
+  beforeEach(async () => {
+    await synchronize(server);
+    fixtures = await loadFixtures(server);
+
+    // create sample questionnaire data
+    originalData = await (
+      await fixtures.createSampleOneTimeQuestionnaire()
+    ).getAllWindows();
+
+    // generate question responses based on questionnaire
+    let testQuestionnaireWindow: QuestionnaireWindowData =
+      originalData.questionWindows[0];
+    let qnnaireWindowId = testQuestionnaireWindow.windowId;
+    let questions = testQuestionnaireWindow.questions;
+    answerData = questions.map((element) => {
+      let answer: AnswerPostData = {
+        questionOrderId: element.qnOrderId,
+        optionId:
+          element.options.length > 0 ? element.options[0].optionId : undefined,
+        textResponse:
+          "This is a sample answer to some non-multiple choice question!",
+      };
+      return answer;
+    });
+
+    attemptData = {
+      qnnaireWindowId: qnnaireWindowId,
+      answers: answerData,
+    };
+  });
+
+  afterAll(async () => {
+    await synchronize(server);
+    fixtures = await loadFixtures(server);
+  });
+
+  it("should create an attempt successfully", async () => {
+    const response = await request(server.server)
+      .post(`${fixtures.api}/questionnaires/submissions`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(attemptData);
+    expect(response.status).toEqual(200);
+
+    const attemptId = response.body.id;
+    expect(attemptId).toBeTruthy();
+
+    const createdAttempt = await getRepository(Attempt).find({
+      where: { id: attemptId },
+      relations: [
+        "user",
+        "questionnaireWindow",
+        "answers",
+        "answers.questionOrder",
+        "answers.questionOrder.question",
+      ],
+    });
+
+    expect(createdAttempt).toHaveLength(1);
+    expect(createdAttempt[0].user).toBeTruthy();
+    expect(createdAttempt[0].questionnaireWindow).toBeTruthy();
+    expect(createdAttempt[0].answers.length).toBeGreaterThan(0);
+  });
+
+  it("should return 200 if valid id and is admin", async () => {
+    const response = await request(server.server)
+      .get(
+        `${fixtures.api}/questionnaires/${originalData.questionnaireId}/submissions`
+      )
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toEqual(200);
+  });
+
+  it("should return 404 if invalid id", async () => {
+    const response = await request(server.server)
+      .get(
+        `${fixtures.api}/questionnaires/${
+          originalData.questionnaireId + 200
+        }/submissions`
+      )
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toEqual(404);
+  });
+
+  it("should return 401 if not logged in", async () => {
+    const response = await request(server.server)
+      .post(
+        `${fixtures.api}/questionnaires/${originalData.questionnaireId}/submissions`
+      )
+      .send(attemptData);
+    expect(response.status).toBe(401);
+  });
+});
