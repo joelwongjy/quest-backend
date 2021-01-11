@@ -1,5 +1,6 @@
 import request from "supertest";
 import { getRepository } from "typeorm";
+import { Class } from "../../entities/programme/Class";
 import { Programme } from "../../entities/programme/Programme";
 import ApiServer from "../../server";
 import {
@@ -123,6 +124,14 @@ describe("POST /", () => {
 });
 
 describe("PATCH /id", () => {
+  let programme: Programme;
+  beforeAll(async () => {
+    programme = await getRepository(Programme).save(
+      new Programme("Programme to edit!")
+    );
+    await getRepository(Class).save(new Class("Existing class", programme));
+  });
+
   let editData: ProgrammePatchData = {
     name: "Edited programme name",
     description: "Edited programme description",
@@ -130,14 +139,14 @@ describe("PATCH /id", () => {
 
   it("should return 401 if not logged in", async () => {
     const response = await request(server.server)
-      .patch(`${fixtures.api}/programmes/${fixtures.programme.id}`)
+      .patch(`${fixtures.api}/programmes/${programme.id}`)
       .send(editData);
     expect(response.status).toBe(401);
   });
 
   it("should return 401 if not admin", async () => {
     const response = await request(server.server)
-      .patch(`${fixtures.api}/programmes/${fixtures.programme.id}`)
+      .patch(`${fixtures.api}/programmes/${programme.id}`)
       .set("Authorization", fixtures.teacherAccessToken)
       .send(editData);
     expect(response.status).toBe(401);
@@ -145,24 +154,24 @@ describe("PATCH /id", () => {
 
   it("should return 200 if admin without classes", async () => {
     const response = await request(server.server)
-      .patch(`${fixtures.api}/programmes/${fixtures.programme.id}`)
+      .patch(`${fixtures.api}/programmes/${programme.id}`)
       .set("Authorization", fixtures.adminAccessToken)
       .send(editData);
     expect(response.status).toBe(200);
     expect(
-      await ProgrammeClassEditor.verify(fixtures.programme.id, editData)
+      await ProgrammeClassEditor.verify(programme.id, editData)
     ).toBeTruthy();
   });
 
   it("should return 200 if admin and changed classes", async () => {
     editData.classes = [{ name: "Editing a class" }];
     const response = await request(server.server)
-      .patch(`${fixtures.api}/programmes/${fixtures.programme.id}`)
+      .patch(`${fixtures.api}/programmes/${programme.id}`)
       .set("Authorization", fixtures.adminAccessToken)
       .send(editData);
     expect(response.status).toBe(200);
     expect(
-      await ProgrammeClassEditor.verify(fixtures.programme.id, editData)
+      await ProgrammeClassEditor.verify(programme.id, editData)
     ).toBeTruthy();
   });
 });
