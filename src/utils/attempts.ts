@@ -276,7 +276,13 @@ export async function getAttemptsForOneTimeQnnaire(
 
   const attempts = await getRepository(Attempt).find({
     where: { questionnaireWindow: { id: windowId } },
-    relations: ["questionnaireWindow", "answers", "user"],
+    relations: [
+      "questionnaireWindow",
+      "user",
+      "answers",
+      "answers.questionOrder",
+      "answers.questionOrder.question",
+    ],
   });
 
   const allAttempts: AttemptFullData[] = [];
