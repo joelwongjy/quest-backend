@@ -4,7 +4,8 @@ import { Option } from "./Option";
 import { IsNotEmpty, ValidateIf, validateOrReject } from "class-validator";
 import { Attempt } from "./Attempt";
 import { Discardable } from "../Discardable";
-
+import { AnswerData } from "../../types/answers";
+import { QuestionData } from "../../types/questions";
 @Entity()
 export class Answer extends Discardable {
   entityName = "Answer";
@@ -41,4 +42,33 @@ export class Answer extends Discardable {
   async validate() {
     await validateOrReject(this);
   }
+
+  getData = (): AnswerData => {
+    // convert QuestionOrder to QuestionData
+    const question: QuestionData = {
+      qnOrderId: this.questionOrder.id,
+      order: this.questionOrder.order,
+      questionType: this.questionOrder.question.questionType,
+      questionText: this.questionOrder.question.questionText,
+      options: this.questionOrder.question.options.map((option) => {
+        return {
+          ...option,
+          optionId: Number(option.id),
+        };
+      }),
+    };
+
+    // ensure Answer has Option else set to null
+    return {
+      answerId: this.id,
+      questionOrder: question,
+      option: this.option
+        ? {
+            ...this.option,
+            optionId: Number(this.option.id),
+          }
+        : null,
+      textResponse: this.answer,
+    };
+  };
 }

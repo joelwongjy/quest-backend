@@ -13,14 +13,19 @@ router.get("/", QuestionnaireController.index);
 
 router.use(checkBearerToken(BearerTokenType.AccessToken));
 router.get("/:id/window/:windowId", QuestionnaireController.showWindow);
-router.get("/submissions", AttemptController.index);
-router.get("/submissions/:id", AttemptController.show);
-router.post("/submissions", AttemptController.create);
 router.get("/:id", QuestionnaireController.show);
 
 router.use(checkIfAdmin());
 router.post("/create", QuestionnaireController.create);
 router.delete("/delete/:id", QuestionnaireController.softDelete);
 router.post("/edit/:id", QuestionnaireController.edit);
+
+router.post("/submissions", AttemptController.create);
+router.get("/submissions", AttemptController.index);
+router.get("/submissions/:id", AttemptController.show);
+router.get(
+  "/:questionnaireId/submissions",
+  AttemptController.showByQuestionnaire
+);
 
 export default router;
