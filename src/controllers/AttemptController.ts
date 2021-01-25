@@ -76,11 +76,11 @@ export async function showByQuestionnaire(
   request: Request,
   response: Response<AttemptFullData[] | Message>
 ): Promise<void> {
-  const { questionnaireId } = request.params;
+  const { id } = request.params;
 
   try {
     let qnnaire = await getRepository(Questionnaire).findOne({
-      where: { id: questionnaireId },
+      where: { id },
     });
 
     if (!qnnaire) {
