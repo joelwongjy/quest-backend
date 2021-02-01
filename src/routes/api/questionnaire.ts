@@ -9,23 +9,19 @@ import { BearerTokenType } from "../../types/tokens";
 
 export const router = Router();
 
-router.get("/", QuestionnaireController.index);
-
 router.use(checkBearerToken(BearerTokenType.AccessToken));
+router.post("/submissions", AttemptController.create);
+router.get("/submissions", AttemptController.index);
+router.get("/submissions/:id", AttemptController.show);
+router.get("/:id/submissions", AttemptController.showByQuestionnaire);
+
 router.get("/:id/window/:windowId", QuestionnaireController.showWindow);
 router.get("/:id", QuestionnaireController.show);
+router.get("/", QuestionnaireController.index);
 
 router.use(checkIfAdmin());
 router.post("/create", QuestionnaireController.create);
 router.delete("/delete/:id", QuestionnaireController.softDelete);
 router.post("/edit/:id", QuestionnaireController.edit);
-
-router.post("/submissions", AttemptController.create);
-router.get("/submissions", AttemptController.index);
-router.get("/submissions/:id", AttemptController.show);
-router.get(
-  "/:questionnaireId/submissions",
-  AttemptController.showByQuestionnaire
-);
 
 export default router;
