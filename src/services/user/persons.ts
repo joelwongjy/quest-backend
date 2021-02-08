@@ -2,6 +2,8 @@ import { parseISO } from "date-fns";
 import { EntityManager, getRepository, In } from "typeorm";
 import { ClassPerson } from "../../entities/programme/ClassPerson";
 import { Person } from "../../entities/user/Person";
+import { Relationship } from "../../entities/user/Relationship";
+import { User } from "../../entities/user/User";
 import { ClassPersonRole } from "../../types/classPersons";
 import { isValidDate } from "../../types/entities";
 import { PERSON_CREATOR_ERROR, PERSON_DELETER_ERROR } from "../../types/errors";
@@ -190,18 +192,41 @@ export class PersonDeleter {
   }
 
   public async deletePersons(persons: number[]): Promise<boolean> {
-    const qryPersons = await this.manager
-      .getRepository(Person)
-      .findByIds(persons);
+    const qryPersons = await this.manager.getRepository(Person).find({
+      where: {
+        id: In(persons),
+      },
+      relations: ["user", "classPersons", "youths", "familyMembers"],
+    });
 
     if (qryPersons.length !== persons.length) {
       throw new PersonDeleterError(
         "Could not find one or more persons in the provided list."
       );
     }
+
+    // delete Person
     await this.manager.getRepository(Person).softDelete({
       id: In(persons),
     });
+
+    const users: User[] = [];
+    const classPersons: ClassPerson[] = [];
+    const relationships: Relationship[] = [];
+    qryPersons.forEach((p) => {
+      if (p.user) {
+        users.push(p.user);
+      }
+
+      classPersons.push(...p.classPersons);
+      relationships.push(...p.youths, ...p.familyMembers);
+    });
+
+    // delete associated
+    await this.manager.getRepository(User).softRemove(users);
+    await this.manager.getRepository(ClassPerson).softRemove(classPersons);
+    await this.manager.getRepository(Relationship).softRemove(relationships);
+
     return true;
   }
 
@@ -211,33 +236,38 @@ export class PersonDeleter {
       where: {
         id: In(ids),
       },
-      relations: ["classPersons", "youths", "familyMembers"],
+      relations: ["user", "classPersons", "youths", "familyMembers"],
     });
 
     if (persons.length !== ids.length) {
       return false;
     }
 
-    persons.forEach((p) => {
+    for (let p of persons) {
       // check that related ClassPersons are removed
-      p.classPersons.forEach((cp) => {
+      for (let cp of p.classPersons) {
         if (!cp.discardedAt) {
           return false;
         }
-      });
+      }
+
+      // check that related User are removed
+      if (!p.user!.discardedAt) {
+        return false;
+      }
 
       // check that related Relationships are removed
-      p.youths.forEach((y) => {
+      for (let y of p.youths) {
         if (!y.discardedAt) {
           return false;
         }
-      });
-      p.familyMembers.forEach((fm) => {
+      }
+      for (let fm of p.familyMembers) {
         if (!fm.discardedAt) {
           return false;
         }
-      });
-    });
+      }
+    }
 
     return true;
   }
