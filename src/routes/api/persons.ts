@@ -14,5 +14,6 @@ router.use(checkIfAdmin());
 router.post("/:id/user", UsersController.create);
 router.post("/students", PersonsController.createStudent);
 router.get("/students", PersonsController.indexStudent);
+router.delete("/students", PersonsController.deleteStudent);
 
 export default router;

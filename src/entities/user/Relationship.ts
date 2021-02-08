@@ -19,10 +19,14 @@ export class Relationship extends Discardable {
     this.relationship = relationshipType;
   }
 
-  @ManyToOne((type) => Person, (youth) => youth.familyMembers)
+  @ManyToOne((type) => Person, (youth) => youth.familyMembers, {
+    cascade: ["soft-remove", "recover"],
+  })
   youth: Person;
 
-  @ManyToOne((type) => Person, (familyMember) => familyMember.youths)
+  @ManyToOne((type) => Person, (familyMember) => familyMember.youths, {
+    cascade: ["soft-remove", "recover"],
+  })
   familyMember: Person;
 
   @Column({

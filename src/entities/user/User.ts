@@ -52,7 +52,9 @@ export class User extends Discardable {
   @IsEnum(DefaultUserRole)
   defaultRole: DefaultUserRole;
 
-  @OneToOne((type) => Person, (person) => person.user)
+  @OneToOne((type) => Person, (person) => person.user, {
+    cascade: ["soft-remove", "recover"],
+  })
   @JoinColumn()
   person: Person;
 
