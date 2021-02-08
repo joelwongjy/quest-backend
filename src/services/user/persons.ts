@@ -1,5 +1,5 @@
 import { parseISO } from "date-fns";
-import { EntityManager, getRepository, In } from "typeorm";
+import { EntityManager, getRepository, In, IsNull, Not } from "typeorm";
 import { ClassPerson } from "../../entities/programme/ClassPerson";
 import { Person } from "../../entities/user/Person";
 import { Relationship } from "../../entities/user/Relationship";
@@ -235,6 +235,7 @@ export class PersonDeleter {
       withDeleted: true,
       where: {
         id: In(ids),
+        discardedAt: Not(IsNull()),
       },
       relations: ["user", "classPersons", "youths", "familyMembers"],
     });
