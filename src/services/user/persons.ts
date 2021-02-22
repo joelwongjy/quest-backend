@@ -1,21 +1,26 @@
 import { parseISO } from "date-fns";
-import { getRepository } from "typeorm";
+import { EntityManager, getRepository, In, IsNull, Not } from "typeorm";
 import { ClassPerson } from "../../entities/programme/ClassPerson";
 import { Person } from "../../entities/user/Person";
+import { Relationship } from "../../entities/user/Relationship";
+import { User } from "../../entities/user/User";
 import { ClassPersonRole } from "../../types/classPersons";
 import { isValidDate } from "../../types/entities";
-import { PERSON_CREATOR_ERROR } from "../../types/errors";
-import {
-  Gender,
-  PersonListDataWithProgram,
-  PersonPostData,
-} from "../../types/persons";
+import { PERSON_CREATOR_ERROR, PERSON_DELETER_ERROR } from "../../types/errors";
+import { PersonListDataWithProgram, PersonPostData } from "../../types/persons";
 import { ClassPersonCreator, ProgrammeClassGetter } from "../programme/";
 
 class PersonCreatorError extends Error {
   constructor(message: string) {
     super(message);
     this.name = PERSON_CREATOR_ERROR;
+  }
+}
+
+class PersonDeleterError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = PERSON_DELETER_ERROR;
   }
 }
 
@@ -176,5 +181,95 @@ export class StudentGetter {
     return await new PersonGetter().getPersons(
       (cp) => cp.role === ClassPersonRole.STUDENT
     );
+  }
+}
+
+export class PersonDeleter {
+  private manager: EntityManager;
+
+  constructor(manager: EntityManager) {
+    this.manager = manager;
+  }
+
+  public async deletePersons(persons: number[]): Promise<boolean> {
+    const qryPersons = await this.manager.getRepository(Person).find({
+      where: {
+        id: In(persons),
+      },
+      relations: ["user", "classPersons", "youths", "familyMembers"],
+    });
+
+    if (qryPersons.length !== persons.length) {
+      throw new PersonDeleterError(
+        "Could not find one or more persons in the provided list."
+      );
+    }
+
+    // delete Person
+    await this.manager.getRepository(Person).softDelete({
+      id: In(persons),
+    });
+
+    const users: User[] = [];
+    const classPersons: ClassPerson[] = [];
+    const relationships: Relationship[] = [];
+    qryPersons.forEach((p) => {
+      if (p.user) {
+        users.push(p.user);
+      }
+
+      classPersons.push(...p.classPersons);
+      relationships.push(...p.youths, ...p.familyMembers);
+    });
+
+    // delete associated
+    await this.manager.getRepository(User).softRemove(users);
+    await this.manager.getRepository(ClassPerson).softRemove(classPersons);
+    await this.manager.getRepository(Relationship).softRemove(relationships);
+
+    return true;
+  }
+
+  public static async verify(ids: number[]): Promise<boolean> {
+    const persons = await getRepository(Person).find({
+      withDeleted: true,
+      where: {
+        id: In(ids),
+        discardedAt: Not(IsNull()),
+      },
+      relations: ["user", "classPersons", "youths", "familyMembers"],
+    });
+
+    if (persons.length !== ids.length) {
+      return false;
+    }
+
+    for (let p of persons) {
+      // check that related ClassPersons are removed
+      for (let cp of p.classPersons) {
+        if (!cp.discardedAt) {
+          return false;
+        }
+      }
+
+      // check that related User are removed
+      if (!p.user!.discardedAt) {
+        return false;
+      }
+
+      // check that related Relationships are removed
+      for (let y of p.youths) {
+        if (!y.discardedAt) {
+          return false;
+        }
+      }
+      for (let fm of p.familyMembers) {
+        if (!fm.discardedAt) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 }

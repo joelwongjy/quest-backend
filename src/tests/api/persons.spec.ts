@@ -2,8 +2,8 @@ import request from "supertest";
 import { getRepository } from "typeorm";
 import { Person } from "../../entities/user/Person";
 import { ApiServer } from "../../server";
-import { StudentCreator } from "../../services/user";
-import { Gender, PersonPostData } from "../../types/persons";
+import { PersonDeleter, StudentCreator } from "../../services/user";
+import { Gender, PersonDeleteData, PersonPostData } from "../../types/persons";
 import { Fixtures, loadFixtures, synchronize } from "../../utils/tests";
 
 let server: ApiServer;
@@ -124,6 +124,45 @@ describe("GET /persons/students", () => {
     const response = await request(server.server)
       .get(`${fixtures.api}/persons/students`)
       .send();
+    expect(response.status).toBe(401);
+  });
+});
+
+describe("DELETE /persons/students", () => {
+  const deleteData: PersonDeleteData = {
+    persons: [],
+  };
+
+  beforeAll(async () => {
+    await server.connection!.dropDatabase();
+    await synchronize(server);
+    fixtures = await loadFixtures(server);
+    deleteData.persons.push(fixtures.student.id);
+  });
+
+  it("should delete successfully", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/persons/students`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(deleteData);
+    expect(response.status).toBe(200);
+
+    const result = await PersonDeleter.verify(deleteData.persons);
+    expect(result).toBe(true);
+  });
+
+  it("should delete unsuccessfully with invalid id", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/persons/students`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(deleteData);
+    expect(response.status).toBe(400);
+  });
+
+  it("should delete unsuccessfully if not admin", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/persons/students`)
+      .send(deleteData);
     expect(response.status).toBe(401);
   });
 });
