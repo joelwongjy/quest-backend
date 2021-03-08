@@ -46,11 +46,6 @@
     "tsconfig-paths": "^3.9.0",
     "typescript": "^4.2.3"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
-  },
   "scripts": {
     "lint": "prettier --write \"src/**/*.{ts,tsx}\" --tab-width 2",
     "start": "set debug=* && cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only ./src/index.ts",
@@ -60,6 +55,7 @@
     "coverage": "yarn test --coverage",
     "production": "cd build && cross-env NODE_ENV=production node ./src/index.js",
     "build": "tsc --build",
-    "clean": "tsc --build --clean"
+    "clean": "tsc --build --clean",
+    "postinstall": "husky install"
   }
 }
