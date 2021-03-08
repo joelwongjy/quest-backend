@@ -91,7 +91,7 @@ describe("POST /persons/:id/user", () => {
   });
 });
 
-describe("POST /persons/students", () => {
+describe("POST /students", () => {
   it("should create a person", async () => {
     const personData: PersonPostData = {
       name: "Bobby",
@@ -100,7 +100,7 @@ describe("POST /persons/students", () => {
     };
 
     const response = await request(server.server)
-      .post(`${fixtures.api}/persons/students`)
+      .post(`${fixtures.api}/students`)
       .set("Authorization", fixtures.adminAccessToken)
       .send(personData);
     expect(response.status).toBe(200);
@@ -111,10 +111,10 @@ describe("POST /persons/students", () => {
   });
 });
 
-describe("GET /persons/students", () => {
+describe("GET /students", () => {
   it("should return 200 if admin", async () => {
     const response = await request(server.server)
-      .get(`${fixtures.api}/persons/students`)
+      .get(`${fixtures.api}/students`)
       .set("Authorization", fixtures.adminAccessToken)
       .send();
     expect(response.status).toBe(200);
@@ -122,19 +122,33 @@ describe("GET /persons/students", () => {
 
   it("should return 401 if not admin", async () => {
     const response = await request(server.server)
-      .get(`${fixtures.api}/persons/students`)
+      .get(`${fixtures.api}/students`)
       .send();
     expect(response.status).toBe(401);
   });
 });
 
-describe("DELETE /persons/students", () => {
+describe("GET /persons/:id", () => {
+  beforeEach(async () => {
+    await synchronize(server);
+    fixtures = await loadFixtures(server);
+  });
+
+  it("should return 200", async () => {
+    const response = await request(server.server)
+      .get(`${fixtures.api}/persons/${fixtures.teacher.id}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(200);
+  });
+});
+
+describe("DELETE /students", () => {
   const deleteData: PersonDeleteData = {
     persons: [],
   };
 
-  beforeAll(async () => {
-    await server.connection!.dropDatabase();
+  beforeEach(async () => {
     await synchronize(server);
     fixtures = await loadFixtures(server);
     deleteData.persons.push(fixtures.student.id);
@@ -142,7 +156,7 @@ describe("DELETE /persons/students", () => {
 
   it("should delete successfully", async () => {
     const response = await request(server.server)
-      .delete(`${fixtures.api}/persons/students`)
+      .delete(`${fixtures.api}/students`)
       .set("Authorization", fixtures.adminAccessToken)
       .send(deleteData);
     expect(response.status).toBe(200);
@@ -153,7 +167,7 @@ describe("DELETE /persons/students", () => {
 
   it("should delete unsuccessfully with invalid id", async () => {
     const response = await request(server.server)
-      .delete(`${fixtures.api}/persons/students`)
+      .delete(`${fixtures.api}/students`)
       .set("Authorization", fixtures.adminAccessToken)
       .send(deleteData);
     expect(response.status).toBe(400);
@@ -161,7 +175,7 @@ describe("DELETE /persons/students", () => {
 
   it("should delete unsuccessfully if not admin", async () => {
     const response = await request(server.server)
-      .delete(`${fixtures.api}/persons/students`)
+      .delete(`${fixtures.api}/students`)
       .send(deleteData);
     expect(response.status).toBe(401);
   });
