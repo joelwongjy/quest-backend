@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { getConnection } from "typeorm";
+import { Person } from "../entities/user/Person";
+import { getConnection, getRepository } from "typeorm";
 import {
   PersonDeleter,
   StudentCreator,
@@ -7,6 +8,7 @@ import {
 } from "../services/user/";
 import { Message, PERSON_DELETER_ERROR, SuccessId } from "../types/errors";
 import {
+  PersonData,
   PersonDeleteData,
   PersonListDataWithProgram,
   PersonPostData,
@@ -77,6 +79,38 @@ export async function deleteStudent(
           return;
         });
     });
+  } catch (e) {
+    console.log(e);
+    response.status(400);
+    return;
+  }
+}
+
+export async function showPerson(
+  request: Request<{ id: string }, any, {}, any>,
+  response: Response<{ person: PersonData }>
+): Promise<void> {
+  try {
+    const { id: idStr } = request.params;
+    const id = parseInt(idStr);
+
+    if (!id) {
+      response.status(400);
+      return;
+    }
+
+    const person = await getRepository(Person).findOne({
+      where: { id: id },
+      relations: ["user", "youths", "familyMembers"],
+    });
+
+    if (!person) {
+      response.sendStatus(404);
+      return;
+    } else {
+      response.status(200).json({ person: await person.getData() });
+      return;
+    }
   } catch (e) {
     console.log(e);
     response.status(400);
