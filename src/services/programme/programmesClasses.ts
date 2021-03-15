@@ -110,6 +110,7 @@ export class ProgrammeClassGetter {
         ...p.getBase(),
         name: p.name,
         classCount: p.classes.filter((p) => !p.discardedAt).length,
+        description: p.description ?? undefined,
       };
     });
     return result;
@@ -192,7 +193,7 @@ export class ProgrammeClassCreator {
   public async createProgrammeWithClasses(
     createData: ProgrammePostData
   ): Promise<Programme> {
-    const { name, description, classes: classesCreateData } = createData;
+    const { name, description } = createData;
 
     let programme: Programme = new Programme(name, description);
     const errors = await validate(programme);
@@ -206,34 +207,6 @@ export class ProgrammeClassCreator {
     }
 
     programme = await this.manager.getRepository(Programme).save(programme);
-
-    if (!classesCreateData || classesCreateData.length === 0) {
-      return programme;
-    }
-
-    let classes: Class[] = await Promise.all(
-      classesCreateData.map(async (c) => {
-        const { name, description } = c;
-        let clazz = new Class(name, programme, description);
-
-        const errors = await validate(clazz);
-        if (errors.length > 0) {
-          throw new ProgrammeClassCreatorError(
-            `Provided class details (name: ${name}, description: ${description})` +
-              `failed validation checks (failed properties: ${errors.map(
-                (e) => e.property
-              )})`
-          );
-        }
-
-        return clazz;
-      })
-    );
-
-    classes = await this.manager.getRepository(Class).save(classes);
-
-    // safe to do this since programme is new
-    programme.classes = classes;
     return programme;
   }
 
@@ -247,16 +220,6 @@ export class ProgrammeClassCreator {
     });
 
     if (!query) {
-      return false;
-    }
-
-    const { classes } = createData;
-    if (!classes || classes.length === 0) {
-      // verification has been completed
-      return true;
-    }
-
-    if (classes.length !== query.classes.length) {
       return false;
     }
 
