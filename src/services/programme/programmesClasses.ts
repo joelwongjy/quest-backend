@@ -326,6 +326,7 @@ export class ClassDeletor {
     const queryClasses = await this.manager.getRepository(Class).find({
       where: classesOR,
       relations: ["classQuestionnaires", "classPersons"],
+      withDeleted: true,
     });
 
     const classQnnaires = flatMap(
