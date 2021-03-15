@@ -46,3 +46,5 @@ export const CLASS_PERSON_CREATOR_ERROR = "ClassPersonCreatorError";
 export const PROGRAMME_CLASS_CREATOR_ERROR = "ProgrammeClassCreatorError";
 export const PROGRAMME_CLASS_DELETOR_ERROR = "ProgrammeClassDeleterError";
 export const PROGRAMME_CLASS_EDITOR_ERROR = "ProgrammeClassEditorError";
+
+export const CLASS_EDITOR_ERROR = "ClassEditorError";

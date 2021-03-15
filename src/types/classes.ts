@@ -11,7 +11,7 @@ export interface ClassPostData {
 // PATCH /classes/:classId
 export interface ClassPatchData {
   name?: string;
-  studentIds?: number[]; // the complete list of student ids
+  studentIds: number[]; // the complete list of student ids
   teacherIds: number[]; // the complete list of teacher ids
 }
 
