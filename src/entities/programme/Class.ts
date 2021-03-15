@@ -52,10 +52,10 @@ export class Class extends Discardable {
       ).classPersons;
     return {
       students: classPersons.filter(
-        (cu) => cu.role === ClassPersonRole.STUDENT
+        (cu) => cu.role === ClassPersonRole.STUDENT && !cu.discardedAt
       ),
       teachers: classPersons.filter(
-        (cu) => cu.role === ClassPersonRole.TEACHER
+        (cu) => cu.role === ClassPersonRole.TEACHER && !cu.discardedAt
       ),
     };
   };
