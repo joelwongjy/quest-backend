@@ -196,6 +196,7 @@ export async function getAttemptsForPrePostQnnaire(
     relations: [
       "user",
       "answers",
+      "answers.option",
       "answers.questionOrder",
       "questionnaireWindow",
       "questionnaireWindow.mainSet",
@@ -280,6 +281,7 @@ export async function getAttemptsForOneTimeQnnaire(
       "questionnaireWindow",
       "user",
       "answers",
+      "answers.option",
       "answers.questionOrder",
       "answers.questionOrder.question",
     ],
