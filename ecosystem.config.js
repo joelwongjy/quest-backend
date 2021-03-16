@@ -4,7 +4,7 @@ module.exports = {
       name: "staging",
       script: "./src/index.js",
       env: {
-        NODE_ENV: "development",
+        NODE_ENV: "staging",
       },
     },
     {
