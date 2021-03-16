@@ -85,15 +85,6 @@ describe("POST /", () => {
   const postData: ProgrammePostData = {
     name: "Winter programme for kids!",
     description: "Enjoy your december holidays with us!",
-    classes: [
-      {
-        name: "Snowflake origami",
-        description: "Make some origami with us!",
-      },
-      {
-        name: "Hiking @ Bukit Timah",
-      },
-    ],
   };
 
   it("should return 200 and create programmes if admin", async () => {
