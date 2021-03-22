@@ -198,6 +198,7 @@ export async function getAttemptsForPrePostQnnaire(
       "answers",
       "answers.option",
       "answers.questionOrder",
+      "answers.questionOrder.question",
       "questionnaireWindow",
       "questionnaireWindow.mainSet",
       "questionnaireWindow.sharedSet",
