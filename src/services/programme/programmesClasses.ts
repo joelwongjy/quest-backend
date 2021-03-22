@@ -1,14 +1,16 @@
 import { validate } from "class-validator";
 import { flatMap } from "lodash";
-import { EntityManager, getRepository } from "typeorm";
+import { Person } from "../../entities/user/Person";
+import { EntityManager, getRepository, In } from "typeorm";
 import { Class } from "../../entities/programme/Class";
 import { ClassPerson } from "../../entities/programme/ClassPerson";
 import { Programme } from "../../entities/programme/Programme";
 import { ClassQuestionnaire } from "../../entities/questionnaire/ClassQuestionnaire";
 import { ProgrammeQuestionnaire } from "../../entities/questionnaire/ProgrammeQuestionnaire";
-import { ClassListData } from "../../types/classes";
+import { ClassListData, ClassPatchData } from "../../types/classes";
 import { ClassPersonRole } from "../../types/classPersons";
 import {
+  CLASS_EDITOR_ERROR,
   PROGRAMME_CLASS_CREATOR_ERROR,
   PROGRAMME_CLASS_DELETOR_ERROR,
   PROGRAMME_CLASS_EDITOR_ERROR,
@@ -38,6 +40,14 @@ class ProgrammeClassEditorError extends Error {
   constructor(message: string) {
     super(message);
     this.name = PROGRAMME_CLASS_EDITOR_ERROR;
+  }
+}
+
+class ClassEditorError extends Error {
+  constructor(message: string) {
+    super();
+    this.message = message;
+    this.name = CLASS_EDITOR_ERROR;
   }
 }
 
@@ -100,6 +110,7 @@ export class ProgrammeClassGetter {
         ...p.getBase(),
         name: p.name,
         classCount: p.classes.filter((p) => !p.discardedAt).length,
+        description: p.description ?? undefined,
       };
     });
     return result;
@@ -182,7 +193,7 @@ export class ProgrammeClassCreator {
   public async createProgrammeWithClasses(
     createData: ProgrammePostData
   ): Promise<Programme> {
-    const { name, description, classes: classesCreateData } = createData;
+    const { name, description } = createData;
 
     let programme: Programme = new Programme(name, description);
     const errors = await validate(programme);
@@ -196,34 +207,6 @@ export class ProgrammeClassCreator {
     }
 
     programme = await this.manager.getRepository(Programme).save(programme);
-
-    if (!classesCreateData || classesCreateData.length === 0) {
-      return programme;
-    }
-
-    let classes: Class[] = await Promise.all(
-      classesCreateData.map(async (c) => {
-        const { name, description } = c;
-        let clazz = new Class(name, programme, description);
-
-        const errors = await validate(clazz);
-        if (errors.length > 0) {
-          throw new ProgrammeClassCreatorError(
-            `Provided class details (name: ${name}, description: ${description})` +
-              `failed validation checks (failed properties: ${errors.map(
-                (e) => e.property
-              )})`
-          );
-        }
-
-        return clazz;
-      })
-    );
-
-    classes = await this.manager.getRepository(Class).save(classes);
-
-    // safe to do this since programme is new
-    programme.classes = classes;
     return programme;
   }
 
@@ -237,16 +220,6 @@ export class ProgrammeClassCreator {
     });
 
     if (!query) {
-      return false;
-    }
-
-    const { classes } = createData;
-    if (!classes || classes.length === 0) {
-      // verification has been completed
-      return true;
-    }
-
-    if (classes.length !== query.classes.length) {
       return false;
     }
 
@@ -353,6 +326,7 @@ export class ClassDeletor {
     const queryClasses = await this.manager.getRepository(Class).find({
       where: classesOR,
       relations: ["classQuestionnaires", "classPersons"],
+      withDeleted: true,
     });
 
     const classQnnaires = flatMap(
@@ -609,5 +583,111 @@ export class ProgrammeClassEditor {
       areDiscardedClassPersonsDiscarded &&
       areDiscardedClassQnnairesDiscarded
     );
+  }
+}
+
+export class ClassEditor {
+  private manager: EntityManager;
+
+  constructor(manager: EntityManager) {
+    this.manager = manager;
+  }
+
+  public async editClass(id: number, editData: ClassPatchData): Promise<Class> {
+    const clazz = await this.manager.getRepository(Class).findOne({
+      where: { id },
+      relations: ["classPersons", "classPersons.person"],
+    });
+
+    if (!clazz) {
+      throw new ClassEditorError(`No class found for id ${id}`);
+    }
+
+    const { name, studentIds, teacherIds } = editData;
+
+    if (name) {
+      clazz.name = name;
+    }
+
+    console.log(clazz.classPersons);
+
+    const studentMap: Map<number, ClassPerson> = new Map();
+    const teacherMap: Map<number, ClassPerson> = new Map();
+    clazz.classPersons.forEach((cp) => {
+      if (cp.role === ClassPersonRole.STUDENT) {
+        studentMap.set(cp.person.id, cp);
+      } else if (cp.role === ClassPersonRole.TEACHER) {
+        teacherMap.set(cp.person.id, cp);
+      }
+    });
+
+    const toKeep: ClassPerson[] = [];
+    const toRemove: ClassPerson[] = [];
+    let toCreate: ClassPerson[] = [];
+
+    // students
+    const newStudentIds: number[] = [];
+    studentIds.forEach((id) => {
+      if (studentMap.has(id)) {
+        const cp = studentMap.get(id)!;
+        cp.discardedAt = null;
+        toKeep.push(cp);
+        studentMap.delete(id);
+      } else {
+        newStudentIds.push(id);
+      }
+    });
+    for (const id of studentMap.keys()) {
+      toRemove.push(studentMap.get(id)!);
+    }
+    const students = await this.manager
+      .getRepository(Person)
+      .findByIds(newStudentIds);
+    toCreate = [
+      ...toCreate,
+      ...students.map(
+        (s) => new ClassPerson(clazz, s, ClassPersonRole.STUDENT)
+      ),
+    ];
+
+    // teachers
+    const newTeacherIds: number[] = [];
+    teacherIds.forEach((id) => {
+      if (teacherMap.has(id)) {
+        const cp = teacherMap.get(id)!;
+        cp.discardedAt = null;
+        toKeep.push(cp);
+        teacherMap.delete(id);
+      } else {
+        newTeacherIds.push(id);
+      }
+    });
+    for (const id of teacherMap.keys()) {
+      toRemove.push(teacherMap.get(id)!);
+    }
+    const teachers = await this.manager
+      .getRepository(Person)
+      .findByIds(newTeacherIds);
+    toCreate = [
+      ...toCreate,
+      ...teachers.map(
+        (t) => new ClassPerson(clazz, t, ClassPersonRole.TEACHER)
+      ),
+    ];
+
+    // save
+    await this.manager.getRepository(ClassPerson).save(toKeep);
+    await this.manager.getRepository(ClassPerson).softRemove(toRemove);
+    await this.manager.getRepository(ClassPerson).save(toCreate);
+
+    const prevNumber = clazz.classPersons.length;
+    clazz.classPersons = [...toKeep, ...toRemove, ...toCreate];
+    if (clazz.classPersons.length < prevNumber) {
+      throw new ClassEditorError(
+        `Implementation bug: will cause dangling ClassPerson`
+      );
+    }
+    await this.manager.getRepository(Class).save(clazz);
+    return clazz;
   }
 }

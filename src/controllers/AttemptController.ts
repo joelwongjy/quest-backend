@@ -125,6 +125,7 @@ export async function show(
         "answers",
         "answers.questionOrder",
         "answers.questionOrder.question",
+        "answers.option",
         "questionnaireWindow.mainSet",
       ],
     });

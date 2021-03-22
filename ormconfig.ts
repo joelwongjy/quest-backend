@@ -2,6 +2,7 @@ import { ConnectionOptions } from "typeorm";
 
 switch (process.env.NODE_ENV) {
   case "development":
+  case "staging":
     require("dotenv").config({ path: ".env.development" });
     break;
   case "test":
@@ -51,6 +52,7 @@ export const postgres: ConnectionOptions = {
     subscribersDir: `src/subscribers`,
   },
   migrationsRun: true,
+  dropSchema: process.env.NODE_ENV === "staging",
 };
 
 module.exports = postgres;
