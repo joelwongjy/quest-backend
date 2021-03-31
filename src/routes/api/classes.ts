@@ -10,6 +10,8 @@ export const router = Router();
 
 router.use(checkBearerToken(BearerTokenType.AccessToken));
 router.use(checkIfAdmin());
+router.post("/teachers", ClassesController.createTeacher);
+router.post("/admins", ClassesController.createAdmin);
 router.get("/:id", ClassesController.show);
 router.patch("/:id", ClassesController.edit);
 

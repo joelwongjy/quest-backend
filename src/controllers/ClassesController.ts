@@ -77,3 +77,13 @@ export async function edit(
     return;
   }
 }
+
+export async function createTeacher(
+  request: Request,
+  response: Response
+): Promise<void> {}
+
+export async function createAdmin(
+  request: Request,
+  response: Response
+): Promise<void> {}
