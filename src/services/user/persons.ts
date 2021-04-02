@@ -62,22 +62,44 @@ class PersonCreator {
   }
 }
 
-export class StudentCreator {
-  public async createStudent(
-    student: Omit<PersonPostData, "classes">,
-    classIds: number[]
+export class StudentTeacherAdminCreator {
+  private async _create(
+    data: Omit<PersonPostData, "classes">,
+    classIds: number[],
+    role: ClassPersonRole
   ): Promise<Person> {
-    const person = await new PersonCreator().createPerson(student);
+    const person = await new PersonCreator().createPerson(data);
     const classes = await new ProgrammeClassGetter().getClasses(classIds);
     const classPersons = await new ClassPersonCreator().assignClassesToPerson(
       person,
       classes,
-      ClassPersonRole.STUDENT
+      role
     );
 
     // since person is new, it is save to do this
     person.classPersons = classPersons;
     return person;
+  }
+
+  public async createStudent(
+    student: Omit<PersonPostData, "classes">,
+    classIds: number[]
+  ): Promise<Person> {
+    return await this._create(student, classIds, ClassPersonRole.STUDENT);
+  }
+
+  public async createTeacher(
+    teacher: Omit<PersonPostData, "classes">,
+    classIds: number[]
+  ): Promise<Person> {
+    return await this._create(teacher, classIds, ClassPersonRole.TEACHER);
+  }
+
+  public async createAdmin(
+    admin: Omit<PersonPostData, "classes">,
+    classIds: number[]
+  ): Promise<Person> {
+    return await this._create(admin, classIds, ClassPersonRole.ADMIN);
   }
 
   public static async verify(

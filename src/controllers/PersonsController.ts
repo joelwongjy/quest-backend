@@ -3,7 +3,7 @@ import { Person } from "../entities/user/Person";
 import { getConnection, getRepository } from "typeorm";
 import {
   PersonDeleter,
-  StudentCreator,
+  StudentTeacherAdminCreator,
   StudentGetter,
 } from "../services/user/";
 import { Message, PERSON_DELETER_ERROR, SuccessId } from "../types/errors";
@@ -20,7 +20,7 @@ export async function createStudent(
 ): Promise<void> {
   try {
     const { classIds } = request.body;
-    const student = await new StudentCreator().createStudent(
+    const student = await new StudentTeacherAdminCreator().createStudent(
       request.body,
       classIds
     );
