@@ -1,6 +1,6 @@
 # Quest Backend
 
-![CI Badge](https://github.com/dsc-team-quest/backend/workflows/Node%20CI/badge.svg)
+![CI Badge](https://github.com/dsc-team-quest/backend/workflows/Node%20CI/badge.svg)&nbsp;&nbsp;![Staging Badge](https://github.com/dsc-team-quest/backend/workflows/Deploy%20to%20Staging%20via%20SSH/badge.svg)
 
 To be built!
 

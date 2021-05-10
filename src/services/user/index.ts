@@ -1,6 +1,6 @@
 export {
   PersonGetter,
   PersonDeleter,
-  StudentCreator,
+  StudentTeacherAdminCreator,
   StudentGetter,
 } from "./persons";

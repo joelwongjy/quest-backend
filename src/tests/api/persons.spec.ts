@@ -2,7 +2,7 @@ import request from "supertest";
 import { getRepository } from "typeorm";
 import { Person } from "../../entities/user/Person";
 import { ApiServer } from "../../server";
-import { PersonDeleter, StudentCreator } from "../../services/user";
+import { PersonDeleter, StudentTeacherAdminCreator } from "../../services/user";
 import { Gender, PersonDeleteData, PersonPostData } from "../../types/persons";
 import { Fixtures, loadFixtures, synchronize } from "../../utils/tests";
 
@@ -106,7 +106,7 @@ describe("POST /students", () => {
     expect(response.status).toBe(200);
     expect(response.body.id).toBeTruthy();
     expect(
-      await StudentCreator.verify(response.body.id, personData)
+      await StudentTeacherAdminCreator.verify(response.body.id, personData)
     ).toBeTruthy();
   });
 });

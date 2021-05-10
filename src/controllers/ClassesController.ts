@@ -4,6 +4,8 @@ import { ClassData, ClassPatchData } from "../types/classes";
 import { getConnection } from "typeorm";
 import { SuccessId } from "../types/errors";
 import { ClassEditor } from "../services/programme/programmesClasses";
+import { PersonPostData } from "../types/persons";
+import { StudentTeacherAdminCreator } from "../services/user";
 
 export async function show(
   request: Request<{ id: string }, {}, {}, {}>,
@@ -74,6 +76,46 @@ export async function edit(
   } catch (e) {
     console.log(e);
     response.status(400);
+    return;
+  }
+}
+
+export async function createTeacher(
+  request: Request<{}, any, PersonPostData, any>,
+  response: Response<SuccessId | { error: string }>
+): Promise<void> {
+  try {
+    const { classIds } = request.body;
+    const teacher = await new StudentTeacherAdminCreator().createTeacher(
+      request.body,
+      classIds
+    );
+
+    response.status(200).json({ success: true, id: teacher.id });
+    return;
+  } catch (error) {
+    console.log(error);
+    response.status(400).json({ error: error.message });
+    return;
+  }
+}
+
+export async function createAdmin(
+  request: Request<{}, any, PersonPostData, any>,
+  response: Response<SuccessId | { error: string }>
+): Promise<void> {
+  try {
+    const { classIds } = request.body;
+    const admin = await new StudentTeacherAdminCreator().createAdmin(
+      request.body,
+      classIds
+    );
+
+    response.status(200).json({ success: true, id: admin.id });
+    return;
+  } catch (error) {
+    console.log(error);
+    response.status(400).json({ error: error.message });
     return;
   }
 }
