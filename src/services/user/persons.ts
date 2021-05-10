@@ -30,14 +30,8 @@ class PersonCreator {
   ): Promise<Person> {
     this.validateHasNameAndGenderOrReject(createData);
 
-    const {
-      name,
-      gender,
-      email,
-      mobileNumber,
-      homeNumber,
-      birthday,
-    } = createData;
+    const { name, gender, email, mobileNumber, homeNumber, birthday } =
+      createData;
     const person = new Person(name, gender, email, mobileNumber, homeNumber);
 
     if (birthday && isValidDate(birthday)) {
