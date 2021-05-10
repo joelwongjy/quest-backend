@@ -165,7 +165,7 @@ describe("DELETE /students", () => {
     expect(result).toBe(true);
   });
 
-  it("should delete unsuccessfully with invalid id", async () => {
+  it("should delete unsuccessfully with an invalid/extra id in delete data", async () => {
     const response = await request(server.server)
       .delete(`${fixtures.api}/students`)
       .set("Authorization", fixtures.adminAccessToken)
