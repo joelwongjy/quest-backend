@@ -171,14 +171,12 @@ export abstract class QuestionnaireCreator {
     );
     const saved = await getRepository(Questionnaire).save(newQnnaire);
 
-    const {
-      programmes,
-      classes,
-    } = await this.createProgrammesAndClassesRelations(
-      programmesData,
-      classesData,
-      saved
-    );
+    const { programmes, classes } =
+      await this.createProgrammesAndClassesRelations(
+        programmesData,
+        classesData,
+        saved
+      );
 
     saved.programmeQuestionnaires = programmes;
     saved.classQuestionnaires = classes;
@@ -232,7 +230,8 @@ export class OneTimeQuestionnaireCreator extends QuestionnaireCreator {
 
   public async createQuestionnaire(): Promise<Questionnaire> {
     const newQnnaire = await super.createQuestionnaire();
-    const newMainWindow = await this.mainWindowCreator.createWindowAndMainQnSet();
+    const newMainWindow =
+      await this.mainWindowCreator.createWindowAndMainQnSet();
 
     newQnnaire.questionnaireWindows = [newMainWindow];
     const saved = await getRepository(Questionnaire).save(newQnnaire);
@@ -330,10 +329,8 @@ export abstract class QuestionnaireEditor {
     this.qnnaireType = qnnaire.questionnaireType;
     this.editData = editData;
 
-    this.programmesClassesQnnaireEditor = new QuestionnaireProgrammesAndClassesEditor(
-      this.qnnaire,
-      this.editData
-    );
+    this.programmesClassesQnnaireEditor =
+      new QuestionnaireProgrammesAndClassesEditor(this.qnnaire, this.editData);
   }
 
   getValidator(): QuestionnaireValidator {
@@ -349,10 +346,8 @@ export abstract class QuestionnaireEditor {
     this.qnnaire.questionnaireType = this.editData.type;
     this.qnnaire.questionnaireStatus = this.editData.status;
 
-    const {
-      programmes,
-      classes,
-    } = await this.programmesClassesQnnaireEditor.editProgrammesAndClasses();
+    const { programmes, classes } =
+      await this.programmesClassesQnnaireEditor.editProgrammesAndClasses();
     this.qnnaire.programmeQuestionnaires = programmes;
     this.qnnaire.classQuestionnaires = classes;
 
@@ -535,9 +530,8 @@ export abstract class QuestionnaireViewer {
 
   constructor(qnnaireId: number) {
     this.qnnaireId = qnnaireId;
-    this.programmesClassesQnnaireViewer = new QuestionnaireProgrammesAndClassesViewer(
-      this.qnnaireId
-    );
+    this.programmesClassesQnnaireViewer =
+      new QuestionnaireProgrammesAndClassesViewer(this.qnnaireId);
   }
 
   protected async getProgrammesClasses(): Promise<QuestionnaireProgramClassData> {

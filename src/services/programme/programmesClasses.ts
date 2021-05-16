@@ -609,8 +609,6 @@ export class ClassEditor {
       clazz.name = name;
     }
 
-    console.log(clazz.classPersons);
-
     const studentMap: Map<number, ClassPerson> = new Map();
     const teacherMap: Map<number, ClassPerson> = new Map();
     clazz.classPersons.forEach((cp) => {
