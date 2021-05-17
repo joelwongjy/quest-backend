@@ -14,10 +14,10 @@ export class QuestionnaireWindow extends Discardable {
     this.closeAt = closeAt;
   }
 
-  @Column({ type: "timestamp without time zone" })
+  @Column({ type: "timestamptz" })
   openAt: Date;
 
-  @Column({ type: "timestamp without time zone" })
+  @Column({ type: "timestamptz" })
   closeAt: Date;
 
   @IsNotEmpty()

@@ -10,10 +10,10 @@ export abstract class Base {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: "timestamptz" })
   updatedAt!: Date;
 
   getBase = (): BaseData => ({
