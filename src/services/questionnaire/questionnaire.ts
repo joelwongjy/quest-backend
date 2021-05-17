@@ -453,7 +453,7 @@ export class PrePostQuestionnaireEditor extends QuestionnaireEditor {
 
     this.editDataWindowMap = new Map();
     super.getEditData().questionWindows.forEach((winData) => {
-      if (winData.windowId) {
+      if (!winData.windowId) {
         throw new PrePostQuestionnaireEditorError(
           `Provided editData is invalid - missing windowId.`
         );
@@ -466,7 +466,7 @@ export class PrePostQuestionnaireEditor extends QuestionnaireEditor {
     this.window1Editor = new QuestionnaireWindowEditor(
       this.window1,
       this.window1EditData,
-      undefined
+      this.sharedQnSetData
     );
 
     this.window2 = qnnaire.questionnaireWindows[1];
