@@ -4,7 +4,7 @@ import { DiscardableData } from "../types/entities";
 import { Base } from "./Base";
 
 export abstract class Discardable extends Base {
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: "timestamptz" })
   discardedAt!: Date | null;
 
   getBase = (): DiscardableData => ({
