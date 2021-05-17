@@ -9,6 +9,8 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: db
+      TZ: "GMT+8"
+      PGTZ: "GMT+8"
 
   test:
     image: postgres:12.3-alpine
@@ -18,6 +20,8 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: db
+      TZ: "GMT+8"
+      PGTZ: "GMT+8"
 
   pgadmin:
     image: dpage/pgadmin4:4.29

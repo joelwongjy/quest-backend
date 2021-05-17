@@ -18,8 +18,8 @@ export abstract class Base {
 
   getBase = (): BaseData => ({
     id: this.id,
-    createdAt: addHours(this.createdAt, 8),
-    updatedAt: addHours(this.updatedAt, 8),
+    createdAt: this.createdAt,
+    updatedAt: this.updatedAt,
   });
 
   abstract entityName: string;
