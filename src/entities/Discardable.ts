@@ -9,8 +9,8 @@ export abstract class Discardable extends Base {
 
   getBase = (): DiscardableData => ({
     id: this.id,
-    createdAt: addHours(this.createdAt, 8),
-    updatedAt: addHours(this.updatedAt, 8),
-    discardedAt: this.discardedAt ? addHours(this.discardedAt, 8) : null,
+    createdAt: this.createdAt,
+    updatedAt: this.updatedAt,
+    discardedAt: this.discardedAt,
   });
 }
