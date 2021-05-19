@@ -7,7 +7,11 @@ import { User } from "../../entities/user/User";
 import { ClassPersonRole } from "../../types/classPersons";
 import { isValidDate } from "../../types/entities";
 import { PERSON_CREATOR_ERROR, PERSON_DELETER_ERROR } from "../../types/errors";
-import { PersonListDataWithProgram, PersonPostData } from "../../types/persons";
+import {
+  PersonData,
+  PersonListDataWithProgram,
+  PersonPostData,
+} from "../../types/persons";
 import { ClassPersonCreator, ProgrammeClassGetter } from "../programme/";
 
 class PersonCreatorError extends Error {
@@ -192,9 +196,56 @@ export class PersonGetter {
   }
 }
 
+export class DetailedPersonGetter {
+  public async getPersons(
+    predicate: (classPerson: ClassPerson) => boolean
+  ): Promise<PersonData[]> {
+    const query = await getRepository(Person).find({
+      relations: [
+        "classPersons",
+        "classPersons.class",
+        "classPersons.class.programme",
+      ],
+    });
+
+    const persons: PersonData[] = [];
+
+    for (let p of query) {
+      let shouldInclude: boolean = false;
+
+      p.classPersons.forEach((cp) => {
+        if (
+          cp.discardedAt ||
+          cp.class.discardedAt ||
+          cp.class.programme.discardedAt
+        ) {
+          return;
+        }
+
+        if (predicate(cp)) {
+          shouldInclude = true;
+        }
+      });
+      if (shouldInclude) {
+        let data = await p.getData();
+        persons.push(data);
+      }
+    }
+
+    return persons;
+  }
+}
+
 export class StudentGetter {
   public async getStudents(): Promise<PersonListDataWithProgram[]> {
     return await new PersonGetter().getPersons(
+      (cp) => cp.role === ClassPersonRole.STUDENT
+    );
+  }
+}
+export class DetailedStudentGetter {
+  public async getStudents(): Promise<PersonData[]> {
+    return await new DetailedPersonGetter().getPersons(
       (cp) => cp.role === ClassPersonRole.STUDENT
     );
   }
