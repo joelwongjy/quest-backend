@@ -22,3 +22,11 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# local scripts
+*_local.sh
+
+# backups and backup configs
+backups/pg_backup.config
+backups/*.sql
+backups/*.sql.in_progress
