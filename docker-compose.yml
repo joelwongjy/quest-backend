@@ -6,9 +6,9 @@ services:
     ports:
       - 35432:5432
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: db
+      POSTGRES_USER: quest
+      POSTGRES_PASSWORD: quest
+      POSTGRES_DB: quest
       TZ: "GMT+8"
       PGTZ: "GMT+8"
 
@@ -17,17 +17,17 @@ services:
     ports:
       - 54320:5432
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: db
+      POSTGRES_USER: quest
+      POSTGRES_PASSWORD: quest
+      POSTGRES_DB: quest_test
       TZ: "GMT+8"
       PGTZ: "GMT+8"
 
   pgadmin:
     image: dpage/pgadmin4:4.29
     environment:
-      PGADMIN_DEFAULT_EMAIL: user@user.com
-      PGADMIN_DEFAULT_PASSWORD: pass
+      PGADMIN_DEFAULT_EMAIL: quest@quest.com
+      PGADMIN_DEFAULT_PASSWORD: quest
     ports:
       - 3002:80
     depends_on:
