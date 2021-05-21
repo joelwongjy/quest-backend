@@ -16,6 +16,7 @@ const {
   POSTGRES_PORT,
   POSTGRES_NAME,
   POSTGRES_DISABLE_SSL,
+  POSTGRES_RUN_MIGRATIONS,
 } = process.env;
 
 if (
@@ -50,7 +51,7 @@ export const postgres: ConnectionOptions = {
     migrationsDir: `src/migrations`,
     subscribersDir: `src/subscribers`,
   },
-  migrationsRun: process.env.NODE_ENV === "test",
+  migrationsRun: !!POSTGRES_RUN_MIGRATIONS,
   dropSchema: false,
 };
 

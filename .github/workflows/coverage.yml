@@ -25,7 +25,7 @@ jobs:
         env:
           POSTGRES_USER: quest
           POSTGRES_PASSWORD: quest
-          POSTGRES_DB: quest_test
+          POSTGRES_DB: quest
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -54,8 +54,6 @@ jobs:
             ${{ runner.os }}-${{ matrix.node-version }}-yarn-
       - name: Install dependencies
         run: yarn install
-      - name: Run migrations
-        run: chmod +x ./run_migrations.sh && ./run_migrations.sh -t
       - uses: mattallty/jest-github-action@v1
         name: Run tests and get coverage
         with:
@@ -67,8 +65,8 @@ jobs:
           POSTGRES_PORT: 5432
           POSTGRES_USERNAME: quest
           POSTGRES_PASSWORD: quest
-          POSTGRES_NAME: quest_test
+          POSTGRES_NAME: quest
           POSTGRES_DISABLE_SSL: true
+          POSTGRES_RUN_MIGRATIONS: 1
           JWT_SECRET: teamQuestIsTheBest
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_ENV: test
