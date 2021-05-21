@@ -1,4 +1,3 @@
-import bodyParser from "body-parser";
 import cors, { CorsOptions } from "cors";
 import express from "express";
 import helmet from "helmet";
@@ -23,8 +22,8 @@ export class ApiServer {
     this.connection = await createConnection(postgres);
 
     const app = express();
-    app.use(bodyParser.json({ limit: "20mb" }));
-    app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
+    app.use(express.json({ limit: "20mb" }));
+    app.use(express.urlencoded({ extended: true, limit: "20mb" }));
     app.use(cors(corsOptions));
     app.use(helmet());
     if (process.env.NODE_ENV !== "test") {
