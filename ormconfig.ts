@@ -16,7 +16,7 @@ const {
   POSTGRES_PORT,
   POSTGRES_NAME,
   POSTGRES_DISABLE_SSL,
-  POSTGRES_RUN_MIGRATIONS,
+  POSTGRES_SYNCHRONISE,
 } = process.env;
 
 if (
@@ -38,7 +38,7 @@ export const postgres: ConnectionOptions = {
   port: Number(POSTGRES_PORT),
   database: POSTGRES_NAME,
   ssl: !POSTGRES_DISABLE_SSL,
-  synchronize: false,
+  synchronize: !!POSTGRES_SYNCHRONISE,
   logging: false,
   entities: [`${__dirname}/src/entities/**/*.js`, "src/entities/**/*.ts"],
   migrations: ["src/migrations/**/*.ts"],
@@ -51,7 +51,7 @@ export const postgres: ConnectionOptions = {
     migrationsDir: `src/migrations`,
     subscribersDir: `src/subscribers`,
   },
-  migrationsRun: !!POSTGRES_RUN_MIGRATIONS,
+  migrationsRun: false,
   dropSchema: false,
 };
 
