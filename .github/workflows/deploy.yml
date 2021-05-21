@@ -18,7 +18,7 @@ jobs:
         env:
           POSTGRES_USER: quest
           POSTGRES_PASSWORD: quest
-          POSTGRES_DB: quest
+          POSTGRES_DB: quest_test
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -56,9 +56,10 @@ jobs:
           POSTGRES_PORT: 5432
           POSTGRES_USERNAME: quest
           POSTGRES_PASSWORD: quest
-          POSTGRES_NAME: quest
+          POSTGRES_NAME: quest_test
           POSTGRES_DISABLE_SSL: true
           JWT_SECRET: teamQuestIsTheBest
+          NODE_ENV: test
 
   build:
     runs-on: ubuntu-latest

@@ -3,13 +3,9 @@ import { ConnectionOptions } from "typeorm";
 switch (process.env.NODE_ENV) {
   case "development":
   case "staging":
-    require("dotenv").config({ path: ".env.development" });
-    break;
   case "test":
-    require("dotenv").config({ path: ".env.test" });
-    break;
   case "production":
-    require("dotenv").config({ path: ".env.production" });
+    require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
     break;
 }
 
@@ -41,7 +37,7 @@ export const postgres: ConnectionOptions = {
   port: Number(POSTGRES_PORT),
   database: POSTGRES_NAME,
   ssl: !POSTGRES_DISABLE_SSL,
-  synchronize: process.env.NODE_ENV !== "production",
+  synchronize: false,
   logging: false,
   entities: [`${__dirname}/src/entities/**/*.js`, "src/entities/**/*.ts"],
   migrations: ["src/migrations/**/*.ts"],
@@ -54,8 +50,8 @@ export const postgres: ConnectionOptions = {
     migrationsDir: `src/migrations`,
     subscribersDir: `src/subscribers`,
   },
-  migrationsRun: false,
-  dropSchema: process.env.NODE_ENV === "staging",
+  migrationsRun: process.env.NODE_ENV === "test",
+  dropSchema: false,
 };
 
 module.exports = postgres;
