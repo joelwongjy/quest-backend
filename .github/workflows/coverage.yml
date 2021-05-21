@@ -54,6 +54,8 @@ jobs:
             ${{ runner.os }}-${{ matrix.node-version }}-yarn-
       - name: Install dependencies
         run: yarn install
+      - name: Run migrations
+        run: chmod +x ./run_migrations.sh && ./run_migrations.sh -t
       - uses: mattallty/jest-github-action@v1
         name: Run tests and get coverage
         with:

@@ -47,6 +47,8 @@ jobs:
             ${{ runner.os }}-production-yarn-
       - name: Install dependencies
         run: yarn install
+      - name: Run migrations
+        run: chmod +x ./run_migrations.sh && ./run_migrations.sh -t
       - name: Run tests
         run: yarn test:ci
         env:
