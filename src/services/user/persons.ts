@@ -367,6 +367,9 @@ class PersonEditor {
     const toDiscard: number[] = [];
 
     person.classPersons.forEach((cp) => {
+      if (cp.role !== role) {
+        return;
+      }
       if (classIds.includes(cp.class.id)) {
         toKeep.push(cp.id);
       } else {
