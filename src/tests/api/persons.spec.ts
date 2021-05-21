@@ -151,7 +151,7 @@ describe("DELETE /students", () => {
   beforeEach(async () => {
     await synchronize(server);
     fixtures = await loadFixtures(server);
-    deleteData.persons.push(fixtures.student.id);
+    deleteData.persons = [fixtures.student.id];
   });
 
   it("should delete successfully", async () => {
@@ -166,11 +166,19 @@ describe("DELETE /students", () => {
   });
 
   it("should delete unsuccessfully with an invalid/extra id in delete data", async () => {
-    const response = await request(server.server)
+    deleteData.persons = [deleteData.persons[0], deleteData.persons[0]]; // duplicate ids
+    const responseOne = await request(server.server)
       .delete(`${fixtures.api}/students`)
       .set("Authorization", fixtures.adminAccessToken)
       .send(deleteData);
-    expect(response.status).toBe(400);
+    expect(responseOne.status).toBe(400);
+
+    deleteData.persons = [999]; // invalid id
+    const responseTwo = await request(server.server)
+      .delete(`${fixtures.api}/students`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(deleteData);
+    expect(responseTwo.status).toBe(400);
   });
 
   it("should delete unsuccessfully if not admin", async () => {

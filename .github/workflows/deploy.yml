@@ -16,9 +16,9 @@ jobs:
         image: postgres
         # Provide the password for postgres
         env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: pass
-          POSTGRES_DB: db
+          POSTGRES_USER: quest
+          POSTGRES_PASSWORD: quest
+          POSTGRES_DB: quest
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -54,9 +54,9 @@ jobs:
           POSTGRES_HOST: localhost
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
-          POSTGRES_USERNAME: user
-          POSTGRES_PASSWORD: pass
-          POSTGRES_NAME: db
+          POSTGRES_USERNAME: quest
+          POSTGRES_PASSWORD: quest
+          POSTGRES_NAME: quest
           POSTGRES_DISABLE_SSL: true
           JWT_SECRET: teamQuestIsTheBest
 
@@ -108,11 +108,21 @@ jobs:
             cd ${{ secrets.REMOTE_DIR }}
             git checkout production
             git pull
-            yarn install
+            git reset --hard origin/production
             cd build/build
             mv * ..
             cd ..
             rm -rf build
             cd ..
-            pm2 restart quest-backend
+            pm2 stop ecosystem.config.js --only production
+            chmod +x ./backups/pg_backup.sh
+            ./backups/pg_backup.sh ${{ secrets.REMOTE_DIR }}
+            chmod +x ./run_migrations.sh
+            ./run_migrations.sh -p
+            cp .env.production ./build/
+            cp ecosystem.config.js ./build/
+            cp package.json ./build/
+            cd build
+            yarn install
+            pm2 restart ecosystem.config.js --only production
             pm2 logs --nostream

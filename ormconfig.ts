@@ -8,6 +8,9 @@ switch (process.env.NODE_ENV) {
   case "test":
     require("dotenv").config({ path: ".env.test" });
     break;
+  case "production":
+    require("dotenv").config({ path: ".env.production" });
+    break;
 }
 
 const {
@@ -38,7 +41,7 @@ export const postgres: ConnectionOptions = {
   port: Number(POSTGRES_PORT),
   database: POSTGRES_NAME,
   ssl: !POSTGRES_DISABLE_SSL,
-  synchronize: true,
+  synchronize: process.env.NODE_ENV !== "production",
   logging: false,
   entities: [`${__dirname}/src/entities/**/*.js`, "src/entities/**/*.ts"],
   migrations: ["src/migrations/**/*.ts"],
@@ -51,7 +54,7 @@ export const postgres: ConnectionOptions = {
     migrationsDir: `src/migrations`,
     subscribersDir: `src/subscribers`,
   },
-  migrationsRun: true,
+  migrationsRun: false,
   dropSchema: process.env.NODE_ENV === "staging",
 };
 
