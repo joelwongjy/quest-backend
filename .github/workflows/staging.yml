@@ -120,7 +120,7 @@ jobs:
             ./backups/pg_backup.sh ${{ secrets.REMOTE_DIR }}
             chmod +x ./run_migrations.sh
             ./run_migrations.sh -s
-            cp .env.development ./build/
+            cp .env.staging ./build/
             cp ecosystem.config.js ./build/
             cp package.json ./build/
             cd build
