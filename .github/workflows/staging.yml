@@ -117,7 +117,7 @@ jobs:
             cd ..
             pm2 stop ecosystem.config.js --only staging
             chmod +x ./backups/pg_backup.sh
-            ./backups/pg_backup.sh ${{ secrets.REMOTE_DIR }}
+            ./backups/pg_backup.sh ${{ secrets.REMOTE_STAGING_DIR }}
             chmod +x ./run_migrations.sh
             ./run_migrations.sh -s
             cp .env.staging ./build/

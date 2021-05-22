@@ -55,6 +55,6 @@
     "production": "cd build && cross-env NODE_ENV=production node ./src/index.js",
     "build": "tsc --build",
     "clean": "tsc --build --clean",
-    "prepare": "husky install"
+    "prepare": "node -e \"if(require('fs').existsSync('.git')){process.exit(1)}\" || is-ci || husky install"
   }
 }
