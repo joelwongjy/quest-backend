@@ -58,6 +58,7 @@ jobs:
           POSTGRES_PASSWORD: quest
           POSTGRES_NAME: quest
           POSTGRES_DISABLE_SSL: true
+          POSTGRES_SYNCHRONISE: true
           JWT_SECRET: teamQuestIsTheBest
 
   build:
