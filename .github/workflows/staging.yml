@@ -58,6 +58,7 @@ jobs:
           POSTGRES_PASSWORD: quest
           POSTGRES_NAME: quest
           POSTGRES_DISABLE_SSL: true
+          POSTGRES_SYNCHRONISE: true
           JWT_SECRET: teamQuestIsTheBest
 
   build:
@@ -114,7 +115,11 @@ jobs:
             cd ..
             rm -rf build
             cd ..
-            docker-compose up -d
+            pm2 stop ecosystem.config.js --only staging
+            chmod +x ./backups/pg_backup.sh
+            ./backups/pg_backup.sh ${{ secrets.REMOTE_DIR }}
+            chmod +x ./run_migrations.sh
+            ./run_migrations.sh -s
             cp .env.development ./build/
             cp ecosystem.config.js ./build/
             cp package.json ./build/
