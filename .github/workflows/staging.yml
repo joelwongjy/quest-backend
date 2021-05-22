@@ -110,6 +110,7 @@ jobs:
             git checkout master
             git pull
             git reset --hard origin/master
+            yarn install
             cd build/build
             mv * ..
             cd ..
