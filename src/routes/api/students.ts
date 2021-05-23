@@ -13,7 +13,6 @@ router.use(checkIfAdmin());
 
 router.post("/", PersonsController.createStudent);
 router.get("/", PersonsController.indexStudent);
-router.get("/details", PersonsController.indexDetailedStudent);
 router.delete("/", PersonsController.deleteStudent);
 
 export default router;
