@@ -5,7 +5,6 @@ import {
   PersonDeleter,
   StudentTeacherAdminCreator,
   StudentGetter,
-  DetailedStudentGetter,
 } from "../services/user/";
 import { Message, PERSON_DELETER_ERROR, SuccessId } from "../types/errors";
 import {
@@ -41,20 +40,6 @@ export async function indexStudent(
 ): Promise<void> {
   try {
     const persons = await new StudentGetter().getStudents();
-    response.status(200).json({ persons });
-  } catch (e) {
-    console.log(e);
-    response.status(400);
-    return;
-  }
-}
-
-export async function indexDetailedStudent(
-  _request: Request<{}, any, any, any>,
-  response: Response<{ persons: PersonData[] }>
-): Promise<void> {
-  try {
-    const persons = await new DetailedStudentGetter().getStudents();
     response.status(200).json({ persons });
   } catch (e) {
     console.log(e);
