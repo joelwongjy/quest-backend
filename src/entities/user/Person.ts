@@ -124,6 +124,9 @@ export class Person extends Discardable {
 
       highestClassRole = ClassPersonRole.STUDENT;
       fullPerson.classPersons.forEach((cu) => {
+        if (cu.discardedAt) {
+          return;
+        }
         if (cu.role === ClassPersonRole.TEACHER) {
           highestClassRole = ClassPersonRole.TEACHER;
         }

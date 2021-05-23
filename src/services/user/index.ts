@@ -3,4 +3,5 @@ export {
   PersonDeleter,
   StudentTeacherAdminCreator,
   StudentGetter,
+  StudentTeacherAdminEditor,
 } from "./persons";

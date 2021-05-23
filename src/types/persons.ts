@@ -18,6 +18,8 @@ export interface PersonPostData {
   classIds: number[];
 }
 
+export interface PersonPatchData extends Partial<PersonPostData> {}
+
 export interface PersonListData extends DiscardableData {
   name: string;
   mobileNumber?: string;
