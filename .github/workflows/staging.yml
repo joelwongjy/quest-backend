@@ -126,5 +126,5 @@ jobs:
             cp package.json ./build/
             cd build
             yarn install
-            pm2 restart ecosystem.config.js --only staging
+            pm2 restart ecosystem.config.js --only staging --log-date-format="YYYY-MM-DD HH:mm Z"
             pm2 logs --nostream
