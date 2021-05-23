@@ -6,6 +6,7 @@ module.exports = {
       env: {
         NODE_ENV: "staging",
       },
+      log_date_format: "YYYY-MM-DD HH:mm Z",
     },
     {
       name: "production",
@@ -13,6 +14,7 @@ module.exports = {
       env: {
         NODE_ENV: "production",
       },
+      log_date_format: "YYYY-MM-DD HH:mm Z",
     },
   ],
 };
