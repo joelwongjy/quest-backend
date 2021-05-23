@@ -5,9 +5,15 @@ import {
   PersonDeleter,
   StudentTeacherAdminCreator,
   StudentGetter,
+  StudentTeacherAdminEditor,
 } from "../services/user/";
 import { Message, PERSON_DELETER_ERROR, SuccessId } from "../types/errors";
-import { PersonData, PersonDeleteData, PersonPostData } from "../types/persons";
+import {
+  PersonData,
+  PersonDeleteData,
+  PersonPatchData,
+  PersonPostData,
+} from "../types/persons";
 
 export async function createStudent(
   request: Request<{}, any, PersonPostData, any>,
@@ -36,6 +42,38 @@ export async function indexStudent(
   try {
     const persons = await new StudentGetter().getStudents();
     response.status(200).json({ persons });
+  } catch (e) {
+    console.log(e);
+    response.status(400);
+    return;
+  }
+}
+
+export async function editStudent(
+  request: Request<{ id: string }, any, PersonPatchData, any>,
+  response: Response<SuccessId>
+): Promise<void> {
+  try {
+    const { id: idStr } = request.params;
+    const id = parseInt(idStr);
+
+    if (!id) {
+      response.status(400);
+      return;
+    }
+
+    await getConnection()
+      .transaction<void>(async (manager) => {
+        const editor = new StudentTeacherAdminEditor(manager);
+        await editor.editStudent(id, request.body);
+        response.status(200).json({ success: true, id });
+        return;
+      })
+      .catch((error) => {
+        console.log(error);
+        response.status(400);
+        return;
+      });
   } catch (e) {
     console.log(e);
     response.status(400);

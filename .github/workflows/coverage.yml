@@ -5,7 +5,7 @@ name: Coverage CI
 
 on:
   pull_request:
-    branches: [master]
+    branches: [master, production]
 
 jobs:
   build:
@@ -23,9 +23,9 @@ jobs:
         image: postgres
         # Provide the password for postgres
         env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: pass
-          POSTGRES_DB: db
+          POSTGRES_USER: quest
+          POSTGRES_PASSWORD: quest
+          POSTGRES_DB: quest
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -63,9 +63,10 @@ jobs:
           POSTGRES_HOST: localhost
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
-          POSTGRES_USERNAME: user
-          POSTGRES_PASSWORD: pass
-          POSTGRES_NAME: db
+          POSTGRES_USERNAME: quest
+          POSTGRES_PASSWORD: quest
+          POSTGRES_NAME: quest
           POSTGRES_DISABLE_SSL: true
+          POSTGRES_SYNCHRONISE: true
           JWT_SECRET: teamQuestIsTheBest
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

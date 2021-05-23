@@ -4,8 +4,11 @@ import { ClassData, ClassPatchData } from "../types/classes";
 import { getConnection } from "typeorm";
 import { SuccessId } from "../types/errors";
 import { ClassEditor } from "../services/programme/programmesClasses";
-import { PersonPostData } from "../types/persons";
-import { StudentTeacherAdminCreator } from "../services/user";
+import { PersonPatchData, PersonPostData } from "../types/persons";
+import {
+  StudentTeacherAdminCreator,
+  StudentTeacherAdminEditor,
+} from "../services/user";
 
 export async function show(
   request: Request<{ id: string }, {}, {}, {}>,
@@ -116,6 +119,70 @@ export async function createAdmin(
   } catch (error) {
     console.log(error);
     response.status(400).json({ error: error.message });
+    return;
+  }
+}
+
+export async function editTeacher(
+  request: Request<{ id: string }, any, PersonPatchData, any>,
+  response: Response<SuccessId>
+): Promise<void> {
+  try {
+    const { id: idStr } = request.params;
+    const id = parseInt(idStr);
+
+    if (!id) {
+      response.status(400);
+      return;
+    }
+
+    await getConnection()
+      .transaction<void>(async (manager) => {
+        const editor = new StudentTeacherAdminEditor(manager);
+        await editor.editTeacher(id, request.body);
+        response.status(200).json({ success: true, id });
+        return;
+      })
+      .catch((error) => {
+        console.log(error);
+        response.status(400);
+        return;
+      });
+  } catch (e) {
+    console.log(e);
+    response.status(400);
+    return;
+  }
+}
+
+export async function editAdmin(
+  request: Request<{ id: string }, any, PersonPatchData, any>,
+  response: Response<SuccessId>
+): Promise<void> {
+  try {
+    const { id: idStr } = request.params;
+    const id = parseInt(idStr);
+
+    if (!id) {
+      response.status(400);
+      return;
+    }
+
+    await getConnection()
+      .transaction<void>(async (manager) => {
+        const editor = new StudentTeacherAdminEditor(manager);
+        await editor.editAdmin(id, request.body);
+        response.status(200).json({ success: true, id });
+        return;
+      })
+      .catch((error) => {
+        console.log(error);
+        response.status(400);
+        return;
+      });
+  } catch (e) {
+    console.log(e);
+    response.status(400);
     return;
   }
 }
