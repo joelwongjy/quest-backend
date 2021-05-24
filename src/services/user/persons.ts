@@ -13,7 +13,7 @@ import {
   PERSON_EDITOR_ERROR,
 } from "../../types/errors";
 import {
-  PersonListDataWithProgram,
+  PersonData,
   PersonPatchData,
   PersonPostData,
 } from "../../types/persons";
@@ -138,9 +138,7 @@ export class StudentTeacherAdminCreator {
 }
 
 export class PersonGetter {
-  public async getPersons(
-    predicate: (classPerson: ClassPerson) => boolean
-  ): Promise<PersonListDataWithProgram[]> {
+  public async getPersons(role: ClassPersonRole): Promise<PersonData[]> {
     const query = await getRepository(Person).find({
       relations: [
         "classPersons",
@@ -149,58 +147,18 @@ export class PersonGetter {
       ],
     });
 
-    const persons: PersonListDataWithProgram[] = [];
+    const allPersons = await Promise.all(
+      query.map(async (p) => {
+        return {
+          ...(await p.getData()),
+        };
+      })
+    );
 
-    query.forEach((p) => {
-      let shouldInclude: boolean = false;
-      const programmes: Pick<PersonListDataWithProgram, "programmes"> = {
-        programmes: [],
-      };
-
-      p.classPersons.forEach((cp) => {
-        if (
-          cp.discardedAt ||
-          cp.class.discardedAt ||
-          cp.class.programme.discardedAt
-        ) {
-          return;
-        }
-
-        if (predicate(cp)) {
-          shouldInclude = true;
-
-          const existingProgram = programmes.programmes.find(
-            (p) => p.id === cp.class.programme.id
-          );
-
-          if (existingProgram) {
-            existingProgram.classes.push({
-              id: cp.class.id,
-              name: cp.class.name,
-              role: cp.role,
-            });
-          } else {
-            programmes.programmes.push({
-              id: cp.class.programme.id,
-              name: cp.class.programme.name,
-              classes: [
-                {
-                  id: cp.class.id,
-                  name: cp.class.name,
-                  role: cp.role,
-                },
-              ],
-            });
-          }
-        }
-      });
-
-      if (shouldInclude) {
-        persons.push({
-          ...p.getBase(),
-          name: p.name,
-          ...programmes,
-        });
+    const persons: PersonData[] = [];
+    allPersons.forEach((p) => {
+      if (p.highestClassRole === role) {
+        persons.push(p);
       }
     });
 
@@ -209,10 +167,8 @@ export class PersonGetter {
 }
 
 export class StudentGetter {
-  public async getStudents(): Promise<PersonListDataWithProgram[]> {
-    return await new PersonGetter().getPersons(
-      (cp) => cp.role === ClassPersonRole.STUDENT
-    );
+  public async getStudents(): Promise<PersonData[]> {
+    return await new PersonGetter().getPersons(ClassPersonRole.STUDENT);
   }
 }
 

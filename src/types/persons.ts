@@ -49,10 +49,6 @@ export interface PersonData extends PersonListData {
   user?: UserData;
 }
 
-export interface PersonListDataWithProgram
-  extends PersonListData,
-    Pick<PersonData, "programmes"> {}
-
 export interface PersonDeleteData {
   persons: number[];
 }

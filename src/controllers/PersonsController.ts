@@ -11,7 +11,6 @@ import { Message, PERSON_DELETER_ERROR, SuccessId } from "../types/errors";
 import {
   PersonData,
   PersonDeleteData,
-  PersonListDataWithProgram,
   PersonPatchData,
   PersonPostData,
 } from "../types/persons";
@@ -38,7 +37,7 @@ export async function createStudent(
 
 export async function indexStudent(
   _request: Request<{}, any, any, any>,
-  response: Response<{ persons: PersonListDataWithProgram[] }>
+  response: Response<{ persons: PersonData[] }>
 ): Promise<void> {
   try {
     const persons = await new StudentGetter().getStudents();
