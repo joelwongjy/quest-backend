@@ -172,6 +172,18 @@ export class StudentGetter {
   }
 }
 
+export class TeacherGetter {
+  public async getTeachers(): Promise<PersonData[]> {
+    return await new PersonGetter().getPersons(ClassPersonRole.TEACHER);
+  }
+}
+
+export class AdminGetter {
+  public async getAdmins(): Promise<PersonData[]> {
+    return await new PersonGetter().getPersons(ClassPersonRole.ADMIN);
+  }
+}
+
 export class PersonDeleter {
   private manager: EntityManager;
 
