@@ -139,30 +139,110 @@ export class StudentTeacherAdminCreator {
 
 export class PersonGetter {
   public async getPersons(role: ClassPersonRole): Promise<PersonData[]> {
-    const query = await getRepository(Person).find({
+    const persons = await getRepository(Person).find({
       relations: [
         "classPersons",
         "classPersons.class",
         "classPersons.class.programme",
+        "youths",
+        "familyMembers",
       ],
+      order: {
+        name: "ASC",
+      },
     });
 
-    const allPersons = await Promise.all(
-      query.map(async (p) => {
-        return {
-          ...(await p.getData()),
-        };
-      })
-    );
+    const output: PersonData[] = [];
 
-    const persons: PersonData[] = [];
-    allPersons.forEach((p) => {
-      if (p.highestClassRole === role) {
-        persons.push(p);
+    persons.forEach((p) => {
+      let hasValidRole: boolean = false;
+      let highestClassRole: ClassPersonRole = ClassPersonRole.STUDENT;
+      const { name, gender } = p;
+      const programmes: PersonData["programmes"] = [];
+      const relatives: PersonData["relatives"] = [];
+
+      p.classPersons.forEach((cp) => {
+        if (cp.discardedAt) {
+          return;
+        }
+
+        switch (cp.role) {
+          case ClassPersonRole.ADMIN:
+            highestClassRole = ClassPersonRole.ADMIN;
+            break;
+          case ClassPersonRole.TEACHER:
+            highestClassRole = ClassPersonRole.TEACHER;
+            break;
+          case ClassPersonRole.STUDENT:
+            highestClassRole = ClassPersonRole.STUDENT;
+            break;
+        }
+
+        if (cp.role === role) {
+          hasValidRole = true;
+        } else {
+          return;
+        }
+
+        const index = programmes.findIndex(
+          (p) => p.id === cp.class.programme.id
+        );
+        if (index === -1) {
+          programmes.push({
+            id: cp.class.programme.id,
+            name: cp.class.programme.name,
+            classes: [
+              {
+                id: cp.class.id,
+                name: cp.class.name,
+                role: cp.role,
+              },
+            ],
+          });
+        } else {
+          programmes[index].classes.push({
+            id: cp.class.id,
+            name: cp.class.name,
+            role: cp.role,
+          });
+        }
+      });
+
+      if (!hasValidRole) {
+        return;
       }
+
+      p.youths.forEach((rs) => {
+        if (rs.discardedAt) {
+          return;
+        }
+        relatives.push({
+          person: rs.youth.getListData(),
+          relationship: rs.relationship,
+        });
+      });
+
+      p.familyMembers.forEach((rs) => {
+        if (rs.discardedAt) {
+          return;
+        }
+        relatives.push({
+          person: rs.familyMember.getListData(),
+          relationship: rs.relationship,
+        });
+      });
+
+      output.push({
+        ...p.getBase(),
+        name,
+        gender,
+        relatives,
+        highestClassRole,
+        programmes,
+      });
     });
 
-    return persons;
+    return output;
   }
 }
 
