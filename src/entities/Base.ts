@@ -3,7 +3,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { addHours } from "date-fns";
 import { BaseData } from "../types/entities";
 
 export abstract class Base {
