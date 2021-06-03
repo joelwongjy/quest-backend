@@ -1,5 +1,6 @@
 import { parseISO } from "date-fns";
 import _ from "lodash";
+import { DefaultUserRole } from "../../types/users";
 import { EntityManager, getRepository, In, IsNull, Not } from "typeorm";
 import { ClassPerson } from "../../entities/programme/ClassPerson";
 import { Person } from "../../entities/user/Person";
@@ -138,129 +139,66 @@ export class StudentTeacherAdminCreator {
 }
 
 export class PersonGetter {
-  public async getPersons(role: ClassPersonRole): Promise<PersonData[]> {
-    const persons = await getRepository(Person).find({
+  public async queryPersons(
+    predicate: (p: Person) => boolean
+  ): Promise<Person[]> {
+    const query = await getRepository(Person).find({
       relations: [
         "classPersons",
         "classPersons.class",
         "classPersons.class.programme",
         "youths",
         "familyMembers",
+        "user",
       ],
       order: {
         name: "ASC",
       },
     });
 
-    const output: PersonData[] = [];
-
-    persons.forEach((p) => {
-      let hasValidRole: boolean = false;
-      let highestClassRole: ClassPersonRole = ClassPersonRole.STUDENT;
-      const { name, gender } = p;
-      const programmes: PersonData["programmes"] = [];
-      const relatives: PersonData["relatives"] = [];
-
-      p.classPersons.forEach((cp) => {
-        if (cp.discardedAt) {
-          return;
-        }
-
-        switch (cp.role) {
-          case ClassPersonRole.ADMIN:
-            highestClassRole = ClassPersonRole.ADMIN;
-            break;
-          case ClassPersonRole.TEACHER:
-            highestClassRole = ClassPersonRole.TEACHER;
-            break;
-          case ClassPersonRole.STUDENT:
-            highestClassRole = ClassPersonRole.STUDENT;
-            break;
-        }
-
-        if (cp.role === role) {
-          hasValidRole = true;
-        } else {
-          return;
-        }
-
-        const index = programmes.findIndex(
-          (p) => p.id === cp.class.programme.id
-        );
-        if (index === -1) {
-          programmes.push({
-            id: cp.class.programme.id,
-            name: cp.class.programme.name,
-            classes: [
-              {
-                id: cp.class.id,
-                name: cp.class.name,
-                role: cp.role,
-              },
-            ],
-          });
-        } else {
-          programmes[index].classes.push({
-            id: cp.class.id,
-            name: cp.class.name,
-            role: cp.role,
-          });
-        }
-      });
-
-      if (!hasValidRole) {
-        return;
+    const persons: Person[] = [];
+    query.forEach((p) => {
+      if (predicate(p)) {
+        persons.push(p);
       }
-
-      p.youths.forEach((rs) => {
-        if (rs.discardedAt) {
-          return;
-        }
-        relatives.push({
-          person: rs.youth.getListData(),
-          relationship: rs.relationship,
-        });
-      });
-
-      p.familyMembers.forEach((rs) => {
-        if (rs.discardedAt) {
-          return;
-        }
-        relatives.push({
-          person: rs.familyMember.getListData(),
-          relationship: rs.relationship,
-        });
-      });
-
-      output.push({
-        ...p.getBase(),
-        name,
-        gender,
-        relatives,
-        highestClassRole,
-        programmes,
-      });
     });
 
-    return output;
+    return persons;
+  }
+
+  public async getPersons(
+    predicate: (p: Person) => boolean
+  ): Promise<PersonData[]> {
+    const persons = await this.queryPersons(predicate);
+    return await Promise.all(persons.map((p) => p.getData()));
   }
 }
 
 export class StudentGetter {
   public async getStudents(): Promise<PersonData[]> {
-    return await new PersonGetter().getPersons(ClassPersonRole.STUDENT);
+    return await new PersonGetter().getPersons((p) =>
+      p.classPersons.map((p) => p.role).includes(ClassPersonRole.STUDENT)
+    );
   }
 }
 
 export class TeacherGetter {
   public async getTeachers(): Promise<PersonData[]> {
-    return await new PersonGetter().getPersons(ClassPersonRole.TEACHER);
+    return await new PersonGetter().getPersons((p) =>
+      p.classPersons.map((p) => p.role).includes(ClassPersonRole.TEACHER)
+    );
   }
 }
 
 export class AdminGetter {
   public async getAdmins(): Promise<PersonData[]> {
-    return await new PersonGetter().getPersons(ClassPersonRole.ADMIN);
+    const classAdmins = await new PersonGetter().getPersons((p) =>
+      p.classPersons.map((p) => p.role).includes(ClassPersonRole.ADMIN)
+    );
+    const superusers = await new PersonGetter().getPersons(
+      (p) => p.user?.defaultRole === DefaultUserRole.ADMIN
+    );
+    return [...classAdmins, ...superusers];
   }
 }
 
