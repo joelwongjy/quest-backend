@@ -13,12 +13,15 @@ export class ClassQuestionnaire extends Discardable {
     this.questionnaire = questionnaire;
   }
 
-  @ManyToOne((type) => Class, (class_) => class_.classQuestionnaires)
+  @ManyToOne((type) => Class, (class_) => class_.classQuestionnaires, {
+    nullable: false,
+  })
   class: Class;
 
   @ManyToOne(
     (type) => Questionnaire,
-    (questionnaire) => questionnaire.classQuestionnaires
+    (questionnaire) => questionnaire.classQuestionnaires,
+    { nullable: false }
   )
   questionnaire: Questionnaire;
 }
