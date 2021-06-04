@@ -15,10 +15,10 @@ export class Attempt extends Discardable {
     this.questionnaireWindow = questionnaireWindow;
   }
 
-  @ManyToOne((type) => User)
+  @ManyToOne((type) => User, { nullable: false })
   user: User;
 
-  @ManyToOne((type) => QuestionnaireWindow)
+  @ManyToOne((type) => QuestionnaireWindow, { nullable: false })
   questionnaireWindow: QuestionnaireWindow;
 
   @OneToMany((type) => Answer, (answer) => answer.attempt)
