@@ -3,11 +3,19 @@ import { Option } from "../entities/questionnaire/Option";
 import { QuestionOrder } from "../entities/questionnaire/QuestionOrder";
 import { AnswerPostData } from "../types/answers";
 import { getRepository } from "typeorm";
+import { Attempt } from "src/entities/questionnaire/Attempt";
 
 export async function createAnswers(
-  answers: AnswerPostData[]
+  answers: AnswerPostData[],
+  attempt: Attempt
 ): Promise<Answer[]> {
   let result: Answer[] = [];
+
+  // TODO: refactor the Attempt/Answer into its own clas
+  // An additional benefit to use classes is to utilise transactions
+  if (!attempt.id) {
+    throw new Error("The given attempt has no id");
+  }
 
   await Promise.all(
     answers.map(async (answer) => {
@@ -34,6 +42,8 @@ export async function createAnswers(
           answer.textResponse
         );
       }
+
+      createdAnswer.attempt = attempt;
       result.push(createdAnswer);
     })
   );

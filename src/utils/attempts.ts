@@ -1,5 +1,4 @@
 import { getRepository, In } from "typeorm";
-import { Answer } from "../entities/questionnaire/Answer";
 import { Attempt } from "../entities/questionnaire/Attempt";
 import { AttemptFullData, SharedQnnaireAnswerData } from "../types/attempts";
 import {
@@ -7,24 +6,6 @@ import {
   QuestionnaireWindowData,
 } from "../types/questionnaires";
 import { QuestionData } from "../types/questions";
-
-/**
- * Associates a list of answers to a given attempt
- *
- * @param answers List of answer objects
- * @param attempt attempt object to associate answers with
- */
-export async function associateAttemptWithAnswers(
-  answers: Answer[],
-  attempt: Attempt
-): Promise<Attempt> {
-  if (answers.length > 0) {
-    attempt.answers = answers;
-  }
-
-  const saved = await getRepository(Attempt).save(attempt);
-  return saved;
-}
 
 /**
  * Reduces a list of QuestionData to a set of Question Order ids
@@ -112,7 +93,8 @@ function processPreAttemptData(
   for (const answer of attempt.answers) {
     const currQuestionId = answer.questionOrder.id;
 
-    const currSharedQnnaireAnswerData = currAttemptData.answers as SharedQnnaireAnswerData;
+    const currSharedQnnaireAnswerData =
+      currAttemptData.answers as SharedQnnaireAnswerData;
 
     if (sharedSetIds.has(currQuestionId)) {
       currSharedQnnaireAnswerData["sharedAnswersBefore"].push(answer.getData());
@@ -133,7 +115,8 @@ function processPostAttemptData(
 
   for (const answer of attempt.answers) {
     const currQuestionId = answer.questionOrder.id;
-    const currSharedQnnaireAnswerData = currAttemptData.answers as SharedQnnaireAnswerData;
+    const currSharedQnnaireAnswerData =
+      currAttemptData.answers as SharedQnnaireAnswerData;
 
     if (sharedSetIds.has(currQuestionId)) {
       currSharedQnnaireAnswerData["sharedAnswersAfter"].push(answer.getData());
