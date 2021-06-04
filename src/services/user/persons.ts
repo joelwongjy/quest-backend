@@ -192,13 +192,11 @@ export class TeacherGetter {
 
 export class AdminGetter {
   public async getAdmins(): Promise<PersonData[]> {
-    const classAdmins = await new PersonGetter().getPersons((p) =>
-      p.classPersons.map((p) => p.role).includes(ClassPersonRole.ADMIN)
+    return await new PersonGetter().getPersons(
+      (p) =>
+        p.user?.defaultRole === DefaultUserRole.ADMIN ||
+        p.classPersons.map((p) => p.role).includes(ClassPersonRole.ADMIN)
     );
-    const superusers = await new PersonGetter().getPersons(
-      (p) => p.user?.defaultRole === DefaultUserRole.ADMIN
-    );
-    return [...classAdmins, ...superusers];
   }
 }
 
