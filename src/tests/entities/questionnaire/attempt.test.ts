@@ -95,6 +95,8 @@ describe("Create attempt", () => {
 
     const answer1Data = new Answer(questionOrder, undefined, "I'm good!");
     const answer2Data = new Answer(questionOrder, undefined, "I'm okay!");
+    answer1Data.attempt = attempt;
+    answer2Data.attempt = attempt;
     const answer1 = await getRepository(Answer).save(answer1Data);
     const answer2 = await getRepository(Answer).save(answer2Data);
 
