@@ -257,10 +257,6 @@ export class PersonDeleter {
     });
 
     if (persons.length !== ids.length) {
-      console.log(
-        `Cannot find the provided entities ` +
-          `(Input: ${persons.length}, Found: ${ids.length})`
-      );
       return false;
     }
 
@@ -268,27 +264,23 @@ export class PersonDeleter {
       // check that related ClassPersons are removed
       for (let cp of p.classPersons) {
         if (!cp.discardedAt) {
-          console.log(`Related classPerson ${cp.id} not removed`);
           return false;
         }
       }
 
       // check that related User are removed
       if (!p.user!.discardedAt) {
-        console.log(`Related user ${p.user!.id} not removed`);
         return false;
       }
 
       // check that related Relationships are removed
       for (let y of p.youths) {
         if (!y.discardedAt) {
-          console.log(`Related classPerson ${y.id} not removed`);
           return false;
         }
       }
       for (let fm of p.familyMembers) {
         if (!fm.discardedAt) {
-          console.log(`Related classPerson ${fm.id} not removed`);
           return false;
         }
       }
