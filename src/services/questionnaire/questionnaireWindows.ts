@@ -51,8 +51,6 @@ class QuestionnaireWindowViewerError extends Error {
 export class QuestionnaireWindowCreator {
   private questionSetCreator = new QuestionSetCreator();
 
-  constructor() {}
-
   private validateCreatorOrReject(mainQnsData: QuestionSetPostData): void {
     if (!mainQnsData.questions) {
       throw new QuestionnaireWindowCreatorError(
