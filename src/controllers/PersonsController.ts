@@ -86,32 +86,41 @@ export async function deleteStudent(
   response: Response<SuccessId | Message>
 ): Promise<void> {
   try {
-    await getConnection().transaction<void>(async (manager) => {
-      const { persons } = request.body;
-      const deleter = new PersonDeleter(manager);
+    let message: string | undefined;
+    const didSucceed = await getConnection().transaction<boolean>(
+      async (manager) => {
+        const { persons } = request.body;
+        const deleter = new PersonDeleter(manager);
 
-      return await deleter
-        .deletePersons(persons)
-        .then((_result) => {
-          response.status(200).json({ success: true });
-          return;
-        })
-        .catch((error) => {
-          console.log(error);
-          let message: string | undefined;
+        return await deleter
+          .deletePersons(persons)
+          .then((_result) => {
+            return true;
+          })
+          .catch((error) => {
+            console.log(error);
 
-          switch (error.name) {
-            case PERSON_DELETER_ERROR:
-              message = error.message;
-              break;
-            default:
-              message = undefined;
-          }
+            switch (error.name) {
+              case PERSON_DELETER_ERROR:
+                message = error.message;
+                break;
+              default:
+                message = undefined;
+                break;
+            }
 
-          response.status(400).json({ success: false, message });
-          return;
-        });
-    });
+            return false;
+          });
+      }
+    );
+
+    if (didSucceed) {
+      response.status(200).json({ success: true });
+      return;
+    } else {
+      response.status(400).json({ success: false, message });
+      return;
+    }
   } catch (e) {
     console.log(e);
     response.status(400);

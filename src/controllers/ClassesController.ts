@@ -4,10 +4,12 @@ import { ClassData, ClassPatchData } from "../types/classes";
 import { getConnection } from "typeorm";
 import { SuccessId } from "../types/errors";
 import { ClassEditor } from "../services/programme/programmesClasses";
-import { PersonPatchData, PersonPostData } from "../types/persons";
+import { PersonData, PersonPatchData, PersonPostData } from "../types/persons";
 import {
+  AdminGetter,
   StudentTeacherAdminCreator,
   StudentTeacherAdminEditor,
+  TeacherGetter,
 } from "../services/user";
 
 export async function show(
@@ -180,6 +182,34 @@ export async function editAdmin(
         response.status(400);
         return;
       });
+  } catch (e) {
+    console.log(e);
+    response.status(400);
+    return;
+  }
+}
+
+export async function indexTeacher(
+  _request: Request<{}, any, any, any>,
+  response: Response<{ persons: PersonData[] }>
+): Promise<void> {
+  try {
+    const teachers = await new TeacherGetter().getTeachers();
+    response.status(200).json({ persons: teachers });
+  } catch (e) {
+    console.log(e);
+    response.status(400);
+    return;
+  }
+}
+
+export async function indexAdmin(
+  _request: Request<{}, any, any, any>,
+  response: Response<{ persons: PersonData[] }>
+): Promise<void> {
+  try {
+    const admins = await new AdminGetter().getAdmins();
+    response.status(200).json({ persons: admins });
   } catch (e) {
     console.log(e);
     response.status(400);
