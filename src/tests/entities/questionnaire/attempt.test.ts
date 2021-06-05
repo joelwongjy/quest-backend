@@ -27,6 +27,7 @@ afterAll(async () => {
 describe("Create attempt", () => {
   let user: User;
   let window: QuestionnaireWindow;
+  let questionSet: QuestionSet;
 
   beforeAll(async () => {
     const person = new Person("Bobby", Gender.MALE);
@@ -39,21 +40,23 @@ describe("Create attempt", () => {
       QuestionType.SHORT_ANSWER
     );
 
+    questionSet = new QuestionSet();
+    await getRepository(QuestionSet).save(questionSet);
+
     const newQuestion = await getRepository(Question).save(question);
-    const questionOrder = new QuestionOrder(1, newQuestion);
+    const questionOrder = new QuestionOrder(1, newQuestion, questionSet);
     const newQuestionOrder = await getRepository(QuestionOrder).save(
       questionOrder
     );
 
-    const questionSet = new QuestionSet();
     questionSet.questionOrders = [newQuestionOrder];
-    const newQuestionSet = await getRepository(QuestionSet).save(questionSet);
+    await getRepository(QuestionSet).save(questionSet);
 
     const windowData = new QuestionnaireWindow(
       new Date("2020/01/01"),
       new Date("2020/01/20")
     );
-    windowData.mainSet = newQuestionSet;
+    windowData.mainSet = questionSet;
     window = await getRepository(QuestionnaireWindow).save(windowData);
   });
 
@@ -88,7 +91,7 @@ describe("Create attempt", () => {
     );
 
     const question = await getRepository(Question).save(questionData);
-    const questionOrderData = new QuestionOrder(1, question);
+    const questionOrderData = new QuestionOrder(1, question, questionSet);
     const questionOrder = await getRepository(QuestionOrder).save(
       questionOrderData
     );

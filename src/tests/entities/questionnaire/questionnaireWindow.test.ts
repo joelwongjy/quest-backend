@@ -37,16 +37,15 @@ describe("Create questionnaireWindow", () => {
     const newQuestion = await getRepository(Question).save(question);
     expect(newQuestion.id).toBeTruthy();
 
-    const questionOrder = new QuestionOrder(1, newQuestion);
+    const questionSet = new QuestionSet();
+    const newQuestionSet = await getRepository(QuestionSet).save(questionSet);
+    expect(newQuestionSet.id).toBeTruthy();
+
+    const questionOrder = new QuestionOrder(1, newQuestion, newQuestionSet);
     const newQuestionOrder = await getRepository(QuestionOrder).save(
       questionOrder
     );
     expect(newQuestionOrder.id).toBeTruthy();
-
-    const questionSet = new QuestionSet();
-    questionSet.questionOrders = [newQuestionOrder];
-    const newQuestionSet = await getRepository(QuestionSet).save(questionSet);
-    expect(newQuestionSet.id).toBeTruthy();
 
     questionnaireWindow = new QuestionnaireWindow(startDate, endDate);
     questionnaireWindow.mainSet = newQuestionSet;
