@@ -22,10 +22,12 @@ export class QuestionOrder extends Discardable {
   order: number;
 
   // the same question could appear in different orders in different sets
-  @ManyToOne((type) => Question)
+  @ManyToOne((type) => Question, { nullable: false })
   question: Question;
 
-  @ManyToOne((type) => QuestionSet, (qnSet) => qnSet.questionOrders)
+  @ManyToOne((type) => QuestionSet, (qnSet) => qnSet.questionOrders, {
+    nullable: false,
+  })
   questionSet!: QuestionSet;
 
   /**
