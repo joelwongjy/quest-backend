@@ -5,6 +5,7 @@ import { Question } from "../../../entities/questionnaire/Question";
 import { QuestionType } from "../../../types/questions";
 import ApiServer from "../../../server";
 import { synchronize } from "../../../utils/tests";
+import { QuestionSet } from "../../../entities/questionnaire/QuestionSet";
 
 let server: ApiServer;
 
@@ -19,6 +20,12 @@ afterAll(async () => {
 });
 
 describe("Create questionOrder", () => {
+  let questionSet: QuestionSet;
+
+  beforeAll(async () => {
+    questionSet = await getRepository(QuestionSet).save(new QuestionSet());
+  });
+
   afterEach(async () => {
     await getRepository(QuestionOrder).delete({});
   });
@@ -29,8 +36,10 @@ describe("Create questionOrder", () => {
     let questionOrder: QuestionOrder;
 
     question = new Question("How are you feeling today?", QuestionType.MOOD);
+    await getRepository(Question).save(question);
+
     order = 2;
-    questionOrder = new QuestionOrder(order, question);
+    questionOrder = new QuestionOrder(order, question, questionSet);
 
     const errors = await validate(questionOrder);
     expect(errors.length).toBe(0);
@@ -48,7 +57,7 @@ describe("Create questionOrder", () => {
 
     question = new Question("How are you feeling today?", QuestionType.MOOD);
     order = 1.7;
-    questionOrder = new QuestionOrder(order, question);
+    questionOrder = new QuestionOrder(order, question, questionSet);
 
     const errors = await validate(questionOrder);
     expect(errors.length).not.toBe(0);
@@ -61,7 +70,7 @@ describe("Create questionOrder", () => {
 
     question = new Question("How are you feeling today?", QuestionType.MOOD);
     order = -1;
-    questionOrder = new QuestionOrder(order, question);
+    questionOrder = new QuestionOrder(order, question, questionSet);
 
     const errors = await validate(questionOrder);
     expect(errors.length).not.toBe(0);
@@ -73,8 +82,8 @@ describe("Create questionOrder", () => {
     let question: Question;
 
     question = new Question("How are you feeling today?", QuestionType.MOOD);
-    questionOrderOne = new QuestionOrder(3, question);
-    questionOrderTwo = new QuestionOrder(4, question);
+    questionOrderOne = new QuestionOrder(3, question, questionSet);
+    questionOrderTwo = new QuestionOrder(4, question, questionSet);
 
     const errorsQuestionOrderOne = await validate(questionOrderOne);
     expect(errorsQuestionOrderOne.length).toBe(0);

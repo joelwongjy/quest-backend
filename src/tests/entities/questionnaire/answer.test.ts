@@ -9,6 +9,7 @@ import ApiServer from "../../../server";
 import { Fixtures, loadFixtures, synchronize } from "../../../utils/tests";
 import { Attempt } from "../../../entities/questionnaire/Attempt";
 import { Questionnaire } from "../../../entities/questionnaire/Questionnaire";
+import { QuestionSet } from "../../../entities/questionnaire/QuestionSet";
 
 let server: ApiServer;
 let fixtures: Fixtures;
@@ -26,9 +27,11 @@ afterAll(async () => {
 
 describe("Create answer", () => {
   let questionnaire: Questionnaire;
+  let questionSet: QuestionSet;
 
   beforeAll(async () => {
     questionnaire = await fixtures.createSampleOneTimeQuestionnaire();
+    questionSet = await getRepository(QuestionSet).save(new QuestionSet());
   });
 
   afterEach(async () => {
@@ -48,7 +51,7 @@ describe("Create answer", () => {
     );
     question = new Question("How are you feeling today?", QuestionType.MOOD);
     option = new Option("Awesome!", question);
-    questionOrder = new QuestionOrder(1, question);
+    questionOrder = new QuestionOrder(1, question, questionSet);
     answer = new Answer(questionOrder, option);
 
     await getRepository(Attempt).save(attempt);
@@ -78,7 +81,7 @@ describe("Create answer", () => {
       "How are you feeling today?",
       QuestionType.SHORT_ANSWER
     );
-    questionOrder = new QuestionOrder(1, question);
+    questionOrder = new QuestionOrder(1, question, questionSet);
     answer = new Answer(
       questionOrder,
       undefined,
@@ -106,7 +109,7 @@ describe("Create answer", () => {
       "How are you feeling today?",
       QuestionType.SHORT_ANSWER
     );
-    questionOrder = new QuestionOrder(1, question);
+    questionOrder = new QuestionOrder(1, question, questionSet);
     answer = new Answer(questionOrder);
 
     const errors = await validate(answer);
@@ -124,7 +127,7 @@ describe("Create answer", () => {
       QuestionType.SHORT_ANSWER
     );
 
-    questionOrder = new QuestionOrder(1, question);
+    questionOrder = new QuestionOrder(1, question, questionSet);
     answerOne = new Answer(questionOrder, undefined, "Work for Campus Impact!");
     answerTwo = new Answer(
       questionOrder,

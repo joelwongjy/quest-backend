@@ -28,6 +28,8 @@ describe("Create option", () => {
     let question: Question;
 
     question = new Question("How are you feeling today?", QuestionType.MOOD);
+    await getRepository(Question).save(question);
+
     option = new Option("Awesome!", question);
 
     const errors = await validate(option);

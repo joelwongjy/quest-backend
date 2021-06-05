@@ -17,6 +17,7 @@ import {
   QuestionData,
 } from "../../types/questions";
 import { Option } from "../../entities/questionnaire/Option";
+import { QuestionSet } from "../../entities/questionnaire/QuestionSet";
 
 class QuestionOrderCreationError extends Error {
   constructor(message: string) {
@@ -37,6 +38,7 @@ class QuestionOrderViewerError extends Error {
  */
 export class QuestionOrderCreator {
   private async _createQuestion(
+    questionSet: QuestionSet,
     questionText: string,
     questionType: QuestionType,
     order: number
@@ -45,7 +47,7 @@ export class QuestionOrderCreator {
     await validateOrReject(data);
     const question = await getRepository(Question).save(data);
 
-    const orderData = new QuestionOrder(order, question);
+    const orderData = new QuestionOrder(order, question, questionSet);
     const newOrder = await getRepository(QuestionOrder).save(orderData);
 
     // This object has the db id for qnOrder and qn
@@ -53,12 +55,18 @@ export class QuestionOrderCreator {
   }
 
   private async _createQuestionWithOptions(
+    questionSet: QuestionSet,
     questionText: string,
     questionType: QuestionType,
     optionsText: OptionPostData[],
     order: number
   ): Promise<QuestionOrder> {
-    const rv = await this._createQuestion(questionText, questionType, order);
+    const rv = await this._createQuestion(
+      questionSet,
+      questionText,
+      questionType,
+      order
+    );
 
     const { question } = rv;
 
@@ -77,10 +85,12 @@ export class QuestionOrderCreator {
   }
 
   private async createShortAnswerQuestion(
+    questionSet: QuestionSet,
     questionText: string,
     order: number
   ): Promise<QuestionOrder> {
     const rv = await this._createQuestion(
+      questionSet,
       questionText,
       QuestionType.SHORT_ANSWER,
       order
@@ -89,10 +99,12 @@ export class QuestionOrderCreator {
   }
 
   private async createLongAnswerQuestion(
+    questionSet: QuestionSet,
     questionText: string,
     order: number
   ): Promise<QuestionOrder> {
     const rv = await this._createQuestion(
+      questionSet,
       questionText,
       QuestionType.LONG_ANSWER,
       order
@@ -101,11 +113,13 @@ export class QuestionOrderCreator {
   }
 
   private async createMCQ(
+    questionSet: QuestionSet,
     questionText: string,
     optionsText: OptionPostData[],
     order: number
   ): Promise<QuestionOrder> {
     return await this._createQuestionWithOptions(
+      questionSet,
       questionText,
       QuestionType.MULTIPLE_CHOICE,
       optionsText,
@@ -114,11 +128,13 @@ export class QuestionOrderCreator {
   }
 
   private async createScaleQuestion(
+    questionSet: QuestionSet,
     questionText: string,
     optionsText: OptionPostData[],
     order: number
   ): Promise<QuestionOrder> {
     return await this._createQuestionWithOptions(
+      questionSet,
       questionText,
       QuestionType.SCALE,
       optionsText,
@@ -127,11 +143,13 @@ export class QuestionOrderCreator {
   }
 
   private async createMoodQuestion(
+    questionSet: QuestionSet,
     questionText: string,
     optionsText: OptionPostData[],
     order: number
   ): Promise<QuestionOrder> {
     return await this._createQuestionWithOptions(
+      questionSet,
       questionText,
       QuestionType.MOOD,
       optionsText,
@@ -140,25 +158,32 @@ export class QuestionOrderCreator {
   }
 
   public async createQuestionOrder(
+    qnSet: QuestionSet,
     qn: QuestionPostData
   ): Promise<QuestionOrder> {
     const { questionText, questionType, order } = qn;
     switch (questionType) {
       case QuestionType.LONG_ANSWER:
-        return await this.createLongAnswerQuestion(questionText, order);
+        return await this.createLongAnswerQuestion(qnSet, questionText, order);
       case QuestionType.SHORT_ANSWER:
-        return await this.createShortAnswerQuestion(questionText, order);
+        return await this.createShortAnswerQuestion(qnSet, questionText, order);
       case QuestionType.MULTIPLE_CHOICE:
         if (!qn.options) {
           throw new Error(
             `MCQ Question (text: ${questionText}, order ${order}) has no options `
           );
         }
-        return await this.createMCQ(questionText, qn.options, order);
+        return await this.createMCQ(qnSet, questionText, qn.options, order);
       case QuestionType.MOOD:
-        return await this.createMoodQuestion(questionText, MOOD_OPTIONS, order);
+        return await this.createMoodQuestion(
+          qnSet,
+          questionText,
+          MOOD_OPTIONS,
+          order
+        );
       case QuestionType.SCALE:
         return await this.createScaleQuestion(
+          qnSet,
           questionText,
           SCALE_OPTIONS,
           order
@@ -169,11 +194,12 @@ export class QuestionOrderCreator {
   }
 
   public async createQuestionOrders(
+    questionSet: QuestionSet,
     questions: QuestionPostData[]
   ): Promise<QuestionOrder[]> {
     try {
       const questionOrders = await Promise.all(
-        questions.map(async (qn) => this.createQuestionOrder(qn))
+        questions.map(async (qn) => this.createQuestionOrder(questionSet, qn))
       );
       return questionOrders;
     } catch (e) {
