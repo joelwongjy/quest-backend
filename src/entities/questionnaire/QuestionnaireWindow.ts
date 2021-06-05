@@ -29,7 +29,8 @@ export class QuestionnaireWindow extends Discardable {
 
   @ManyToOne(
     (type) => Questionnaire,
-    (questionnaire) => questionnaire.questionnaireWindows
+    (questionnaire) => questionnaire.questionnaireWindows,
+    { nullable: false }
   )
   questionnaire!: Questionnaire;
 }
