@@ -9,10 +9,11 @@ import { QuestionSet } from "./QuestionSet";
 export class QuestionOrder extends Discardable {
   entityName = "QuestionOrder";
 
-  constructor(order: number, question: Question) {
+  constructor(order: number, question: Question, questionSet: QuestionSet) {
     super();
     this.order = order;
     this.question = question;
+    this.questionSet = questionSet;
   }
 
   @Column()
@@ -28,7 +29,7 @@ export class QuestionOrder extends Discardable {
   @ManyToOne((type) => QuestionSet, (qnSet) => qnSet.questionOrders, {
     nullable: false,
   })
-  questionSet!: QuestionSet;
+  questionSet: QuestionSet;
 
   /**
    * Returns the question order with question and options.\

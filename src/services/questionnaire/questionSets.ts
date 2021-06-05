@@ -40,18 +40,20 @@ export class QuestionSetCreator {
   private orderCreator = new QuestionOrderCreator();
 
   async createQuestionSet(questions: QuestionPostData[]): Promise<QuestionSet> {
+    const questionSet = new QuestionSet();
+    await validateOrReject(questionSet);
+    await getRepository(QuestionSet).save(questionSet);
+
     const questionOrders = await this.orderCreator.createQuestionOrders(
+      questionSet,
       questions
     );
 
     // aggregate them into a set
-    const questionSet = new QuestionSet();
-    await validateOrReject(questionSet);
-
     questionSet.questionOrders = questionOrders;
-    const newQuestionSet = await getRepository(QuestionSet).save(questionSet);
+    await getRepository(QuestionSet).save(questionSet);
 
-    return newQuestionSet;
+    return questionSet;
   }
 }
 
@@ -186,6 +188,7 @@ export class QuestionSetEditor {
     });
 
     const newOrders = await this.orderCreator.createQuestionOrders(
+      this.qnSet,
       ordersToCreate
     );
     const updatedOrders = await getRepository(QuestionOrder).save(
