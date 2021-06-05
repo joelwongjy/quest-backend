@@ -52,7 +52,7 @@ export class User extends Discardable {
   @IsEnum(DefaultUserRole)
   defaultRole: DefaultUserRole;
 
-  @OneToOne((type) => Person, (person) => person.user)
+  @OneToOne((type) => Person, (person) => person.user, { nullable: false })
   @JoinColumn()
   person: Person;
 
