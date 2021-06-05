@@ -36,6 +36,8 @@ describe("Create questionOrder", () => {
     let questionOrder: QuestionOrder;
 
     question = new Question("How are you feeling today?", QuestionType.MOOD);
+    await getRepository(Question).save(question);
+
     order = 2;
     questionOrder = new QuestionOrder(order, question, questionSet);
 
