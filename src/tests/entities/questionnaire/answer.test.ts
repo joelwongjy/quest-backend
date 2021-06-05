@@ -6,14 +6,18 @@ import { Question } from "../../../entities/questionnaire/Question";
 import { QuestionOrder } from "../../../entities/questionnaire/QuestionOrder";
 import { QuestionType } from "../../../types/questions";
 import ApiServer from "../../../server";
-import { synchronize } from "../../../utils/tests";
+import { Fixtures, loadFixtures, synchronize } from "../../../utils/tests";
+import { Attempt } from "../../../entities/questionnaire/Attempt";
+import { Questionnaire } from "../../../entities/questionnaire/Questionnaire";
 
 let server: ApiServer;
+let fixtures: Fixtures;
 
 beforeAll(async () => {
   server = new ApiServer();
   await server.initialize();
   await synchronize(server);
+  fixtures = await loadFixtures(server);
 });
 
 afterAll(async () => {
@@ -21,20 +25,37 @@ afterAll(async () => {
 });
 
 describe("Create answer", () => {
+  let questionnaire: Questionnaire;
+
+  beforeAll(async () => {
+    questionnaire = await fixtures.createSampleOneTimeQuestionnaire();
+  });
+
   afterEach(async () => {
     await getRepository(Answer).delete({});
   });
 
   it("with valid question and option", async () => {
+    let attempt: Attempt;
     let answer: Answer;
     let option: Option;
     let question: Question;
     let questionOrder: QuestionOrder;
 
+    attempt = new Attempt(
+      fixtures.student.person.user!,
+      questionnaire.questionnaireWindows[0]
+    );
     question = new Question("How are you feeling today?", QuestionType.MOOD);
     option = new Option("Awesome!", question);
     questionOrder = new QuestionOrder(1, question);
     answer = new Answer(questionOrder, option);
+
+    await getRepository(Attempt).save(attempt);
+    await getRepository(Question).save(question);
+    await getRepository(Option).save(option);
+    await getRepository(QuestionOrder).save(questionOrder);
+    answer.attempt = attempt;
 
     const errors = await validate(answer);
     expect(errors.length).toBe(0);
@@ -44,21 +65,30 @@ describe("Create answer", () => {
   });
 
   it("with valid question and text answer", async () => {
+    let attempt: Attempt;
     let answer: Answer;
     let question: Question;
     let questionOrder: QuestionOrder;
 
+    attempt = new Attempt(
+      fixtures.student.person.user!,
+      questionnaire.questionnaireWindows[0]
+    );
     question = new Question(
       "How are you feeling today?",
       QuestionType.SHORT_ANSWER
     );
-
     questionOrder = new QuestionOrder(1, question);
     answer = new Answer(
       questionOrder,
       undefined,
       "I'm feeling good like I should"
     );
+
+    await getRepository(Attempt).save(attempt);
+    await getRepository(Question).save(question);
+    await getRepository(QuestionOrder).save(questionOrder);
+    answer.attempt = attempt;
 
     const errors = await validate(answer);
     expect(errors.length).toBe(0);

@@ -26,7 +26,9 @@ export class Class extends Discardable {
   @IsOptional()
   description: string | null;
 
-  @ManyToOne((type) => Programme, (programme) => programme.classes)
+  @ManyToOne((type) => Programme, (programme) => programme.classes, {
+    nullable: false,
+  })
   programme: Programme;
 
   @OneToMany((type) => ClassPerson, (classPerson) => classPerson.class)

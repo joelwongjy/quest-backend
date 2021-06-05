@@ -19,7 +19,7 @@ export class Answer extends Discardable {
 
   // for each question, there can be multiple answer objects
   // use QuestionOrder to have reference to relevant QuestionSet as well
-  @ManyToOne((type) => QuestionOrder)
+  @ManyToOne((type) => QuestionOrder, { nullable: false })
   questionOrder: QuestionOrder;
 
   // option column may be empty if question type is text-based
@@ -33,7 +33,9 @@ export class Answer extends Discardable {
   @IsNotEmpty()
   answer: string | null;
 
-  @ManyToOne((type) => Attempt, (attempt) => attempt.answers)
+  @ManyToOne((type) => Attempt, (attempt) => attempt.answers, {
+    nullable: false,
+  })
   attempt!: Attempt;
 
   // Hook to ensure entity does not have null option and null answer

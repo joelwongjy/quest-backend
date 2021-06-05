@@ -6,7 +6,6 @@ import { QuestionnaireWindow } from "../entities/questionnaire/QuestionnaireWind
 import { Attempt } from "../entities/questionnaire/Attempt";
 import { Answer } from "../entities/questionnaire/Answer";
 import {
-  associateAttemptWithAnswers,
   getAttemptsForOneTimeQnnaire,
   getAttemptsForPrePostQnnaire,
 } from "../utils/attempts";
@@ -54,13 +53,7 @@ export async function create(
   createdAttempt = await getRepository(Attempt).save(createdAttempt);
 
   // create answers
-  const answersProvided: Answer[] = await createAnswers(answers);
-
-  // associate createdAttempt to answers provided
-  createdAttempt = await associateAttemptWithAnswers(
-    answersProvided,
-    createdAttempt
-  );
+  await createAnswers(answers, createdAttempt);
 
   response.status(200).json({ success: true, id: createdAttempt.id });
 
@@ -140,7 +133,8 @@ export async function show(
       openAt: startAt,
       closeAt: endAt,
     } = attempt.questionnaireWindow;
-    const questions: QuestionData[] = await attempt.questionnaireWindow.mainSet.getQuestionOrders();
+    const questions: QuestionData[] =
+      await attempt.questionnaireWindow.mainSet.getQuestionOrders();
     const questionnaireWindow: QuestionnaireWindowData = {
       windowId,
       startAt: startAt.toString(),
