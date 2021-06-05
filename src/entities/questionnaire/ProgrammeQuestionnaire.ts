@@ -15,13 +15,15 @@ export class ProgrammeQuestionnaire extends Discardable {
 
   @ManyToOne(
     (type) => Programme,
-    (programme) => programme.programmeQuestionnaires
+    (programme) => programme.programmeQuestionnaires,
+    { nullable: false }
   )
   programme: Programme;
 
   @ManyToOne(
     (type) => Questionnaire,
-    (questionnaire) => questionnaire.programmeQuestionnaires
+    (questionnaire) => questionnaire.programmeQuestionnaires,
+    { nullable: false }
   )
   questionnaire: Questionnaire;
 }
