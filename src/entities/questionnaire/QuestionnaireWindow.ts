@@ -8,8 +8,9 @@ import { QuestionSet } from "./QuestionSet";
 export class QuestionnaireWindow extends Discardable {
   entityName = "QuestionnaireWindow";
 
-  constructor(openAt: Date, closeAt: Date) {
+  constructor(questionnaire: Questionnaire, openAt: Date, closeAt: Date) {
     super();
+    this.questionnaire = questionnaire;
     this.openAt = openAt;
     this.closeAt = closeAt;
   }
@@ -32,5 +33,5 @@ export class QuestionnaireWindow extends Discardable {
     (questionnaire) => questionnaire.questionnaireWindows,
     { nullable: false }
   )
-  questionnaire!: Questionnaire;
+  questionnaire: Questionnaire;
 }

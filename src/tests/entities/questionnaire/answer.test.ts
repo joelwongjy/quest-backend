@@ -9,7 +9,7 @@ import ApiServer from "../../../server";
 import { Fixtures, loadFixtures, synchronize } from "../../../utils/tests";
 import { Attempt } from "../../../entities/questionnaire/Attempt";
 import { Questionnaire } from "../../../entities/questionnaire/Questionnaire";
-import { QuestionSet } from "src/entities/questionnaire/QuestionSet";
+import { QuestionSet } from "../../../entities/questionnaire/QuestionSet";
 
 let server: ApiServer;
 let fixtures: Fixtures;

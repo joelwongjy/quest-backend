@@ -221,17 +221,16 @@ export class OneTimeQuestionnaireCreator extends QuestionnaireCreator {
       );
     }
     this.mainWindowData = createData.questionWindows[0];
-    this.mainWindowCreator = new QuestionnaireWindowCreator(
-      this.mainWindowData,
-      this.mainWindowData,
-      undefined
-    );
+    this.mainWindowCreator = new QuestionnaireWindowCreator();
   }
 
   public async createQuestionnaire(): Promise<Questionnaire> {
     const newQnnaire = await super.createQuestionnaire();
-    const newMainWindow =
-      await this.mainWindowCreator.createWindowAndMainQnSet();
+    const newMainWindow = await this.mainWindowCreator.createWindowAndMainQnSet(
+      newQnnaire,
+      this.mainWindowData,
+      this.mainWindowData
+    );
 
     newQnnaire.questionnaireWindows = [newMainWindow];
     const saved = await getRepository(Questionnaire).save(newQnnaire);
@@ -268,25 +267,27 @@ export class PrePostQuestionnaireCreator extends QuestionnaireCreator {
     this.window2Data = createData.questionWindows[1];
     this.sharedQnsData = createData.sharedQuestions;
 
-    this.window1Creator = new QuestionnaireWindowCreator(
-      this.window1Data,
-      this.window1Data,
-      undefined
-    );
-    this.window2Creator = new QuestionnaireWindowCreator(
-      this.window2Data,
-      this.window2Data,
-      this.sharedQnsData
-    );
+    this.window1Creator = new QuestionnaireWindowCreator();
+    this.window2Creator = new QuestionnaireWindowCreator();
   }
 
   public async createQuestionnaire(): Promise<Questionnaire> {
     const newQnnaire = await super.createQuestionnaire();
 
-    const newWindow1 = await this.window1Creator.createWindowAndMainQnSet();
-    const newWindow2 = await this.window2Creator.createWindowAndMainQnSet();
+    const newWindow1 = await this.window1Creator.createWindowAndMainQnSet(
+      newQnnaire,
+      this.window1Data,
+      this.window1Data
+    );
+    const newWindow2 = await this.window2Creator.createWindowAndMainQnSet(
+      newQnnaire,
+      this.window2Data,
+      this.window2Data
+    );
 
-    const sharedSet = await this.window2Creator.createSharedQnSet();
+    const sharedSet = await this.window2Creator.createSharedQnSet(
+      this.sharedQnsData
+    );
     newWindow1.sharedSet = sharedSet;
     newWindow2.sharedSet = sharedSet;
     const newWindowsWithSharedSets = await getRepository(
