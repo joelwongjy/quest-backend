@@ -19,10 +19,14 @@ export class Relationship extends Discardable {
     this.relationship = relationshipType;
   }
 
-  @ManyToOne((type) => Person, (youth) => youth.familyMembers)
+  @ManyToOne((type) => Person, (youth) => youth.familyMembers, {
+    nullable: false,
+  })
   youth: Person;
 
-  @ManyToOne((type) => Person, (familyMember) => familyMember.youths)
+  @ManyToOne((type) => Person, (familyMember) => familyMember.youths, {
+    nullable: false,
+  })
   familyMember: Person;
 
   @Column({
