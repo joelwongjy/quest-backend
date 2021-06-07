@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { getConnection, getRepository } from "typeorm";
+import { getRepository } from "typeorm";
+import { SuccessId, TYPEORM_ENTITYNOTFOUND } from "../types/errors";
 import { Class } from "../entities/programme/Class";
 import { Announcement } from "../entities/programme/Announcement";
 import { Programme } from "../entities/programme/Programme";
@@ -107,7 +108,7 @@ export async function show(
   response: Response
 ): Promise<void> {
   try {
-    const { id } = request.params;
+    const id = parseInt(request.params.id, 10);
 
     if (!id) {
       response.status(400);
@@ -146,5 +147,38 @@ export async function show(
     console.log(e);
     response.status(400);
     return;
+  }
+}
+
+export async function softDelete(
+  request: Request,
+  response: Response
+): Promise<void> {
+  const id = parseInt(request.params.id, 10);
+
+  try {
+    if (isNaN(id)) {
+      response.status(400).json({ success: false });
+      return;
+    }
+
+    const announcement = await getRepository(Announcement).findOneOrFail({
+      where: { id: id },
+    });
+
+    await getRepository(Announcement).softRemove(announcement);
+
+    response.status(200).json({ success: true, id: id });
+  } catch (error) {
+    switch (error.name) {
+      case TYPEORM_ENTITYNOTFOUND:
+        response.status(404).json({ success: false });
+        return;
+
+      default:
+        console.log(error);
+        response.status(400).json({ success: false });
+        return;
+    }
   }
 }
