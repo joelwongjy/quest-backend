@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { getRepository } from "typeorm";
-import { SuccessId, TYPEORM_ENTITYNOTFOUND } from "../types/errors";
+import { TYPEORM_ENTITYNOTFOUND } from "../types/errors";
 import { Class } from "../entities/programme/Class";
 import { Announcement } from "../entities/programme/Announcement";
 import { Programme } from "../entities/programme/Programme";
@@ -154,7 +154,7 @@ export async function softDelete(
   request: Request,
   response: Response
 ): Promise<void> {
-  const id = parseInt(request.params.id, 10);
+  const id = parseInt(request.params.announcementId, 10);
 
   try {
     if (isNaN(id)) {
@@ -180,5 +180,41 @@ export async function softDelete(
         response.status(400).json({ success: false });
         return;
     }
+  }
+}
+
+export async function edit(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const id = parseInt(request.params.id, 10);
+
+    if (!id) {
+      response.status(400);
+      return;
+    }
+
+    let existingData: Announcement = await getRepository(
+      Announcement
+    ).findOneOrFail({
+      where: { id: id },
+    });
+
+    let newTitle: string = request.body.title ?? existingData.title;
+    let newDate: Date = request.body.date ?? existingData.date;
+    let newBody: string | null = request.body.body ?? existingData.body;
+
+    existingData.title = newTitle;
+    existingData.date = newDate;
+    existingData.body = newBody;
+
+    await getRepository(Announcement).save(existingData);
+
+    response.status(200).json({ success: true, id: existingData.id });
+  } catch (e) {
+    console.log(e);
+    response.status(400);
+    return;
   }
 }

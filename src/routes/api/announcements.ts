@@ -15,5 +15,6 @@ router.get("/:id", AnnouncementsController.show);
 router.get("/", AnnouncementsController.index);
 router.post("/create", AnnouncementsController.create);
 router.delete("/delete/:id", AnnouncementsController.softDelete);
+router.patch("/:id", AnnouncementsController.edit);
 
 export default router;

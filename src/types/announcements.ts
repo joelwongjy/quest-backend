@@ -30,6 +30,13 @@ export interface AnnouncementPostData {
   programmeId?: number | null;
 }
 
+// DELETE /announcements/delete/:id
 export interface AnnouncementDeleteData {
-  announcements: number[]; // id of all announcements to delete
+  announcementId: number; // id of the announcement to delete
+}
+
+export interface AnnouncementPatchData {
+  title: string;
+  date: Date;
+  body?: string | null;
 }
