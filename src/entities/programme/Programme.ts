@@ -3,6 +3,7 @@ import { Column, Entity, getRepository, OneToMany } from "typeorm";
 import { ProgrammeData, ProgrammeListData } from "../../types/programmes";
 import { Discardable } from "../Discardable";
 import { ProgrammeQuestionnaire } from "../questionnaire/ProgrammeQuestionnaire";
+import { Announcement } from "./Announcement";
 import { Class } from "./Class";
 
 @Entity()
@@ -25,6 +26,9 @@ export class Programme extends Discardable {
 
   @OneToMany((type) => Class, (class_) => class_.programme)
   classes!: Class[];
+
+  @OneToMany((type) => Announcement, (announcement) => announcement.class)
+  announcements?: Announcement[];
 
   @OneToMany(
     (type) => ProgrammeQuestionnaire,

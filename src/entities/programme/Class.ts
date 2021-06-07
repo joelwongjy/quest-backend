@@ -6,6 +6,7 @@ import { Discardable } from "../Discardable";
 import { ClassQuestionnaire } from "../questionnaire/ClassQuestionnaire";
 import { ClassPerson } from "./ClassPerson";
 import { Programme } from "./Programme";
+import { Announcement } from "./Announcement";
 
 @Entity()
 export class Class extends Discardable {
@@ -33,6 +34,9 @@ export class Class extends Discardable {
 
   @OneToMany((type) => ClassPerson, (classPerson) => classPerson.class)
   classPersons!: ClassPerson[];
+
+  @OneToMany((type) => Announcement, (announcement) => announcement.class)
+  announcements?: Announcement[];
 
   @OneToMany(
     (type) => ClassQuestionnaire,
