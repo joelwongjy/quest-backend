@@ -14,6 +14,6 @@ router.use(checkIfAdmin());
 router.get("/:id", AnnouncementsController.show);
 router.get("/", AnnouncementsController.index);
 router.post("/create", AnnouncementsController.create);
-router.delete("/delete/:id", AnnouncementsController.softDelete);
+// router.delete("/delete/:id", AnnouncementsController.softDelete);
 
 export default router;
