@@ -24,30 +24,31 @@ export async function show(
       return;
     }
 
-    const clazz = await getConnection()
-      .transaction<Class | undefined>(async (manager) => {
-        return await manager.getRepository(Class).findOne({
+    const result = await getConnection()
+      .transaction<number | ClassData>(async (manager) => {
+        const clazz = await manager.getRepository(Class).findOne({
           where: { id: idNum },
           relations: ["programme", "classPersons", "classPersons.person"],
         });
-      })
-      .then(async (clazz) => {
-        if (!clazz) {
-          response.sendStatus(404);
-          return;
-        }
 
-        const data = await clazz.getData();
-        response.status(200).json(data);
-        return;
+        if (!clazz) {
+          return 404;
+        } else {
+          return await clazz.getData();
+        }
       })
       .catch((error) => {
         console.log(error);
-        response.sendStatus(400);
-        return;
+        return 400;
       });
 
-    return;
+    if (result === 400 || result === 404) {
+      response.status(result);
+      return;
+    } else {
+      response.status(200).json(result as ClassData);
+      return;
+    }
   } catch (error) {
     console.log(error);
     response.status(400);
@@ -66,18 +67,25 @@ export async function edit(
       response.status(400);
       return;
     }
-    await getConnection()
-      .transaction<void>(async (manager) => {
+
+    const result = await getConnection()
+      .transaction<number>(async (manager) => {
         const editor = new ClassEditor(manager);
         await editor.editClass(idNum, request.body);
-        response.status(200).json({ success: true, id: idNum });
-        return;
+        return 200;
       })
       .catch((error) => {
         console.log(error);
-        response.status(400);
-        return;
+        return 400;
       });
+
+    if (result === 200) {
+      response.status(result).json({ success: true, id: idNum });
+      return;
+    } else {
+      response.status(result);
+      return;
+    }
   } catch (e) {
     console.log(e);
     response.status(400);
@@ -138,18 +146,24 @@ export async function editTeacher(
       return;
     }
 
-    await getConnection()
-      .transaction<void>(async (manager) => {
+    const result = await getConnection()
+      .transaction<number>(async (manager) => {
         const editor = new StudentTeacherAdminEditor(manager);
         await editor.editTeacher(id, request.body);
-        response.status(200).json({ success: true, id });
-        return;
+        return 200;
       })
       .catch((error) => {
         console.log(error);
-        response.status(400);
-        return;
+        return 400;
       });
+
+    if (result === 200) {
+      response.status(result).json({ success: true, id });
+      return;
+    } else {
+      response.status(result);
+      return;
+    }
   } catch (e) {
     console.log(e);
     response.status(400);
@@ -170,18 +184,24 @@ export async function editAdmin(
       return;
     }
 
-    await getConnection()
-      .transaction<void>(async (manager) => {
+    const result = await getConnection()
+      .transaction<number>(async (manager) => {
         const editor = new StudentTeacherAdminEditor(manager);
         await editor.editAdmin(id, request.body);
-        response.status(200).json({ success: true, id });
-        return;
+        return 200;
       })
       .catch((error) => {
         console.log(error);
-        response.status(400);
-        return;
+        return 400;
       });
+
+    if (result === 200) {
+      response.status(200).json({ success: true, id });
+      return;
+    } else {
+      response.status(400);
+      return;
+    }
   } catch (e) {
     console.log(e);
     response.status(400);
