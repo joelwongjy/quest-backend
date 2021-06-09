@@ -10,46 +10,44 @@ import {
 } from "../types/tokens";
 import { DefaultUserRole } from "../types/users";
 
-export const checkBearerToken = (type: BearerTokenType) => (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const bearerToken = req.headers.authorization;
-  if (!bearerToken || !isBearerToken(bearerToken)) {
-    res.sendStatus(401);
-    return;
-  }
-
-  const token = bearerToken.split(" ")[1];
-
-  let payload: object | string;
-  try {
-    payload = jwt.verify(token, process.env.JWT_SECRET!);
-  } catch (error) {
-    res.sendStatus(401);
-    return;
-  }
-
-  switch (type) {
-    case BearerTokenType.AccessToken:
-      if (!isAccessTokenSignedPayload(payload)) {
-        res.sendStatus(401);
-        return;
-      }
-      break;
-
-    default:
+export const checkBearerToken =
+  (type: BearerTokenType) =>
+  (req: Request, res: Response, next: NextFunction): void => {
+    const bearerToken = req.headers.authorization;
+    if (!bearerToken || !isBearerToken(bearerToken)) {
       res.sendStatus(401);
       return;
-  }
+    }
 
-  res.locals.payload = payload;
+    const token = bearerToken.split(" ")[1];
 
-  next();
-};
+    let payload: object | string;
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET!);
+    } catch (error) {
+      res.sendStatus(401);
+      return;
+    }
 
-export const checkIfAdmin = () => async (
+    switch (type) {
+      case BearerTokenType.AccessToken:
+        if (!isAccessTokenSignedPayload(payload)) {
+          res.sendStatus(401);
+          return;
+        }
+        break;
+
+      default:
+        res.sendStatus(401);
+        return;
+    }
+
+    res.locals.payload = payload;
+
+    next();
+  };
+
+export const checkIfAdmin = async (
   _req: Request,
   res: Response,
   next: NextFunction

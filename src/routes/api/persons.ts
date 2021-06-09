@@ -10,7 +10,7 @@ import { BearerTokenType } from "../../types/tokens";
 export const router = Router();
 
 router.use(checkBearerToken(BearerTokenType.AccessToken));
-router.use(checkIfAdmin());
+router.use(checkIfAdmin);
 
 router.post("/:id/user", UsersController.create);
 router.get("/:id", PersonsController.showPerson);
