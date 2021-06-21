@@ -1,44 +1,54 @@
 import { IsNotEmpty, IsOptional } from "class-validator";
-import { Column, Entity, ManyToOne } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
 import { Discardable } from "../Discardable";
 import { Programme } from "./Programme";
 import { Class } from "./Class";
-import { AnnouncementListData } from "../../types/announcements";
 
 @Entity()
 export class Announcement extends Discardable {
   entityName = "Announcement";
 
   constructor(
-    programme_: Programme,
-    class_: Class,
-    date: Date,
+    startDate: Date,
+    endDate: Date,
     title: string,
+    programmes?: Programme[],
+    classes?: Class[],
     body?: string
   ) {
     super();
-    this.programme = programme_;
-    this.class = class_;
-    this.date = date;
+
+    this.startDate = startDate;
+    this.endDate = endDate;
     this.title = title;
+    this.programmes = programmes;
+    this.classes = classes;
     this.body = body ?? null;
   }
 
   // A programme can have 0 to many announcements
-  @ManyToOne((type) => Programme, (programme_) => programme_.announcements, {
+  @ManyToMany(() => Programme, (programme) => programme.announcements, {
     nullable: true,
+    cascade: true, // for soft-delete purposes
   })
-  programme: Programme;
+  @JoinTable()
+  programmes: Programme[] | undefined;
 
-  // A class can have 0 to many announcements
-  @ManyToOne((type) => Class, (class_) => class_.announcements, {
+  // A programme can have 0 to many announcements
+  @ManyToMany(() => Class, (class_) => class_.announcements, {
     nullable: true,
+    cascade: true, // for soft-delete purposes
   })
-  class: Class;
+  @JoinTable()
+  classes: Class[] | undefined;
 
   // Refers to the date the Announcement becomes visible to students
   @Column()
-  date: Date;
+  startDate: Date;
+
+  // Refers to the date the Announcement is no longer visible to students
+  @Column()
+  endDate: Date;
 
   @Column()
   @IsNotEmpty()

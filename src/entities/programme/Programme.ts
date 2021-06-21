@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsOptional } from "class-validator";
-import { Column, Entity, getRepository, OneToMany } from "typeorm";
+import { Column, Entity, getRepository, OneToMany, ManyToMany } from "typeorm";
 import { ProgrammeData, ProgrammeListData } from "../../types/programmes";
 import { Discardable } from "../Discardable";
 import { ProgrammeQuestionnaire } from "../questionnaire/ProgrammeQuestionnaire";
@@ -27,7 +27,14 @@ export class Programme extends Discardable {
   @OneToMany((type) => Class, (class_) => class_.programme)
   classes!: Class[];
 
-  @OneToMany((type) => Announcement, (announcement) => announcement.class)
+  // A Programme can have many announcements
+  @ManyToMany(
+    () => Announcement,
+    (announcement: Announcement) => announcement.programmes,
+    {
+      nullable: true,
+    }
+  )
   announcements?: Announcement[];
 
   @OneToMany(

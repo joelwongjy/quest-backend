@@ -11,10 +11,10 @@ export const router = Router();
 router.use(checkBearerToken(BearerTokenType.AccessToken));
 router.use(checkIfAdmin());
 
+router.post("/", AnnouncementsController.create);
 router.get("/:id", AnnouncementsController.show);
 router.get("/", AnnouncementsController.index);
-router.post("/create", AnnouncementsController.create);
-router.delete("/delete/:id", AnnouncementsController.softDelete);
-router.patch("/:id", AnnouncementsController.edit);
+// router.delete('/delete/:id', AnnouncementsController.softDelete);
+// router.patch('/:id', AnnouncementsController.edit);
 
 export default router;

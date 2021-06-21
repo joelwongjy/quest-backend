@@ -1,6 +1,13 @@
 import { IsNotEmpty, IsOptional } from "class-validator";
 import { ClassPersonRole } from "../../types/classPersons";
-import { Column, Entity, getRepository, ManyToOne, OneToMany } from "typeorm";
+import {
+  Column,
+  Entity,
+  getRepository,
+  ManyToOne,
+  OneToMany,
+  ManyToMany,
+} from "typeorm";
 import { ClassData, ClassListData } from "../../types/classes";
 import { Discardable } from "../Discardable";
 import { ClassQuestionnaire } from "../questionnaire/ClassQuestionnaire";
@@ -32,11 +39,18 @@ export class Class extends Discardable {
   })
   programme: Programme;
 
+  // A Class can have many announcements
+  @ManyToMany(
+    () => Announcement,
+    (announcement: Announcement) => announcement.classes,
+    {
+      nullable: true,
+    }
+  )
+  announcements?: Announcement[];
+
   @OneToMany((type) => ClassPerson, (classPerson) => classPerson.class)
   classPersons!: ClassPerson[];
-
-  @OneToMany((type) => Announcement, (announcement) => announcement.class)
-  announcements?: Announcement[];
 
   @OneToMany(
     (type) => ClassQuestionnaire,
