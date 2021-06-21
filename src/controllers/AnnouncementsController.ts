@@ -5,14 +5,23 @@ import { Class } from "../entities/programme/Class";
 import { Announcement } from "../entities/programme/Announcement";
 import { Programme } from "../entities/programme/Programme";
 import { AnnouncementListData, AnnouncementData } from "../types/announcements";
+import { start } from "repl";
 
 export async function create(
   request: Request,
   response: Response
 ): Promise<void> {
   try {
-    const { title, startDate, endDate, programmeIds, classIds, body } =
+    let { title, startDate, endDate, programmeIds, classIds, body } =
       request.body;
+
+    if (!(startDate instanceof Date)) {
+      startDate = new Date(startDate);
+    }
+
+    if (!(endDate instanceof Date)) {
+      endDate = new Date(endDate);
+    }
 
     // check for sufficient data to process request
     const isCompleteData = title && startDate && endDate;
@@ -155,7 +164,7 @@ export async function show(
   try {
     const id = parseInt(request.params.id, 10);
 
-    if (!id) {
+    if (isNaN(id)) {
       response.status(400);
       return;
     }
@@ -208,63 +217,73 @@ export async function show(
   }
 }
 
-// export async function softDelete(request: Request, response: Response): Promise<void> {
-//   const id = parseInt(request.params.announcementId, 10);
+export async function softDelete(
+  request: Request,
+  response: Response
+): Promise<void> {
+  const id = parseInt(request.params.announcementId, 10);
 
-//   try {
-//     if (isNaN(id)) {
-//       response.status(400).json({ success: false });
-//       return;
-//     }
+  try {
+    if (isNaN(id)) {
+      response.status(400).json({ success: false });
+      return;
+    }
 
-//     const announcement = await getRepository(Announcement).findOneOrFail({
-//       where: { id: id }
-//     });
+    const announcement = await getRepository(Announcement).findOneOrFail({
+      where: { id: id },
+    });
 
-//     await getRepository(Announcement).softRemove(announcement);
+    await getRepository(Announcement).softRemove(announcement);
 
-//     response.status(200).json({ success: true, id: id });
-//   } catch (error) {
-//     switch (error.name) {
-//       case TYPEORM_ENTITYNOTFOUND:
-//         response.status(404).json({ success: false });
-//         return;
+    response.status(200).json({ success: true, id: id });
+  } catch (error) {
+    switch (error.name) {
+      case TYPEORM_ENTITYNOTFOUND:
+        response.status(404).json({ success: false });
+        return;
 
-//       default:
-//         console.log(error);
-//         response.status(400).json({ success: false });
-//         return;
-//     }
-//   }
-// }
+      default:
+        console.log(error);
+        response.status(400).json({ success: false });
+        return;
+    }
+  }
+}
 
-// export async function edit(request: Request, response: Response): Promise<void> {
-//   try {
-//     const id = parseInt(request.params.id, 10);
+export async function edit(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const id = parseInt(request.params.id, 10);
 
-//     if (!id) {
-//       response.status(400);
-//       return;
-//     }
+    if (isNaN(id)) {
+      response.status(400);
+      return;
+    }
 
-//     let existingData: Announcement = await getRepository(Announcement).findOneOrFail({
-//       where: { id: id }
-//     });
+    let existingData: Announcement = await getRepository(
+      Announcement
+    ).findOneOrFail({
+      where: { id: id },
+    });
 
-//     let newTitle: string = request.body.title ?? existingData.title;
-//     let newDate: Date = request.body.date ?? existingData.date;
-//     let newBody: string | null = request.body.body ?? existingData.body;
+    let newTitle: string = request.body.title ?? existingData.title;
+    let newStartDate: Date = request.body.startDate ?? existingData.startDate;
+    let newEndDate: Date = request.body.endDate ?? existingData.endDate;
+    let newBody: string | null = request.body.body ?? existingData.body;
 
-//     existingData.title = newTitle;
-//     existingData.date = newDate;
-//     existingData.body = newBody;
+    existingData.title = newTitle;
+    existingData.startDate = newStartDate;
+    existingData.endDate = newEndDate;
+    existingData.body = newBody;
 
-//     await getRepository(Announcement).save(existingData);
+    await getRepository(Announcement).save(existingData);
 
-//     response.status(200).json({ success: true, id: existingData.id });
-//   } catch (e) {
-//     console.log(e);
-//     response.status(400);
-//     return;
-//   }
-// }
+    response.status(200).json({ success: true, id: existingData.id });
+  } catch (e) {
+    console.log(e);
+    response.status(400);
+    return;
+  }
+}
