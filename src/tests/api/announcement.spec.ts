@@ -12,6 +12,7 @@ import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
 
 let server: ApiServer;
 let fixtures: Fixtures;
+const mockAnnouncementId = 1;
 
 beforeAll(async () => {
   server = new ApiServer();
@@ -82,8 +83,6 @@ describe("GET /announcements/", () => {
 
 // test show controller
 describe("GET /announcements/:id", () => {
-  const mockAnnouncementId = 1;
-
   it("should return 200 if logged in and valid id", async () => {
     const response = await request(server.server)
       .get(`${fixtures.api}/announcements/${mockAnnouncementId}`)
@@ -137,14 +136,14 @@ describe("PATCH /id", () => {
 
   it("should return 401 if not logged in", async () => {
     const response = await request(server.server)
-      .patch(`${fixtures.api}/announcements/${1}`)
+      .patch(`${fixtures.api}/announcements/${mockAnnouncementId}`)
       .send(editData);
     expect(response.status).toBe(401);
   });
 
   it("should return 401 if not admin", async () => {
     const response = await request(server.server)
-      .patch(`${fixtures.api}/announcements/${1}`)
+      .patch(`${fixtures.api}/announcements/${mockAnnouncementId}`)
       .set("Authorization", fixtures.teacherAccessToken)
       .send(editData);
     expect(response.status).toBe(401);
@@ -152,14 +151,14 @@ describe("PATCH /id", () => {
 
   it("should return 200 if admin and changed data", async () => {
     const response = await request(server.server)
-      .patch(`${fixtures.api}/announcements/${1}`)
+      .patch(`${fixtures.api}/announcements/${mockAnnouncementId}`)
       .set("Authorization", fixtures.adminAccessToken)
       .send(editData);
     expect(response.status).toBe(200);
     const editedAnnouncement: Announcement | undefined = await getRepository(
       Announcement
     ).findOne({
-      where: { id: 1 },
+      where: { id: mockAnnouncementId },
     });
 
     expect(editedAnnouncement?.title).toBe("Edited title");
@@ -170,14 +169,14 @@ describe("PATCH /id", () => {
 describe("DELETE /:id", () => {
   it("should return 401 if not logged in", async () => {
     const response = await request(server.server)
-      .delete(`${fixtures.api}/announcements/${1}`)
+      .delete(`${fixtures.api}/announcements/${mockAnnouncementId}`)
       .send();
     expect(response.status).toBe(401);
   });
 
   it("should return 401 if not admin", async () => {
     const response = await request(server.server)
-      .delete(`${fixtures.api}/announcements/${1}`)
+      .delete(`${fixtures.api}/announcements/${mockAnnouncementId}`)
       .set("Authorization", fixtures.teacherAccessToken)
       .send();
     expect(response.status).toBe(401);
@@ -202,7 +201,7 @@ describe("DELETE /:id", () => {
 
   it("should return 200 and delete announcement if admin and valid id", async () => {
     const response = await request(server.server)
-      .delete(`${fixtures.api}/announcements/${1}`)
+      .delete(`${fixtures.api}/announcements/${mockAnnouncementId}`)
       .set("Authorization", fixtures.adminAccessToken)
       .send();
     expect(response.status).toBe(200);
