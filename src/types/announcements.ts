@@ -35,12 +35,12 @@ export interface AnnouncementPostData {
 
 // DELETE /announcements/delete/:id
 export interface AnnouncementDeleteData {
-  announcementId: number; // id of the announcement to delete
+  id: number; // id of the announcement to delete
 }
 
 export interface AnnouncementPatchData {
-  title: string;
-  startDate: Date;
-  endDate: Date;
+  title?: string;
+  startDate?: Date;
+  endDate?: Date;
   body?: string | null;
 }

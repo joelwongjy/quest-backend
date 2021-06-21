@@ -221,7 +221,7 @@ export async function softDelete(
   request: Request,
   response: Response
 ): Promise<void> {
-  const id = parseInt(request.params.announcementId, 10);
+  const id = parseInt(request.params.id, 10);
 
   try {
     if (isNaN(id)) {

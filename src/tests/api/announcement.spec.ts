@@ -5,7 +5,7 @@ import { Programme } from "../../entities/programme/Programme";
 import { Announcement } from "../../entities/programme/Announcement";
 import ApiServer from "../../server";
 import {
-  AnnouncementListData,
+  AnnouncementPatchData,
   AnnouncementPostData,
 } from "../../types/announcements";
 import { Fixtures, synchronize, loadFixtures } from "../../utils/tests";
@@ -26,7 +26,7 @@ beforeAll(async () => {
   const title2 =
     "We will be having no classes this Friday as it is a Public Holiday";
 
-  const announcement1Data = new Announcement(
+  const announcementOneData = new Announcement(
     new Date("2021-04-01"),
     new Date("2021-04-23"),
     title1,
@@ -35,7 +35,7 @@ beforeAll(async () => {
     "Hello students, as this Friday is going to be a Public Holiday, we will not have any classes."
   );
 
-  const announcement2Data = new Announcement(
+  const announcementTwoData = new Announcement(
     new Date("2021-04-01"),
     new Date("2021-04-23"),
     title2,
@@ -46,11 +46,11 @@ beforeAll(async () => {
   let programme: Programme = await getRepository(Programme).save(programmeData);
   let classOne: Class = await getRepository(Class).save(classOneData);
   let classTwo: Class = await getRepository(Class).save(classTwoData);
-  let announcement1: Announcement = await getRepository(Announcement).save(
-    announcement1Data
+  let announcementOne: Announcement = await getRepository(Announcement).save(
+    announcementOneData
   );
-  let announcement2: Announcement = await getRepository(Announcement).save(
-    announcement2Data
+  let announcementTwo: Announcement = await getRepository(Announcement).save(
+    announcementTwoData
   );
 });
 
@@ -126,5 +126,86 @@ describe("POST /", () => {
       .post(`${fixtures.api}/announcements`)
       .send(postData);
     expect(response.status).toBe(401);
+  });
+});
+
+describe("PATCH /id", () => {
+  let editData: AnnouncementPatchData = {
+    title: "Edited title",
+    body: "Edited body",
+  };
+
+  it("should return 401 if not logged in", async () => {
+    const response = await request(server.server)
+      .patch(`${fixtures.api}/announcements/${1}`)
+      .send(editData);
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 401 if not admin", async () => {
+    const response = await request(server.server)
+      .patch(`${fixtures.api}/announcements/${1}`)
+      .set("Authorization", fixtures.teacherAccessToken)
+      .send(editData);
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 200 if admin and changed data", async () => {
+    const response = await request(server.server)
+      .patch(`${fixtures.api}/announcements/${1}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send(editData);
+    expect(response.status).toBe(200);
+    const editedAnnouncement: Announcement | undefined = await getRepository(
+      Announcement
+    ).findOne({
+      where: { id: 1 },
+    });
+
+    expect(editedAnnouncement?.title).toBe("Edited title");
+    expect(editedAnnouncement?.body).toBe("Edited body");
+  });
+});
+
+describe("DELETE /:id", () => {
+  it("should return 401 if not logged in", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/announcements/${1}`)
+      .send();
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 401 if not admin", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/announcements/${1}`)
+      .set("Authorization", fixtures.teacherAccessToken)
+      .send();
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 400 if admin and NaN id", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/announcements/NanId`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(400);
+  });
+
+  it("should return 404 if admin and invalid id", async () => {
+    const invalidId = 0;
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/announcements/${invalidId}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(404);
+  });
+
+  it("should return 200 and delete announcement if admin and valid id", async () => {
+    const response = await request(server.server)
+      .delete(`${fixtures.api}/announcements/${1}`)
+      .set("Authorization", fixtures.adminAccessToken)
+      .send();
+    expect(response.status).toBe(200);
+    expect(response.body.id).toBeTruthy();
   });
 });
