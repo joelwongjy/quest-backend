@@ -94,7 +94,7 @@ describe("GET /announcements/:id", () => {
   });
 });
 
-describe("POST /", () => {
+describe("POST /announcements", () => {
   const postData: AnnouncementPostData = {
     title: "Dummy Title",
     startDate: new Date("2021-01-01"),
@@ -128,7 +128,7 @@ describe("POST /", () => {
   });
 });
 
-describe("PATCH /id", () => {
+describe("PATCH /:id", () => {
   let editData: AnnouncementPatchData = {
     title: "Edited title",
     body: "Edited body",

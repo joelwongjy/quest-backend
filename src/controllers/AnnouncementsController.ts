@@ -34,24 +34,24 @@ export async function create(
     }
 
     let programmes: Programme[] = [];
-    let programmeIdsAdded: number[] = [];
     let classes: Class[] = [];
+    let programmeIdsAdded: number[] = [];
+    let classIdsAdded: number[] = [];
 
     // get Programmes first, and all of its classes
     if (programmeIds) {
-      programmes = await getRepository(Programme).find({
+      const programmesTemp: Programme[] = await getRepository(Programme).find({
         where: { id: In(programmeIds) },
         relations: ["classes"],
       });
 
-      for (const program of programmes) {
+      for (const program of programmesTemp) {
         programmeIdsAdded.push(program.id);
+        programmes.push(program);
+
         for (const class_ of program.classes) {
-          // need to check to prevent double counting classes
-          if (class_.id in classIds) {
-            continue;
-          }
           classes.push(class_);
+          classIdsAdded.push(class_.id);
         }
       }
     }
@@ -64,12 +64,16 @@ export async function create(
       });
 
       for (const class_ of classesTemp) {
-        if (class_.programme.id in programmeIdsAdded) {
+        if (!programmeIdsAdded.includes(class_.programme.id)) {
           programmes.push(class_.programme);
+          programmeIdsAdded.push(class_.programme.id);
+        }
+
+        if (!classIdsAdded.includes(class_.id)) {
+          classes.push(class_);
+          classIdsAdded.push(class_.id);
         }
       }
-
-      classes.push(...classesTemp);
     }
 
     // Assert there is at least 1 programme and 1 class to tag announcement to
