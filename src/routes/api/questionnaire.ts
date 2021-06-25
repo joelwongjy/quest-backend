@@ -19,7 +19,7 @@ router.get("/:id/window/:windowId", QuestionnaireController.showWindow);
 router.get("/:id", QuestionnaireController.show);
 router.get("/", QuestionnaireController.index);
 
-router.use(checkIfAdmin());
+router.use(checkIfAdmin);
 router.post("/create", QuestionnaireController.create);
 router.delete("/delete/:id", QuestionnaireController.softDelete);
 router.post("/edit/:id", QuestionnaireController.edit);

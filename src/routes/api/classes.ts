@@ -9,7 +9,7 @@ import * as ClassesController from "../../controllers/ClassesController";
 export const router = Router();
 
 router.use(checkBearerToken(BearerTokenType.AccessToken));
-router.use(checkIfAdmin());
+router.use(checkIfAdmin);
 router.get("/teachers", ClassesController.indexTeacher);
 router.get("/admins", ClassesController.indexAdmin);
 router.post("/teachers", ClassesController.createTeacher);

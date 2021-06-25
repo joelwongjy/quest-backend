@@ -62,18 +62,24 @@ export async function editStudent(
       return;
     }
 
-    await getConnection()
-      .transaction<void>(async (manager) => {
+    const result = await getConnection()
+      .transaction<number>(async (manager) => {
         const editor = new StudentTeacherAdminEditor(manager);
         await editor.editStudent(id, request.body);
-        response.status(200).json({ success: true, id });
-        return;
+        return 200;
       })
       .catch((error) => {
         console.log(error);
-        response.status(400);
-        return;
+        return 400;
       });
+
+    if (result === 200) {
+      response.status(200).json({ success: true, id });
+      return;
+    } else if (result === 400) {
+      response.status(400);
+      return;
+    }
   } catch (e) {
     console.log(e);
     response.status(400);
