@@ -5,7 +5,6 @@ import { Class } from "../entities/programme/Class";
 import { Announcement } from "../entities/programme/Announcement";
 import { Programme } from "../entities/programme/Programme";
 import { AnnouncementListData, AnnouncementData } from "../types/announcements";
-import { start } from "repl";
 
 export async function create(
   request: Request,
@@ -55,7 +54,7 @@ export async function create(
     const announcementData: Announcement = await getRepository(
       Announcement
     ).save(announcement);
-    console.log(announcementData);
+
     response.status(200).json({ success: true, id: announcementData.id });
     return;
   } catch (error) {
@@ -170,8 +169,8 @@ export async function index(
 
     response.status(200).json({ announcements: result });
     return;
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.log(error);
     response.status(400);
     return;
   }
@@ -230,8 +229,8 @@ export async function show(
       announcement: result,
     });
     return;
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.log(error);
     response.status(400);
     return;
   }
@@ -310,8 +309,8 @@ export async function edit(
     await getRepository(Announcement).save(existingData);
 
     response.status(200).json({ success: true, id: existingData.id });
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.log(error);
     response.status(400);
     return;
   }
