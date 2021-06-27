@@ -34,7 +34,7 @@ export class Announcement extends Discardable {
   @JoinTable()
   programmes: Programme[] | undefined;
 
-  // A programme can have 0 to many announcements
+  // A class can have 0 to many announcements
   @ManyToMany(() => Class, (class_) => class_.announcements, {
     nullable: true,
     cascade: true, // for soft-delete purposes
