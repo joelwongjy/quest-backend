@@ -9,7 +9,7 @@ import { BearerTokenType } from "../../types/tokens";
 export const router = Router();
 
 router.use(checkBearerToken(BearerTokenType.AccessToken));
-router.use(checkIfAdmin());
+router.use(checkIfAdmin);
 
 router.post("/", PersonsController.createStudent);
 router.get("/", PersonsController.indexStudent);
