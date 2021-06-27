@@ -33,48 +33,10 @@ export async function create(
       );
     }
 
-    let programmes: Programme[] = [];
-    let classes: Class[] = [];
-    let programmeIdsAdded: number[] = [];
-    let classIdsAdded: number[] = [];
-
-    // get Programmes first, and all of its classes
-    if (programmeIds) {
-      const programmesTemp: Programme[] = await getRepository(Programme).find({
-        where: { id: In(programmeIds) },
-        relations: ["classes"],
-      });
-
-      for (const program of programmesTemp) {
-        programmeIdsAdded.push(program.id);
-        programmes.push(program);
-
-        for (const class_ of program.classes) {
-          classes.push(class_);
-          classIdsAdded.push(class_.id);
-        }
-      }
-    }
-
-    // get Classes second
-    if (classIds) {
-      const classesTemp: Class[] = await getRepository(Class).find({
-        where: { id: In(classIds) },
-        relations: ["programme"],
-      });
-
-      for (const class_ of classesTemp) {
-        if (!programmeIdsAdded.includes(class_.programme.id)) {
-          programmes.push(class_.programme);
-          programmeIdsAdded.push(class_.programme.id);
-        }
-
-        if (!classIdsAdded.includes(class_.id)) {
-          classes.push(class_);
-          classIdsAdded.push(class_.id);
-        }
-      }
-    }
+    const { programmes, classes } = await addProgrammesAndClassesData(
+      programmeIds,
+      classIds
+    );
 
     // Assert there is at least 1 programme and 1 class to tag announcement to
     if (programmes.length == 0 || classes.length == 0) {
@@ -93,6 +55,7 @@ export async function create(
     const announcementData: Announcement = await getRepository(
       Announcement
     ).save(announcement);
+    console.log(announcementData);
     response.status(200).json({ success: true, id: announcementData.id });
     return;
   } catch (error) {
@@ -100,6 +63,59 @@ export async function create(
     response.status(400).json({ error });
     return;
   }
+}
+
+async function addProgrammesAndClassesData(
+  programmeIds: number[],
+  classIds: number[]
+) {
+  let programmes: Programme[] = [];
+  let classes: Class[] = [];
+  let programmeIdsAdded: number[] = [];
+  let classIdsAdded: number[] = [];
+
+  // get Programmes first, and all of its classes
+  if (programmeIds) {
+    const programmesTemp: Programme[] = await getRepository(Programme).find({
+      where: { id: In(programmeIds) },
+      relations: ["classes"],
+    });
+
+    for (const program of programmesTemp) {
+      programmeIdsAdded.push(program.id);
+      programmes.push(program);
+
+      for (const class_ of program.classes) {
+        classes.push(class_);
+        classIdsAdded.push(class_.id);
+      }
+    }
+  }
+
+  // get Classes second
+  if (classIds) {
+    const classesTemp: Class[] = await getRepository(Class).find({
+      where: { id: In(classIds) },
+      relations: ["programme"],
+    });
+
+    for (const class_ of classesTemp) {
+      if (!programmeIdsAdded.includes(class_.programme.id)) {
+        programmes.push(class_.programme);
+        programmeIdsAdded.push(class_.programme.id);
+      }
+
+      if (!classIdsAdded.includes(class_.id)) {
+        classes.push(class_);
+        classIdsAdded.push(class_.id);
+      }
+    }
+  }
+
+  return {
+    programmes: programmes,
+    classes: classes,
+  };
 }
 
 export async function index(
@@ -271,6 +287,15 @@ export async function edit(
     ).findOneOrFail({
       where: { id: id },
     });
+
+    if (request.body.programmeIds || request.body.classIds) {
+      let { programmes, classes } = await addProgrammesAndClassesData(
+        request.body.programmeIds,
+        request.body.classIds
+      );
+      existingData.programmes = programmes;
+      existingData.classes = classes;
+    }
 
     let newTitle: string = request.body.title ?? existingData.title;
     let newStartDate: Date = request.body.startDate ?? existingData.startDate;

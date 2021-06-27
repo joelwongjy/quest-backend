@@ -43,4 +43,6 @@ export interface AnnouncementPatchData {
   startDate?: Date;
   endDate?: Date;
   body?: string | null;
+  programmeIds?: number[];
+  classIds?: number[];
 }
