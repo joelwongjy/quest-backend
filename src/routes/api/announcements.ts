@@ -9,11 +9,12 @@ import { BearerTokenType } from "../../types/tokens";
 export const router = Router();
 
 router.use(checkBearerToken(BearerTokenType.AccessToken));
-router.use(checkIfAdmin);
 
-router.post("/", AnnouncementsController.create);
 router.get("/:id", AnnouncementsController.show);
 router.get("/", AnnouncementsController.index);
+
+router.use(checkIfAdmin);
+router.post("/", AnnouncementsController.create);
 router.delete("/:id", AnnouncementsController.softDelete);
 router.patch("/:id", AnnouncementsController.edit);
 
