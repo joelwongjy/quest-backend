@@ -1,5 +1,5 @@
 import cors, { CorsOptions } from "cors";
-import express from "express";
+import express, { RequestHandler } from "express";
 import helmet from "helmet";
 import { Server } from "http";
 import morgan from "morgan";
@@ -22,13 +22,15 @@ export class ApiServer {
     this.connection = await createConnection(postgres);
 
     const app = express();
-    app.use(express.json({ limit: "20mb" }));
-    app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+    app.use(express.json({ limit: "20mb" }) as RequestHandler);
+    app.use(
+      express.urlencoded({ extended: true, limit: "20mb" }) as RequestHandler
+    );
     app.use(cors(corsOptions));
-    app.use(helmet());
+    app.use(helmet() as RequestHandler);
     if (process.env.NODE_ENV !== "test") {
       console.log(`Express server has started on port ${port}.`);
-      app.use(morgan("dev"));
+      app.use(morgan("dev") as RequestHandler);
     }
     app.use("/", routes);
 
