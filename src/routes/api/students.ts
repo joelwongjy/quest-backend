@@ -12,6 +12,7 @@ router.use(checkBearerToken(BearerTokenType.AccessToken));
 router.use(checkIfAdmin);
 
 router.post("/", PersonsController.createStudent);
+router.post("/bulk", PersonsController.bulkAddStudent);
 router.get("/", PersonsController.indexStudent);
 router.patch("/:id", PersonsController.editStudent);
 router.delete("/", PersonsController.deleteStudent);

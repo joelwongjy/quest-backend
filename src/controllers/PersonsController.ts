@@ -9,6 +9,7 @@ import {
 } from "../services/user/";
 import { Message, PERSON_DELETER_ERROR, SuccessId } from "../types/errors";
 import {
+  BulkPersonPostData,
   PersonData,
   PersonDeleteData,
   PersonPatchData,
@@ -162,6 +163,29 @@ export async function showPerson(
   } catch (e) {
     console.log(e);
     response.status(400);
+    return;
+  }
+}
+
+export async function bulkAddStudent(
+  request: Request<{}, any, BulkPersonPostData, any>,
+  response: Response
+): Promise<void> {
+  try {
+    const { body } = request;
+    const { students } = body;
+    await Promise.all(
+      students.map(async (s) => {
+        const { classIds } = s;
+        const creator = new StudentTeacherAdminCreator();
+        return await creator.createStudent(s, classIds ?? []);
+      })
+    );
+    response.status(200).json({});
+    return;
+  } catch (e) {
+    console.log(e);
+    response.status(400).json({});
     return;
   }
 }
