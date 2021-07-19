@@ -7,6 +7,7 @@ import questionnaire from "./questionnaire";
 import programmes from "./programmes";
 import students from "./students";
 import classes from "./classes";
+import announcements from "./announcements";
 
 const routes = Router();
 
@@ -18,5 +19,6 @@ routes.use("/seed", seed);
 routes.use("/questionnaires", questionnaire);
 routes.use("/programmes", programmes);
 routes.use("/classes", classes);
+routes.use("/announcements", announcements);
 
 export default routes;
