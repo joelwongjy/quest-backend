@@ -9,6 +9,7 @@ import { ClassPersonRole } from "../types/classPersons";
 import { ClassPerson } from "../entities/programme/ClassPerson";
 import { Person } from "../entities/user/Person";
 import { Gender } from "../types/persons";
+import { SuccessId } from "src/types/errors";
 
 const DEFAULT_PASSWORD = "password";
 
@@ -87,8 +88,8 @@ const PROGRAMME_SEED: ProgrammeSeed[] = [
 const COMMON_STUDENT: UserSeed = ["XX-Student", ClassPersonRole.STUDENT];
 
 export async function seed(
-  _request: Request,
-  response: Response
+  _request: Request<{}, {}, {}, {}>,
+  response: Response<SuccessId>
 ): Promise<void> {
   try {
     const superuserPerson = new Person("superuser", Gender.FEMALE);
@@ -103,11 +104,12 @@ export async function seed(
     await seedProgrammesClasses(PROGRAMME_SEED);
 
     response.status(200).json({
-      message: "done",
+      success: true,
     });
   } catch (error) {
     response.status(400).json({
-      error,
+      success: false,
+      message: error,
     });
   }
 }

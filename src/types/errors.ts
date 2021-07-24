@@ -5,6 +5,7 @@ export interface Message {
 export interface SuccessId {
   success: boolean;
   id?: number;
+  message?: string;
 }
 
 export const TYPEORM_ENTITYNOTFOUND = "EntityNotFound";
