@@ -52,3 +52,7 @@ export interface PersonData extends PersonListData {
 export interface PersonDeleteData {
   persons: number[];
 }
+
+export interface BulkPersonPostData {
+  students: PersonPostData[];
+}
