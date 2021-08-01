@@ -8,7 +8,19 @@ export interface SuccessId {
   message?: string;
 }
 
-export type QuestRes<T> = T & SuccessId;
+interface Success {
+  success: true;
+  id?: number;
+}
+
+interface Failure {
+  success: false;
+  message: string;
+}
+
+export type QuestRes<T, R = Success | Failure> = R extends Success
+  ? T & Success
+  : Failure;
 
 export const TYPEORM_ENTITYNOTFOUND = "EntityNotFound";
 export const ENTITY_NOT_FOUND = "No such entity";

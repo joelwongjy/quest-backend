@@ -1,10 +1,19 @@
 import { Request, Response } from "express";
-import { getRepository, In, SimpleConsoleLogger } from "typeorm";
-import { TYPEORM_ENTITYNOTFOUND } from "../types/errors";
+import { getRepository, In } from "typeorm";
+import {
+  ENTITY_NOT_FOUND,
+  QuestRes,
+  TYPEORM_ENTITYNOTFOUND,
+} from "../types/errors";
 import { Class } from "../entities/programme/Class";
 import { Announcement } from "../entities/programme/Announcement";
 import { Programme } from "../entities/programme/Programme";
-import { AnnouncementListData, AnnouncementData } from "../types/announcements";
+import {
+  AnnouncementListData,
+  AnnouncementData,
+  AnnouncementPostData,
+  AnnouncementPatchData,
+} from "../types/announcements";
 import { AccessTokenSignedPayload } from "src/types/tokens";
 import { User } from "../entities/user/User";
 import { DefaultUserRole } from "../types/users";
@@ -18,8 +27,8 @@ function convertDateStringToDateObject(date: string | Date) {
 }
 
 export async function create(
-  request: Request,
-  response: Response
+  request: Request<{}, {}, AnnouncementPostData, {}>,
+  response: Response<QuestRes<{}>>
 ): Promise<void> {
   try {
     let { title, startDate, endDate, programmeIds, classIds, body } =
@@ -57,18 +66,21 @@ export async function create(
       title,
       programmes,
       classes,
-      body
+      body ?? undefined
     );
 
     const announcementData: Announcement = await getRepository(
       Announcement
     ).save(announcement);
 
-    response.status(200).json({ success: true, id: announcementData.id });
+    response
+      .status(200)
+      .json({ success: true, id: announcementData.id })
+      .send();
     return;
   } catch (error) {
     console.log(error);
-    response.status(400).json({ error });
+    response.status(400).json({ success: false, message: error }).send();
     return;
   }
 }
@@ -127,8 +139,8 @@ async function addProgrammesAndClassesData(
 }
 
 export async function index(
-  request: Request,
-  response: Response
+  _request: Request<{}, {}, {}, {}>,
+  response: Response<QuestRes<{ announcements: AnnouncementListData[] }>>
 ): Promise<void> {
   try {
     const payload = response.locals.payload as AccessTokenSignedPayload;
@@ -214,24 +226,27 @@ export async function index(
       return currListData;
     });
 
-    response.status(200).json({ announcements: result });
+    response.status(200).json({ success: true, announcements: result }).send();
     return;
   } catch (error) {
     console.log(error);
-    response.status(400);
+    response.status(400).json({ success: false, message: error }).send();
     return;
   }
 }
 
 export async function show(
-  request: Request,
-  response: Response
+  request: Request<{ id: string }, {}, {}, {}>,
+  response: Response<QuestRes<{ announcement: AnnouncementData }>>
 ): Promise<void> {
   try {
     const id = parseInt(request.params.id, 10);
 
     if (isNaN(id)) {
-      response.status(400);
+      response
+        .status(400)
+        .json({ success: false, message: ENTITY_NOT_FOUND })
+        .send();
       return;
     }
 
@@ -241,7 +256,10 @@ export async function show(
     });
 
     if (!announcement) {
-      response.sendStatus(404);
+      response
+        .status(404)
+        .json({ success: false, message: ENTITY_NOT_FOUND })
+        .send();
       return;
     }
 
@@ -272,26 +290,33 @@ export async function show(
       classesData: classData,
     };
 
-    response.status(200).json({
-      announcement: result,
-    });
+    response
+      .status(200)
+      .json({
+        success: true,
+        announcement: result,
+      })
+      .send();
     return;
   } catch (error) {
     console.log(error);
-    response.status(400);
+    response.status(400).json({ success: false, message: error }).send();
     return;
   }
 }
 
 export async function softDelete(
-  request: Request,
-  response: Response
+  request: Request<{ id: string }, {}, {}, {}>,
+  response: Response<QuestRes<{}>>
 ): Promise<void> {
   const id = parseInt(request.params.id, 10);
 
   try {
     if (isNaN(id)) {
-      response.status(400).json({ success: false });
+      response
+        .status(400)
+        .json({ success: false, message: ENTITY_NOT_FOUND })
+        .send();
       return;
     }
 
@@ -301,30 +326,36 @@ export async function softDelete(
 
     await getRepository(Announcement).softRemove(announcement);
 
-    response.status(200).json({ success: true, id: id });
+    response.status(200).json({ success: true, id: id }).send();
   } catch (error) {
     switch (error.name) {
       case TYPEORM_ENTITYNOTFOUND:
-        response.status(404).json({ success: false });
+        response
+          .status(404)
+          .json({ success: false, message: ENTITY_NOT_FOUND })
+          .send();
         return;
 
       default:
         console.log(error);
-        response.status(400).json({ success: false });
+        response.status(400).json({ success: false, message: error }).send();
         return;
     }
   }
 }
 
 export async function edit(
-  request: Request,
-  response: Response
+  request: Request<{ id: string }, {}, AnnouncementPatchData, {}>,
+  response: Response<QuestRes<{}>>
 ): Promise<void> {
   try {
     const id = parseInt(request.params.id, 10);
 
     if (isNaN(id)) {
-      response.status(400);
+      response
+        .status(400)
+        .json({ success: false, message: ENTITY_NOT_FOUND })
+        .send();
       return;
     }
 
@@ -336,8 +367,8 @@ export async function edit(
 
     if (request.body.programmeIds || request.body.classIds) {
       let { programmes, classes } = await addProgrammesAndClassesData(
-        request.body.programmeIds,
-        request.body.classIds
+        request.body.programmeIds ?? [],
+        request.body.classIds ?? []
       );
       existingData.programmes = programmes;
       existingData.classes = classes;
@@ -355,10 +386,10 @@ export async function edit(
 
     await getRepository(Announcement).save(existingData);
 
-    response.status(200).json({ success: true, id: existingData.id });
+    response.status(200).json({ success: true, id: existingData.id }).send();
   } catch (error) {
     console.log(error);
-    response.status(400);
+    response.status(400).json({ success: false, message: error }).send();
     return;
   }
 }
