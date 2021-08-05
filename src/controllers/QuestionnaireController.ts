@@ -23,6 +23,7 @@ import { getConnection, getRepository } from "typeorm";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
 import {
   ENTITY_NOT_FOUND,
+  GENERIC_ERROR,
   QuestRes,
   TYPEORM_ENTITYNOTFOUND,
 } from "../types/errors";
@@ -67,7 +68,10 @@ export async function create(
     return;
   } catch (e) {
     console.log(e);
-    response.status(400).json({ success: false, message: e }).send();
+    response
+      .status(400)
+      .json({ success: false, message: e.message ?? GENERIC_ERROR })
+      .send();
     return;
   }
 }
@@ -94,7 +98,10 @@ export async function softDelete(
         return;
       default:
         console.log(e);
-        response.status(400).json({ success: false, message: e }).send();
+        response
+          .status(400)
+          .json({ success: false, message: e.message ?? GENERIC_ERROR })
+          .send();
         return;
     }
   }
@@ -126,7 +133,10 @@ export async function show(
       .send();
     return;
   } catch (e) {
-    response.status(400).json({ success: false, message: e.message }).send();
+    response
+      .status(400)
+      .json({ success: false, message: e.message ?? GENERIC_ERROR })
+      .send();
     return;
   }
 }
@@ -169,7 +179,10 @@ export async function showWindow(
       .send();
     return;
   } catch (e) {
-    response.status(400).json({ success: false, message: e.message }).send();
+    response
+      .status(400)
+      .json({ success: false, message: e.message ?? GENERIC_ERROR })
+      .send();
     return;
   }
 }
@@ -222,7 +235,10 @@ export async function edit(
     return;
   } catch (e) {
     console.log(e);
-    response.status(400).json({ success: false, message: e.message }).send();
+    response
+      .status(400)
+      .json({ success: false, message: e.message ?? GENERIC_ERROR })
+      .send();
     return;
   }
 }

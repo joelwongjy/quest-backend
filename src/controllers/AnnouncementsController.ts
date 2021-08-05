@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { getRepository, In } from "typeorm";
 import {
   ENTITY_NOT_FOUND,
+  GENERIC_ERROR,
   QuestRes,
   TYPEORM_ENTITYNOTFOUND,
 } from "../types/errors";
@@ -80,7 +81,10 @@ export async function create(
     return;
   } catch (error) {
     console.log(error);
-    response.status(400).json({ success: false, message: error }).send();
+    response
+      .status(400)
+      .json({ success: false, message: error.message ?? GENERIC_ERROR })
+      .send();
     return;
   }
 }
@@ -230,7 +234,10 @@ export async function index(
     return;
   } catch (error) {
     console.log(error);
-    response.status(400).json({ success: false, message: error }).send();
+    response
+      .status(400)
+      .json({ success: false, message: error.message ?? GENERIC_ERROR })
+      .send();
     return;
   }
 }
@@ -245,7 +252,7 @@ export async function show(
     if (isNaN(id)) {
       response
         .status(400)
-        .json({ success: false, message: ENTITY_NOT_FOUND })
+        .json({ success: false, message: GENERIC_ERROR })
         .send();
       return;
     }
@@ -300,7 +307,10 @@ export async function show(
     return;
   } catch (error) {
     console.log(error);
-    response.status(400).json({ success: false, message: error }).send();
+    response
+      .status(400)
+      .json({ success: false, message: error.message ?? GENERIC_ERROR })
+      .send();
     return;
   }
 }
@@ -315,7 +325,7 @@ export async function softDelete(
     if (isNaN(id)) {
       response
         .status(400)
-        .json({ success: false, message: ENTITY_NOT_FOUND })
+        .json({ success: false, message: GENERIC_ERROR })
         .send();
       return;
     }
@@ -338,7 +348,10 @@ export async function softDelete(
 
       default:
         console.log(error);
-        response.status(400).json({ success: false, message: error }).send();
+        response
+          .status(400)
+          .json({ success: false, message: error.message ?? GENERIC_ERROR })
+          .send();
         return;
     }
   }
@@ -354,7 +367,7 @@ export async function edit(
     if (isNaN(id)) {
       response
         .status(400)
-        .json({ success: false, message: ENTITY_NOT_FOUND })
+        .json({ success: false, message: GENERIC_ERROR })
         .send();
       return;
     }
@@ -389,7 +402,10 @@ export async function edit(
     response.status(200).json({ success: true, id: existingData.id }).send();
   } catch (error) {
     console.log(error);
-    response.status(400).json({ success: false, message: error }).send();
+    response
+      .status(400)
+      .json({ success: false, message: error.message ?? GENERIC_ERROR })
+      .send();
     return;
   }
 }

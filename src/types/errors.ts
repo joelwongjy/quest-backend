@@ -25,6 +25,8 @@ export type QuestRes<T, R = Success | Failure> = R extends Success
 export const TYPEORM_ENTITYNOTFOUND = "EntityNotFound";
 export const ENTITY_NOT_FOUND = "No such entity";
 
+export const GENERIC_ERROR = "Something went wrong.";
+
 export const QUESTION_ORDER_CREATION_ERROR = "QuestionOrderCreationError";
 export const QUESTION_ORDER_EDITOR_ERROR = "QuestionOrderEditorError";
 export const QUESTION_ORDER_VIEWER_ERROR = "QuestionOrderViewerError";
