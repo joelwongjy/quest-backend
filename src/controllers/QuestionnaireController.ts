@@ -21,19 +21,29 @@ import {
 } from "../services/questionnaire";
 import { getConnection, getRepository } from "typeorm";
 import { Questionnaire } from "../entities/questionnaire/Questionnaire";
-import { Message, SuccessId, TYPEORM_ENTITYNOTFOUND } from "../types/errors";
+import {
+  ENTITY_NOT_FOUND,
+  GENERIC_ERROR,
+  QuestRes,
+  TYPEORM_ENTITYNOTFOUND,
+} from "../types/errors";
 
 export async function index(
-  _request: Request,
-  response: Response
+  _request: Request<{}, {}, {}, {}>,
+  response: Response<QuestRes<{ questionnaires: QuestionnaireListData[] }>>
 ): Promise<void> {
-  const questionnaireListData: QuestionnaireListData[] = await selectQuestionnaireData();
-  response.status(200).json({ questionnaires: questionnaireListData });
+  const questionnaireListData: QuestionnaireListData[] =
+    await selectQuestionnaireData();
+  response
+    .status(200)
+    .json({ success: true, questionnaires: questionnaireListData })
+    .send();
+  return;
 }
 
 export async function create(
-  request: Request<{}, any, QuestionnairePostData, any>,
-  response: Response<SuccessId>
+  request: Request<{}, {}, QuestionnairePostData, {}>,
+  response: Response<QuestRes<{}>>
 ): Promise<void> {
   let creator: QuestionnaireCreator;
   let result: Questionnaire;
@@ -50,26 +60,25 @@ export async function create(
         result = await creator!.createQuestionnaire();
         break;
       default:
-        break;
+        throw new Error("Invalid questionnaire type.");
     }
 
-    if (result!) {
-      response.status(200).json({ success: true, id: result.id });
-      return;
-    } else {
-      response.status(400).json({ success: false });
-      return;
-    }
+    // The createQuestionnaire method should either succced or throw
+    response.status(200).json({ success: true, id: result!.id }).send();
+    return;
   } catch (e) {
     console.log(e);
-    response.status(400).json({ success: false });
+    response
+      .status(400)
+      .json({ success: false, message: e.message ?? GENERIC_ERROR })
+      .send();
     return;
   }
 }
 
 export async function softDelete(
-  request: Request<QuestionnaireId, any, any, any>,
-  response: Response<SuccessId>
+  request: Request<QuestionnaireId, {}, {}, {}>,
+  response: Response<QuestRes<{}>>
 ) {
   const { id } = request.params;
   try {
@@ -77,24 +86,30 @@ export async function softDelete(
       await new QuestionnaireDeleter(manager).deleteQuestionnaire(id);
     });
 
-    response.status(200).json({ success: true, id });
+    response.status(200).json({ success: true, id }).send();
     return;
   } catch (e) {
     switch (e.name) {
       case TYPEORM_ENTITYNOTFOUND:
-        response.status(404).json({ success: false });
+        response
+          .status(404)
+          .json({ success: false, message: ENTITY_NOT_FOUND })
+          .send();
         return;
       default:
         console.log(e);
-        response.status(400).json({ success: false });
+        response
+          .status(400)
+          .json({ success: false, message: e.message ?? GENERIC_ERROR })
+          .send();
         return;
     }
   }
 }
 
 export async function show(
-  request: Request<QuestionnaireId, any, any, any>,
-  response: Response<QuestionnaireFullData | Message>
+  request: Request<QuestionnaireId, {}, {}, {}>,
+  response: Response<QuestRes<QuestionnaireFullData | {}>>
 ): Promise<void> {
   const { id } = request.params;
 
@@ -105,21 +120,30 @@ export async function show(
     });
 
     if (!qnnaire) {
-      response.sendStatus(404);
+      response
+        .status(404)
+        .json({ success: false, message: ENTITY_NOT_FOUND })
+        .send();
       return;
     }
     const result = await qnnaire!.getAllWindows();
-    response.status(200).json(result);
+    response
+      .status(200)
+      .json({ success: true, ...result })
+      .send();
     return;
   } catch (e) {
-    response.status(400).json({ message: e.message });
+    response
+      .status(400)
+      .json({ success: false, message: e.message ?? GENERIC_ERROR })
+      .send();
     return;
   }
 }
 
 export async function showWindow(
-  request: Request<QuestionnaireWindowId, any, any, any>,
-  response: Response<QuestionnaireOneWindowData | Message>
+  request: Request<QuestionnaireWindowId, {}, {}, {}>,
+  response: Response<QuestRes<QuestionnaireOneWindowData | {}>>
 ): Promise<void> {
   const { id, windowId } = request.params;
 
@@ -129,7 +153,10 @@ export async function showWindow(
       where: { id },
     });
     if (!qnnaire) {
-      response.sendStatus(404);
+      response
+        .status(404)
+        .json({ success: false, message: ENTITY_NOT_FOUND })
+        .send();
       return;
     }
 
@@ -137,22 +164,32 @@ export async function showWindow(
     if (isNaN(windowIdInt)) {
       response
         .status(400)
-        .json({ message: `Invalid windowId received (is: ${windowId})` });
+        .json({
+          success: false,
+          message: `Invalid windowId received (is: ${windowId})`,
+        })
+        .send();
       return;
     }
 
     const result = await qnnaire!.getMainWindow(windowIdInt);
-    response.status(200).json(result);
+    response
+      .status(200)
+      .json({ success: true, ...result })
+      .send();
     return;
   } catch (e) {
-    response.status(400).json({ message: e.message });
+    response
+      .status(400)
+      .json({ success: false, message: e.message ?? GENERIC_ERROR })
+      .send();
     return;
   }
 }
 
 export async function edit(
-  request: Request<QuestionnaireId, any, QuestionnairePatchData, any>,
-  response: Response<QuestionnaireFullData | Message>
+  request: Request<QuestionnaireId, {}, QuestionnairePatchData, {}>,
+  response: Response<QuestRes<QuestionnaireFullData | {}>>
 ): Promise<void> {
   const { id } = request.params;
   const editData = request.body;
@@ -182,15 +219,26 @@ export async function edit(
         editor = new PrePostQuestionnaireEditor(qnnaire, editData);
         break;
       default:
-        response.status(400).json({ message: "Unknown QuestionnaireType" });
+        response
+          .status(400)
+          .json({ success: false, message: "Unknown QuestionnaireType" })
+          .send();
         return;
     }
 
     const updated = await editor.editQnnaire();
     const result = await updated.getAllWindows();
-    response.status(200).json(result);
+    response
+      .status(200)
+      .json({ success: true, ...result })
+      .send();
+    return;
   } catch (e) {
     console.log(e);
-    response.status(400).json({ message: e.message });
+    response
+      .status(400)
+      .json({ success: false, message: e.message ?? GENERIC_ERROR })
+      .send();
+    return;
   }
 }

@@ -5,9 +5,27 @@ export interface Message {
 export interface SuccessId {
   success: boolean;
   id?: number;
+  message?: string;
 }
 
+interface Success {
+  success: true;
+  id?: number;
+}
+
+interface Failure {
+  success: false;
+  message: string;
+}
+
+export type QuestRes<T, R = Success | Failure> = R extends Success
+  ? T & Success
+  : Failure;
+
 export const TYPEORM_ENTITYNOTFOUND = "EntityNotFound";
+export const ENTITY_NOT_FOUND = "No such entity";
+
+export const GENERIC_ERROR = "Something went wrong.";
 
 export const QUESTION_ORDER_CREATION_ERROR = "QuestionOrderCreationError";
 export const QUESTION_ORDER_EDITOR_ERROR = "QuestionOrderEditorError";
