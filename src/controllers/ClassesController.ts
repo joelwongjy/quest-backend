@@ -56,43 +56,6 @@ export async function show(
   }
 }
 
-export async function edit(
-  request: Request<{ id: string }, {}, ClassPatchData, {}>,
-  response: Response<SuccessId>
-): Promise<void> {
-  try {
-    const { id } = request.params;
-    const idNum = parseInt(id);
-    if (!idNum) {
-      response.status(400);
-      return;
-    }
-
-    const result = await getConnection()
-      .transaction<number>(async (manager) => {
-        const editor = new ClassEditor(manager);
-        await editor.editClass(idNum, request.body);
-        return 200;
-      })
-      .catch((error) => {
-        console.log(error);
-        return 400;
-      });
-
-    if (result === 200) {
-      response.status(result).json({ success: true, id: idNum });
-      return;
-    } else {
-      response.status(result);
-      return;
-    }
-  } catch (e) {
-    console.log(e);
-    response.status(400);
-    return;
-  }
-}
-
 export async function createTeacher(
   request: Request<{}, any, PersonPostData, any>,
   response: Response<SuccessId | { error: string }>

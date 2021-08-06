@@ -17,6 +17,5 @@ router.post("/admins", ClassesController.createAdmin);
 router.patch("/teachers/:id", ClassesController.editTeacher);
 router.patch("/admins/:id", ClassesController.editAdmin);
 router.get("/:id", ClassesController.show);
-router.patch("/:id", ClassesController.edit);
 
 export default router;
