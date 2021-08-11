@@ -94,37 +94,37 @@ jobs:
           source: "build/"
           target: "${{ secrets.REMOTE_STAGING_DIR }}/build"
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [test, build]
-    steps:
-      - name: Update application on server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
-          script: |
-            cd ${{ secrets.REMOTE_STAGING_DIR }}
-            git checkout master
-            git pull
-            git reset --hard origin/master
-            yarn install
-            cd build/build
-            mv * ..
-            cd ..
-            rm -rf build
-            cd ..
-            pm2 stop ecosystem.config.js --only staging
-            chmod +x ./backups/pg_backup.sh
-            ./backups/pg_backup.sh ${{ secrets.REMOTE_STAGING_DIR }}
-            chmod +x ./run_migrations.sh
-            ./run_migrations.sh -s
-            cp .env.staging ./build/
-            cp ecosystem.config.js ./build/
-            cp package.json ./build/
-            cd build
-            yarn install
-            pm2 restart ecosystem.config.js --only staging --log-date-format="YYYY-MM-DD HH:mm Z"
-            pm2 logs --nostream
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: [test, build]
+  #   steps:
+  #     - name: Update application on server
+  #       uses: appleboy/ssh-action@master
+  #       with:
+  #         host: ${{ secrets.REMOTE_HOST }}
+  #         username: ${{ secrets.REMOTE_USER }}
+  #         key: ${{ secrets.SSH_KEY }}
+  #         port: 22
+  #         script: |
+  #           cd ${{ secrets.REMOTE_STAGING_DIR }}
+  #           git checkout master
+  #           git pull
+  #           git reset --hard origin/master
+  #           yarn install
+  #           cd build/build
+  #           mv * ..
+  #           cd ..
+  #           rm -rf build
+  #           cd ..
+  #           pm2 stop ecosystem.config.js --only staging
+  #           chmod +x ./backups/pg_backup.sh
+  #           ./backups/pg_backup.sh ${{ secrets.REMOTE_STAGING_DIR }}
+  #           chmod +x ./run_migrations.sh
+  #           ./run_migrations.sh -s
+  #           cp .env.staging ./build/
+  #           cp ecosystem.config.js ./build/
+  #           cp package.json ./build/
+  #           cd build
+  #           yarn install
+  #           pm2 restart ecosystem.config.js --only staging --log-date-format="YYYY-MM-DD HH:mm Z"
+  #           pm2 logs --nostream
