@@ -123,6 +123,7 @@ async function seedUserIfAbsent(user: User, person: Person): Promise<Person> {
   // return if username already exists
   const findUser = await userRepo.findOne({
     where: { username },
+    withDeleted: true,
     relations: ["person"],
   });
   if (findUser) {
@@ -151,6 +152,7 @@ async function seedProgrammesClasses(seed: ProgrammeSeed[]): Promise<void> {
       // return if programme already exists
       const programmeCount = await programmeRepo.count({
         where: { name: name },
+        withDeleted: true,
       });
       if (programmeCount > 0) {
         return;
@@ -190,15 +192,20 @@ async function seedProgrammesClasses(seed: ProgrammeSeed[]): Promise<void> {
   );
   await Promise.all(
     seededClasses.map(async (classes) => {
-      classes?.map(async (class_) => {
-        const classPersonData = new ClassPerson(
-          class_,
-          commonStudent,
-          COMMON_STUDENT[1]
-        );
+      if (!classes) {
+        return;
+      }
+      await Promise.all(
+        classes.map(async (clazz) => {
+          const classPersonData = new ClassPerson(
+            clazz,
+            commonStudent,
+            COMMON_STUDENT[1]
+          );
 
-        await classPersonRepo.save(classPersonData);
-      });
+          return await classPersonRepo.save(classPersonData);
+        })
+      );
     })
   );
 }
