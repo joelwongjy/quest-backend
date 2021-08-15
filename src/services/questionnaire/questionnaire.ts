@@ -351,6 +351,7 @@ export abstract class QuestionnaireEditor {
       await this.programmesClassesQnnaireEditor.editProgrammesAndClasses();
     this.qnnaire.programmeQuestionnaires = programmes;
     this.qnnaire.classQuestionnaires = classes;
+    this.qnnaire.updatedAt = new Date(); // to ensure questionnaire updatedAt is updated
 
     const updated = await getRepository(Questionnaire).save(this.qnnaire);
     return updated;
